@@ -1,0 +1,19 @@
+<div class="card mb-3 host d-flex" id="host_<%= host.id %>">
+  <div class="card-body pb-1">
+    <div class="d-flex">
+      
+      <div class="flex-grow-1 ms-3 text-break">
+        <h5 class='card-title'>
+          <%= link_to host.name, host_path(host.name) %>
+        </h5>
+      
+        <p class="card-subtitle mb-2 text-muted">
+          <%= number_with_delimiter host.repositories_count %> packages
+        </p>
+      </div>
+      <div class="flex-shrink-0">
+        <img src="https://github.com/<%= host.kind %>.png" class="rounded" height='40' width='40' onerror="this.style.display='none'">
+      </div>  
+    </div>
+  </div>
+</div>

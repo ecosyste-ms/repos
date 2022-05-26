@@ -39,6 +39,8 @@ gem "semantic"
 gem "semantic_range"
 gem "sanitize-url"
 gem "toml-rb"
+gem "gitlab"
+gem "octokit"
 
 group :development, :test do
   gem "debug", platforms: %i[ mri mingw x64_mingw ]
