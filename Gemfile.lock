@@ -148,6 +148,8 @@ GEM
     globalid (1.0.0)
       activesupport (>= 5.0)
     google-protobuf (3.21.0)
+    google-protobuf (3.21.0-x86_64-darwin)
+    google-protobuf (3.21.0-x86_64-linux)
     hashdiff (1.0.1)
     highline (2.0.3)
     hiredis (0.6.3)
@@ -174,6 +176,7 @@ GEM
       mime-types-data (~> 3.2015)
     mime-types-data (3.2022.0105)
     mini_mime (1.1.2)
+    mini_portile2 (2.8.0)
     minitest (5.15.0)
     mocha (1.14.0)
     msgpack (1.5.1)
@@ -194,7 +197,16 @@ GEM
       net-protocol
       timeout
     nio4r (2.5.8)
+    nokogiri (1.13.6)
+      mini_portile2 (~> 2.8.0)
+      racc (~> 1.4)
+    nokogiri (1.13.6-aarch64-linux)
+      racc (~> 1.4)
     nokogiri (1.13.6-arm64-darwin)
+      racc (~> 1.4)
+    nokogiri (1.13.6-x86_64-darwin)
+      racc (~> 1.4)
+    nokogiri (1.13.6-x86_64-linux)
       racc (~> 1.4)
     octokit (4.22.0)
       faraday (>= 0.9)
@@ -344,7 +356,11 @@ GEM
     zlib (2.1.1)
 
 PLATFORMS
+  aarch64-linux-musl
   arm64-darwin-21
+  ruby
+  x86_64-darwin-20
+  x86_64-linux
 
 DEPENDENCIES
   bibliothecary
