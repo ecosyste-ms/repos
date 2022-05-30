@@ -1,5 +1,44 @@
 module Hosts
   class Base
+
+    def repository_columns
+      [
+        :full_name,                                                                       
+        :owner,                                                                           
+        :description,                                                                     
+        :fork,                                                                            
+        :created_at,                                                                      
+        :updated_at,                                                                      
+        :pushed_at,                                                                       
+        :homepage,                                                                        
+        :size,                                                                            
+        :stargazers_count,                                                                                                                          
+        :language,                                                                        
+        :has_issues,                                                                      
+        :forks_count,
+        :mirror_url,
+        :archived,
+        :open_issues_count,
+        :license,
+        :topics,
+        :default_branch,
+        :subscribers_count,
+        :private,
+        :logo_url,
+        :pull_requests_enabled,
+        :scm,
+        :status,
+        # :allow_forking,
+        # :has_projects,
+        # :has_downloads,
+        # :has_wiki,
+        # :has_pages,
+        # :is_template,
+        # :disabled,
+        # :visibility,
+      ]
+    end
+
     def initialize(url)
       @url = url
     end

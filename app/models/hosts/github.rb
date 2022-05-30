@@ -47,17 +47,24 @@ module Hosts
       "#{url}/commits#{author_param}"
     end
 
-    def self.fetch_repo(id_or_name, token = nil)
+    def fetch_repository(id_or_name, token = nil)
       id_or_name = id_or_name.to_i if id_or_name.match(/\A\d+\Z/)
-      hash = AuthToken.fallback_client(token).repo(id_or_name, accept: 'application/vnd.github.drax-preview+json,application/vnd.github.mercy-preview+json').to_hash
-      hash[:host_type] = 'GitHub'
+      hash = api_client(token).repo(id_or_name, accept: 'application/vnd.github.drax-preview+json,application/vnd.github.mercy-preview+json').to_hash.with_indifferent_access
+      pp hash.keys
       hash[:scm] = 'git'
-      hash
+      hash[:uuid] = hash[:id]
+      hash[:license] = hash[:license][:key] if hash[:license]
+
+      if hash[:fork] && hash[:parent]
+        hash[:source_name] = hash[:parent][:full_name]
+      end
+
+      return hash.slice(*repository_columns)
     rescue *IGNORABLE_EXCEPTIONS
       nil
     end
 
-    def get_file_list(token = nil)
+    def get_file_list(repository, token = nil)
       tree = api_client(token).tree(repository.full_name, repository.default_branch, recursive: true).tree
       tree.select{|item| item.type == 'blob' }.map{|file| file.path }
     rescue *IGNORABLE_EXCEPTIONS
@@ -113,8 +120,8 @@ module Hosts
 
     private
 
-    def api_client(token = nil)
-      AuthToken.fallback_client(token)
+    def api_client(token = nil, options = {})
+      Octokit::Client.new({access_token: token, auto_paginate: true}.merge(options))
     end
   end
 end

@@ -31,7 +31,7 @@ ActiveRecord::Schema[7.0].define(version: 2022_05_26_092546) do
     t.string "name"
     t.string "url"
     t.string "kind"
-    t.integer "repositories_count"
+    t.integer "repositories_count", default: 0
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
@@ -49,7 +49,7 @@ ActiveRecord::Schema[7.0].define(version: 2022_05_26_092546) do
 
   create_table "repositories", force: :cascade do |t|
     t.integer "host_id"
-    t.integer "remote_id"
+    t.string "uuid"
     t.string "full_name"
     t.string "owner"
     t.string "main_language"
@@ -67,6 +67,19 @@ ActiveRecord::Schema[7.0].define(version: 2022_05_26_092546) do
     t.string "etag"
     t.string "topics", default: [], array: true
     t.string "latest_commit_sha"
+    t.string "homepage"
+    t.string "language"
+    t.boolean "has_issues"
+    t.boolean "has_wiki"
+    t.boolean "has_pages"
+    t.string "mirror_url"
+    t.string "source_name"
+    t.string "license"
+    t.boolean "private"
+    t.string "status"
+    t.string "scm"
+    t.string "pull_requests_enabled"
+    t.string "logo_url"
     t.json "metadata", default: {}
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
