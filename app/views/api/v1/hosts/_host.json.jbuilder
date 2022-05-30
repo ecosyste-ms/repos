@@ -1,0 +1,1 @@
+json.extract! host, :name, :url, :kind, :repositories_count

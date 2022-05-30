@@ -1,0 +1,1 @@
+json.partial! 'api/v1/repositories/repository', repository: @repository

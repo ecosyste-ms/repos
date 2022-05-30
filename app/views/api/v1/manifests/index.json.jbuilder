@@ -1,0 +1,1 @@
+json.array! @manifests, partial: 'api/v1/manifests/manifest', as: :manifest

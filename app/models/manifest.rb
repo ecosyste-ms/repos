@@ -7,7 +7,7 @@ class Manifest < ApplicationRecord
   scope :kind, ->(kind) { where(kind: kind) }
 
   def repository_link
-    repository.blob_url(branch) + filepath
+    repository.blob_url + filepath
   end
 
   def lockfile?
