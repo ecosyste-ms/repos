@@ -1,0 +1,41 @@
+<div class="container-sm">
+  <h1>
+    <%= link_to @host, host_path(@host) %> / <%= link_to @repository, @repository.html_url, target: :_blank %>
+  </h1>
+
+  <p><%= @repository.description %></p>
+  
+  <% if @manifests.present? %>
+    <% @manifests.each do |manifest| %>
+      <div class="card mb-3">
+        <div class="card-header">
+          <%= link_to manifest.filepath, manifest.repository_link, target: :_blank %>
+        </div>
+        <ul class="list-group list-group-flush">
+          <% if manifest.lockfile? && manifest.dependencies.length > 100 %>
+            <li class="list-group-item">
+              <%= link_to pluralize(manifest.dependencies.length, 'dependencies'), manifest.repository_link, target: :_blank %>
+            </li>
+          <% else %>
+            <% manifest.dependencies.sort_by(&:package_name).each do |dependency| %>
+              <li class="list-group-item">
+                <%= dependency.package_name %>
+                <i><%= dependency.requirements %></i>
+                <small class='text-muted'>
+                <% if dependency.kind != 'runtime' %>
+                  <%= dependency.kind %>
+                <% end %>
+                <% if dependency.optional %>
+                  (optional)
+                <% end %>
+                </small>
+              </li>
+            <% end %>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+  <% else %>
+    <p>No dependencies found</p>
+  <% end %>
+</div>

@@ -1,0 +1,19 @@
+<div class="card mb-3 repository d-flex" id="repository_<%= repository.id %>">
+  <div class="card-body pb-1">
+    <div class="d-flex">
+      
+      <div class="flex-grow-1 ms-3 text-break">
+        <h5 class='card-title'>
+          <%= link_to repository, host_repository_path(repository.host, repository) %>
+        </h5>
+      
+        <p class="card-subtitle mb-2 text-muted">
+          <%#= number_with_delimiter repository.dependencies_count %> dependencies
+        </p>
+      </div>
+      <div class="flex-shrink-0">
+        <img src="<%= repository.avatar_url(40) %>" class="rounded" height='40' width='40' onerror="this.style.display='none'">
+      </div>  
+    </div>
+  </div>
+</div>

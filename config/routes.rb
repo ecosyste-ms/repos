@@ -15,13 +15,13 @@ Rails.application.routes.draw do
   namespace :api, :defaults => {:format => :json} do
     namespace :v1 do
       resources :hosts, constraints: { id: /.*/ }, only: [:index, :show] do
-        resources :repos, constraints: { id: /.*/ }, only: [:index, :show]
+        resources :repositories, constraints: { id: /.*/ }, only: [:index, :show]
       end
     end
   end
 
   resources :hosts, constraints: { id: /.*/ }, only: [:index, :show] do
-    resources :repos, constraints: { id: /.*/ }, only: [:index, :show]
+    resources :repositories, constraints: { id: /.*/ }, only: [:index, :show]
   end
 
   root "home#index"

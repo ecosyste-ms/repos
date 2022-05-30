@@ -39,30 +39,20 @@ module Hosts
       ]
     end
 
-    def initialize(url)
-      @url = url
+    def initialize(host)
+      @host = host
     end
 
-    def self.create(full_name, token = nil)
-      Repository.create_from_hash(fetch_repo(full_name, token))
-    rescue *self::IGNORABLE_EXCEPTIONS
-      nil
-    end
-
-    def self.domain(host_type)
-      RepositoryHost.const_get(host_type.capitalize).new(nil).domain
-    end
-
-    def url
-      "#{domain}/#{repository.full_name}"
+    def url(repository)
+      "#{@host.url}/#{repository.full_name}"
     end
 
     def issues_url
       "#{url}/issues"
     end
 
-    def source_url
-      "#{domain}/#{repository.source_name}"
+    def source_url(repository)
+      "#{@host.url}/#{repository.source_name}"
     end
 
     def raw_url(sha = nil)

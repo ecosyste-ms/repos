@@ -2,7 +2,7 @@ class Dependency < ApplicationRecord
   belongs_to :repository
   belongs_to :manifest
 
-  scope :ecosystem, ->(ecosystem) { where('lower(repository_dependencies.ecosystem) = ?', ecosystem.try(:downcase)) }
+  scope :ecosystem, ->(ecosystem) { where('lower(dependencies.ecosystem) = ?', ecosystem.try(:downcase)) }
   scope :kind, ->(kind) { where(kind: kind) }
   scope :active, -> { joins(:repository).where(repositories: {archived: false}) }
   scope :source, -> { joins(:repository).where(repositories: {fork: false}) }

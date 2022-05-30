@@ -17,7 +17,11 @@ module Hosts
       Octokit::NotFound
     end
 
-    def avatar_url(size = 60)
+    def html_url(repository)
+      "https://github.com/#{repository.full_name}"
+    end
+
+    def avatar_url(repository, size = 40)
       "https://github.com/#{repository.owner_name}.png?size=#{size}"
     end
 
@@ -37,9 +41,9 @@ module Hosts
       "#{url}/graphs/contributors"
     end
 
-    def blob_url(sha = nil)
+    def blob_url(repository, sha = nil)
       sha ||= repository.default_branch
-      "#{url}/blob/#{sha}/"
+      "#{url(repository)}/blob/#{sha}/"
     end
 
     def commits_url(author = nil)
@@ -50,7 +54,7 @@ module Hosts
     def fetch_repository(id_or_name, token = nil)
       id_or_name = id_or_name.to_i if id_or_name.match(/\A\d+\Z/)
       hash = api_client(token).repo(id_or_name, accept: 'application/vnd.github.drax-preview+json,application/vnd.github.mercy-preview+json').to_hash.with_indifferent_access
-      pp hash.keys
+
       hash[:scm] = 'git'
       hash[:uuid] = hash[:id]
       hash[:license] = hash[:license][:key] if hash[:license]
@@ -71,7 +75,7 @@ module Hosts
       nil
     end
 
-    def get_file_contents(path, token = nil)
+    def get_file_contents(repository, path, token = nil)
       file = api_client(token).contents(repository.full_name, path: path)
       {
         sha: file.sha,
@@ -83,18 +87,18 @@ module Hosts
       nil
     end
 
-    def download_tags(token = nil)
+    def download_tags(repository, token = nil)
       existing_tag_names = repository.tags.pluck(:name)
       tags = api_client(token).refs(repository.full_name, 'tags')
       Array(tags).each do |tag|
         next unless tag && tag.is_a?(Sawyer::Resource) && tag['ref']
-        download_tag(token, tag, existing_tag_names)
+        download_tag(repository, token, tag, existing_tag_names)
       end
     rescue *IGNORABLE_EXCEPTIONS
       nil
     end
 
-    def download_tag(token, tag, existing_tag_names)
+    def download_tag(repository, token, tag, existing_tag_names)
       match = tag.ref.match(/refs\/tags\/(.*)/)
       return unless match
       name = match[1]
