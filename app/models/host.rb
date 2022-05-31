@@ -17,7 +17,7 @@ class Host < ApplicationRecord
     return if repo_hash.blank?
 
     ActiveRecord::Base.transaction do
-      repo = repositories.find_by(uuid: repo_hash[:id])
+      repo = repositories.find_by(uuid: repo_hash[:uuid])
       repo = repositories.find_by('lower(full_name) = ?', repo_hash[:full_name].downcase) if repo.nil?
       repo = repositories.new(uuid: repo_hash[:id], full_name: repo_hash[:full_name]) if repo.nil?
       repo.full_name = repo_hash[:full_name] if repo.full_name.downcase != repo_hash[:full_name].downcase

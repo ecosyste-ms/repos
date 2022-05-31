@@ -3,6 +3,7 @@ module Hosts
 
     def repository_columns
       [
+        :uuid,
         :full_name,                                                                       
         :owner,                                                                           
         :description,                                                                     
