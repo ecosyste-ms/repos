@@ -48,7 +48,7 @@ module Hosts
     end
 
     def download_owner
-      return if repository.owner && repository.repository_user_id && repository.owner.login == repository.owner_name
+      return if repository.owner && repository.repository_user_id && repository.owner.login == repository.owner
       namespace = api_client.project(repository.full_name).try(:namespace)
       return unless namespace
       if namespace.kind == 'group'

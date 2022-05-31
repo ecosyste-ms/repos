@@ -41,7 +41,7 @@ module Hosts
     # end
 
     # def get_file_contents(path, token = nil)
-    #   file = api_client(token).repos.sources.list(repository.owner_name, repository.project_name, URI.escape(repository.default_branch), URI.escape(path))
+    #   file = api_client(token).repos.sources.list(repository.owner, repository.project_name, URI.escape(repository.default_branch), URI.escape(path))
     #   {
     #     sha: file.node,
     #     content: file.data
@@ -55,7 +55,7 @@ module Hosts
     # end
 
     # def retrieve_commits(token = nil)
-    #   api_client(token).repos.commits.list(repository.owner_name, repository.project_name)['values']
+    #   api_client(token).repos.commits.list(repository.owner, repository.project_name)['values']
     # end
 
     # def download_forks(token = nil)
@@ -63,8 +63,8 @@ module Hosts
     # end
 
     # def download_owner
-    #   return if repository.owner && repository.repository_user_id && repository.owner.login == repository.owner_name
-    #   o = RepositoryOwner::Bitbucket.fetch_user(repository.owner_name)
+    #   return if repository.owner && repository.repository_user_id && repository.owner.login == repository.owner
+    #   o = RepositoryOwner::Bitbucket.fetch_user(repository.owner)
     #   if o.type == "team"
     #     org = RepositoryOrganisation.create_from_host('Bitbucket', o)
     #     if org
@@ -89,7 +89,7 @@ module Hosts
     # end
 
     # def download_readme(token = nil)
-    #   files = api_client(token).repos.sources.list(repository.owner_name, repository.project_name, URI.escape(repository.default_branch || 'master'), '/')
+    #   files = api_client(token).repos.sources.list(repository.owner, repository.project_name, URI.escape(repository.default_branch || 'master'), '/')
     #   paths =  files.files.map(&:path)
     #   readme_path = paths.select{|path| path.match(/^readme/i) }.sort{|path| Readme.supported_format?(path) ? 0 : 1 }.first
     #   return if readme_path.nil?
@@ -108,7 +108,7 @@ module Hosts
     # end
 
     # def download_tags(token = nil)
-    #   remote_tags = api_client(token).repos.tags(repository.owner_name, repository.project_name)
+    #   remote_tags = api_client(token).repos.tags(repository.owner, repository.project_name)
     #   existing_tag_names = repository.tags.pluck(:name)
     #   remote_tags.each do |name, data|
     #     next if existing_tag_names.include?(name)

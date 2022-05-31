@@ -22,7 +22,7 @@ module Hosts
     end
 
     def avatar_url(repository, size = 40)
-      "https://github.com/#{repository.owner_name}.png?size=#{size}"
+      "https://github.com/#{repository.owner}.png?size=#{size}"
     end
 
     def watchers_url
@@ -53,11 +53,20 @@ module Hosts
 
     def fetch_repository(id_or_name, token = nil)
       id_or_name = id_or_name.to_i if id_or_name.match(/\A\d+\Z/)
-      hash = api_client(token).repo(id_or_name, accept: 'application/vnd.github.drax-preview+json,application/vnd.github.mercy-preview+json').to_hash.with_indifferent_access
+
+      if id_or_name.is_a?(String)
+        hash = attempt_load_from_timeline(id_or_name)
+      end
+
+      if hash.nil?
+        hash = api_client(token).repo(id_or_name, accept: 'application/vnd.github.drax-preview+json,application/vnd.github.mercy-preview+json').to_hash.with_indifferent_access
+      end
 
       hash[:scm] = 'git'
       hash[:uuid] = hash[:id]
       hash[:license] = hash[:license][:key] if hash[:license]
+      hash[:owner] = hash[:owner][:login]
+      hash[:main_language] = hash[:language]
 
       if hash[:fork] && hash[:parent]
         hash[:source_name] = hash[:parent][:full_name]
@@ -120,6 +129,60 @@ module Hosts
       end
 
       repository.tags.create(tag_hash)
+    end
+
+    def recently_changed_repo_names
+      names = []
+
+      first_response = load_repo_names
+      return if first_response.blank?
+      most_recent = first_response["newest"]["created_at"]
+      target_time = Time.parse(most_recent) - 1.hour
+      next_id = first_response['oldest']['id']
+
+      next_response = load_repo_names(next_id)
+      names = (names + next_response['names']).uniq
+      next_id = next_response['oldest']['id']
+
+      while Time.parse(next_response['oldest']['created_at']) > target_time
+        next_response = load_repo_names(next_id)
+        names = (names + next_response['names']).uniq
+        next_id = next_response['oldest']['id']
+      end
+
+      return names
+    end
+
+    def load_repo_names(id = nil)
+      puts "loading repo names since #{id}"
+      url = "https://timeline.ecosyste.ms/api/v1/events/repository_names"
+      url = "#{url}?before=#{id}" if id.present?
+      begin
+        Oj.load(Faraday.get(url).body)
+      rescue Faraday::Error
+        {}
+      end
+    end
+
+    def events_for_repo(full_name, event_type: nil, per_page: 100)
+      url = "https://timeline.ecosyste.ms/api/v1/events/#{full_name}?per_page=#{per_page}"
+      url = "#{url}&event_type=#{event_type}" if event_type.present?
+
+      begin
+        resp = Faraday.get(url) do |req|
+          req.options.timeout = 5
+        end
+
+        Oj.load(resp.body)
+      rescue Faraday::Error
+        {}
+      end
+    end
+
+    def attempt_load_from_timeline(full_name)
+      events = events_for_repo(full_name, event_type: 'PullRequestEvent', per_page: 1)
+      return nil if events.blank?
+      events.first['payload']['pull_request']['base']['repo'].to_hash.with_indifferent_access
     end
 
     private

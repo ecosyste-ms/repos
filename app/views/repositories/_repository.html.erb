@@ -8,7 +8,10 @@
         </h5>
       
         <p class="card-subtitle mb-2 text-muted">
-          <%#= number_with_delimiter repository.dependencies_count %> dependencies
+          <%= repository.description %>
+        </p>
+        <p class="card-subtitle mb-2 text-muted">
+          <i><small>Last synced: <%= repository.last_synced_at %></small></i>
         </p>
       </div>
       <div class="flex-shrink-0">
