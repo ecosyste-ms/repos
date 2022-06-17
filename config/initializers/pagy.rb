@@ -1,5 +1,6 @@
 require 'pagy/extras/headers'
 require 'pagy/extras/items'
+require 'pagy/extras/countless'
 require 'pagy/extras/bootstrap'
 
 Pagy::DEFAULT[:items] = 100
