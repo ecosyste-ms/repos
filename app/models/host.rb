@@ -12,6 +12,10 @@ class Host < ApplicationRecord
     name
   end
 
+  def sync_repository_async(full_name)
+    SyncRepositoryWorker.perform_async(id, full_name)
+  end
+
   def sync_repository(full_name)
     repo_hash = host_instance.fetch_repository(full_name)
     return if repo_hash.blank?
@@ -31,6 +35,18 @@ class Host < ApplicationRecord
   rescue ActiveRecord::RecordNotUnique
     nil
   end
+
+  def sync_recently_changed_repos(since = 10.minutes)
+    host_instance.recently_changed_repo_names(since).each do |full_name|
+      sync_repository(full_name)
+    end
+  end
+
+  def sync_recently_changed_repos_async(since = 10.minutes)
+    host_instance.recently_changed_repo_names(since).each do |full_name|
+      sync_repository_async(full_name)
+    end
+  end 
 
   def download_tags(repository)
     host_instance.download_tags(repository)

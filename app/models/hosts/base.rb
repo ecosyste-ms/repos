@@ -29,6 +29,7 @@ module Hosts
         :pull_requests_enabled,
         :scm,
         :status,
+        :source_name,
         # :allow_forking,
         # :has_projects,
         # :has_downloads,

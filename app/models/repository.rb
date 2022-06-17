@@ -24,7 +24,14 @@ class Repository < ApplicationRecord
   def to_param
     full_name
   end
-  
+
+  def sync
+    host.sync_repository(full_name)
+  end
+
+  def sync_async
+    host.sync_repository_async(full_name)
+  end
 
   def html_url
     host.html_url(self)
@@ -34,19 +41,10 @@ class Repository < ApplicationRecord
     host.avatar_url(self, size)
   end
 
-  def blob_url(sha)
-    host.blob_url(self, sha)
+  def blob_url(sha = nil)
+    sha ||= default_branch
+    host.blob_url(self, sha = nil)
   end
-
-  # def file_url(filename, sha = nil)
-  #   sha ||= default_branch
-  #   "#{blob_url(sha)}/#{filename}"
-  # end
-
-  # def new_file_url(filename, branch = nil)
-  #   branch ||= default_branch
-  #   "#{html_url}/new/#{branch}?filename=#{filename}"
-  # end
 
   def download_manifests
     file_list = get_file_list
@@ -128,7 +126,6 @@ class Repository < ApplicationRecord
   #   self.contributing_path    = file_list.find{|file| file.match(/^(docs\/)?(.github\/)?CONTRIBUTING/i) }
   #   self.license_path         = file_list.find{|file| file.match(/^LICENSE|^COPYING|^MIT-LICENSE/i) }
   #   self.code_of_conduct_path = file_list.find{|file| file.match(/^(docs\/)?(.github\/)?CODE[-_]OF[-_]CONDUCT/i) }
-  #   self.sol_files            = file_list.any?{|file| file.match(/\.sol$/i) }
 
   #   save if self.changed?
   # end

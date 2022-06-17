@@ -56,12 +56,19 @@ module Hosts
 
       if id_or_name.is_a?(String)
         hash = attempt_load_from_timeline(id_or_name)
+        puts "loaded #{id_or_name} from timeline" if hash.present?
       end
 
       if hash.nil?
         hash = api_client(token).repo(id_or_name, accept: 'application/vnd.github.drax-preview+json,application/vnd.github.mercy-preview+json').to_hash.with_indifferent_access
       end
 
+      map_repository_data(hash)
+    rescue *IGNORABLE_EXCEPTIONS
+      nil
+    end
+
+    def map_repository_data(hash)
       hash[:scm] = 'git'
       hash[:uuid] = hash[:id]
       hash[:license] = hash[:license][:key] if hash[:license]
@@ -73,8 +80,6 @@ module Hosts
       end
 
       return hash.slice(*repository_columns)
-    rescue *IGNORABLE_EXCEPTIONS
-      nil
     end
 
     def get_file_list(repository, token = nil)
@@ -131,13 +136,13 @@ module Hosts
       repository.tags.create(tag_hash)
     end
 
-    def recently_changed_repo_names
+    def recently_changed_repo_names(since = 1.hour)
       names = []
 
       first_response = load_repo_names
       return if first_response.blank?
       most_recent = first_response["newest"]["created_at"]
-      target_time = Time.parse(most_recent) - 1.hour
+      target_time = Time.parse(most_recent) - since
       next_id = first_response['oldest']['id']
 
       next_response = load_repo_names(next_id)
@@ -158,7 +163,11 @@ module Hosts
       url = "https://timeline.ecosyste.ms/api/v1/events/repository_names"
       url = "#{url}?before=#{id}" if id.present?
       begin
-        Oj.load(Faraday.get(url).body)
+        resp = Faraday.get(url) do |req|
+          req.options.timeout = 5
+        end
+
+        Oj.load(resp.body)
       rescue Faraday::Error
         {}
       end
