@@ -10,9 +10,11 @@
         <p class="card-subtitle mb-2 text-muted">
           <%= repository.description %>
         </p>
+        <% if repository.last_synced_at %>
         <p class="card-subtitle mb-2 text-muted">
           <i><small>Last synced: <%= repository.last_synced_at %></small></i>
         </p>
+        <% end %>
       </div>
       <div class="flex-shrink-0">
         <img src="<%= repository.avatar_url(40) %>" class="rounded" height='40' width='40' onerror="this.style.display='none'">
