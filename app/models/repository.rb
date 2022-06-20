@@ -25,8 +25,12 @@ class Repository < ApplicationRecord
     full_name
   end
 
+  def id_or_name
+    uuid || full_name
+  end
+
   def sync
-    host.sync_repository(full_name)
+    host.host_instance.update_from_host(self)
   end
 
   def sync_async

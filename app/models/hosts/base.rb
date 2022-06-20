@@ -87,7 +87,7 @@ module Hosts
     end
 
     def download_fork_source(token = nil)
-      self.class.fetch_repo(repository.source_name, token) if download_fork_source?
+      self.class.fetch_repository(repository.source_name, token) if download_fork_source?
     end
 
     def download_fork_source?
@@ -113,28 +113,24 @@ module Hosts
       RepositoryOwner.const_get(repository.host_type.capitalize)
     end
 
-    def update_from_host(token = nil)
+    def update_from_host(repository, token = nil)
       begin
-        r = self.class.fetch_repo(repository.id_or_name)
+        r = self.fetch_repository(repository.id_or_name)
         return unless r.present?
         repository.uuid = r[:id] unless repository.uuid.to_s == r[:id].to_s
         if repository.full_name.downcase != r[:full_name].downcase
-          clash = Repository.host(r[:host_type]).where('lower(full_name) = ?', r[:full_name].downcase).first
-          if clash && (!clash.repository_host.update_from_host(token) || clash.status == "Removed")
+          clash = repository.host.repositories.where('lower(full_name) = ?', r[:full_name].downcase).first
+          if clash && (!clash.host.host_instance.update_from_host(clash) || clash.status == "Removed")
             clash.destroy
           end
           repository.full_name = r[:full_name]
         end
-        repository.license = Project.format_license(r[:license][:key]) if r[:license]
-        if r[:fork]
-          repository.source_name = r[:parent][:full_name]
-        else
-          repository.source_name = nil
-        end
-        repository.assign_attributes r.slice(*Repository::API_FIELDS)
+        
+        repository.assign_attributes r
         repository.save! if repository.changed?
+        repository.update_column(:last_synced_at, Time.now)
       rescue self.class.api_missing_error_class
-        repository.update_attribute(:status, 'Removed') if !repository.private?
+        repository.destroy
       rescue *self.class::IGNORABLE_EXCEPTIONS
         nil
       end

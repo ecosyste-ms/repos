@@ -4,7 +4,7 @@ module Hosts
       Octokit::Unauthorized,
       Octokit::InvalidRepository,
       Octokit::RepositoryUnavailable,
-      Octokit::NotFound,
+      # Octokit::NotFound,
       Octokit::Conflict,
       Octokit::Forbidden,
       Octokit::InternalServerError,
