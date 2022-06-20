@@ -87,6 +87,8 @@ end
 def load_repos_from_timeline(id = nil)
   host = Host.find_by_name ('GitHub')
 
+  id = REDIS.get('last_timeline_id') if id.nil?
+
   url = "https://timeline.ecosyste.ms/api/v1/events?event_type=PullRequestEvent"
   url = url + "&before=#{id}" if id
 
@@ -128,6 +130,7 @@ def load_repos_from_timeline(id = nil)
   if events.any?
     next_id = events.last['id']
     puts "next id: #{next_id}" 
+    REDIS.set('last_timeline_id', next_id)
     load_repos_from_timeline(next_id)
   end
 end
