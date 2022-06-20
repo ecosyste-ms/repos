@@ -17,20 +17,25 @@ class Host < ApplicationRecord
   end
 
   def sync_repository(full_name)
-    repo_hash = host_instance.fetch_repository(full_name)
-    return if repo_hash.blank?
+    repo = repositories.find_by('lower(full_name) = ?', full_name.downcase)
 
-    ActiveRecord::Base.transaction do
-      repo = repositories.find_by(uuid: repo_hash[:uuid])
-      repo = repositories.find_by('lower(full_name) = ?', repo_hash[:full_name].downcase) if repo.nil?
-      repo = repositories.new(uuid: repo_hash[:id], full_name: repo_hash[:full_name]) if repo.nil?
-      repo.full_name = repo_hash[:full_name] if repo.full_name.downcase != repo_hash[:full_name].downcase
+    if repo
+      repo.sync
+    else
+      repo_hash = host_instance.fetch_repository(full_name)
+      return if repo_hash.blank?
 
-      repo.assign_attributes(repo_hash)
-      repo.last_synced_at = Time.now
-      repo.save
-      # TODO sync extra things if stuff changed
-      repo
+      ActiveRecord::Base.transaction do
+        repo = repositories.find_by(uuid: repo_hash[:uuid])
+        repo = repositories.new(uuid: repo_hash[:id], full_name: repo_hash[:full_name]) if repo.nil?
+        repo.full_name = repo_hash[:full_name] if repo.full_name.downcase != repo_hash[:full_name].downcase
+
+        repo.assign_attributes(repo_hash)
+        repo.last_synced_at = Time.now
+        repo.save
+        # TODO sync extra things if stuff changed
+        repo
+      end
     end
   rescue ActiveRecord::RecordNotUnique
     nil
