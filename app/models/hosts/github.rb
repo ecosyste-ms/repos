@@ -9,7 +9,6 @@ module Hosts
       Octokit::Forbidden,
       Octokit::InternalServerError,
       Octokit::BadGateway,
-      Octokit::ClientError,
       Octokit::UnavailableForLegalReasons
     ]
 
