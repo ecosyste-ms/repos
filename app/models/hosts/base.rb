@@ -82,6 +82,10 @@ module Hosts
       nil
     end
 
+    def recently_changed_repo_names(since=10.minutes)
+      []
+    end
+
     def avatar_url(size = 60)
       raise NotImplementedError
     end
