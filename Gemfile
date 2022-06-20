@@ -41,6 +41,7 @@ gem "sanitize-url"
 gem "toml-rb"
 gem "gitlab"
 gem "octokit"
+gem "bugsnag"
 
 group :development, :test do
   gem "debug", platforms: %i[ mri mingw x64_mingw ]
