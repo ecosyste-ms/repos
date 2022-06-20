@@ -192,6 +192,8 @@ module Hosts
       events = events_for_repo(full_name, event_type: 'PullRequestEvent', per_page: 1)
       return nil if events.blank?
       events.first['payload']['pull_request']['base']['repo'].to_hash.with_indifferent_access
+    rescue
+      nil
     end
 
     private

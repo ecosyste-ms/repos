@@ -80,7 +80,7 @@ namespace :import do
   task github_from_timeline: :environment do
     ActiveRecord::Base.logger = Logger.new STDOUT
     
-    load_repos_from_timeline # TODO allow parsing an ID via CLI
+    load_repos_from_timeline(ENV['BEFORE'])
   end
 end
 
