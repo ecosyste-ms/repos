@@ -2,7 +2,7 @@ namespace :repositories do
   desc 'sync least recently synced repos'
   task sync_least_recent: :environment do 
     Host.all.each do |host|
-      host.repositories.order('last_synced_at DESC').limit(500).each(&:sync_async)
+      host.repositories.order('last_synced_at DESC').limit(1000).each(&:sync_async)
     end
   end
 
