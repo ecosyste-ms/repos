@@ -76,8 +76,6 @@ class Repository < ApplicationRecord
     if json['status'] == 'complete'
       new_manifests = json['results'].to_h.with_indifferent_access['manifests']
       
-      pp new_manifests
-      
       if new_manifests.blank?
         manifests.each(&:destroy)
         return
@@ -86,6 +84,8 @@ class Repository < ApplicationRecord
       new_manifests.each {|m| sync_manifest(m) }
   
       delete_old_manifests(new_manifests)
+
+      update_column(:dependencies_parsed_at, Time.now)
     end
   end
 
@@ -102,6 +102,8 @@ class Repository < ApplicationRecord
     new_manifests.each {|m| sync_manifest(m) }
 
     delete_old_manifests(new_manifests)
+
+    update_column(:dependencies_parsed_at, Time.now)
   end
 
   def parse_manifests(file_list)

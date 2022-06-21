@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2022_06_20_141849) do
+ActiveRecord::Schema[7.0].define(version: 2022_06_21_142115) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_stat_statements"
   enable_extension "plpgsql"
@@ -84,7 +84,9 @@ ActiveRecord::Schema[7.0].define(version: 2022_06_20_141849) do
     t.json "metadata", default: {}
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.datetime "dependencies_parsed_at"
     t.index "host_id, lower((full_name)::text)", name: "index_repositories_on_host_id_lower_full_name", unique: true
+    t.index ["dependencies_parsed_at"], name: "index_repositories_on_dependencies_parsed_at"
     t.index ["host_id", "uuid"], name: "index_repositories_on_host_id_uuid", unique: true
     t.index ["last_synced_at"], name: "index_repositories_on_last_synced_at"
   end
