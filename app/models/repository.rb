@@ -54,6 +54,10 @@ class Repository < ApplicationRecord
     host.blob_url(self, sha = nil)
   end
 
+  def parse_dependencies_async
+    ParseDependenciesWorker.perform_async(self.id)
+  end
+
   def parse_dependencies
     connection = Faraday.new(url: "https://parser.ecosyste.ms") do |faraday|
       faraday.use Faraday::FollowRedirects::Middleware
