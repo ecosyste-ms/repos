@@ -65,7 +65,7 @@ class Repository < ApplicationRecord
       faraday.adapter Faraday.default_adapter
     end
     
-    res = connection.post("/api/v1/jobs?url=#{download_url}")
+    res = connection.post("/api/v1/jobs?url=#{CGI.escape(download_url)}")
     url = res.env.url.to_s
     p url
     while
