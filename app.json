@@ -11,6 +11,6 @@
     {
       "command": "bundle exec rake repositories:parse_missing_dependencies",
       "schedule": "*/15 * * * *"
-    },
+    }
   ]
 }
