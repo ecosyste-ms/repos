@@ -138,7 +138,7 @@ module Hosts
         page = Nokogiri::HTML(r.body)
         names = page.css('a.project').map{|project| project.attributes["href"].value[1..-1] }
         names.each do |name|
-          if r = Repository.host('GitLab').find_by_full_name(name)
+          if r = Repository.find_by('lower(full_name) = ?', name.downcase)
             RepositoryDownloadWorker.perform_async(r.id)
           else
             CreateRepositoryWorker.perform_async('GitLab', name)

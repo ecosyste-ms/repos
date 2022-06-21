@@ -71,6 +71,10 @@ class Host < ApplicationRecord
     host_instance.html_url(repository)
   end
 
+  def download_url(repository, branch = nil)
+    host_instance.download_url(repository, branch)
+  end
+
   def avatar_url(repository, size)
     host_instance.avatar_url(repository, size)
   end

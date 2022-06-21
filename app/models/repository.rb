@@ -41,6 +41,10 @@ class Repository < ApplicationRecord
     host.html_url(self)
   end
 
+  def download_url(branch = default_branch)
+    host.download_url(self, branch)
+  end
+
   def avatar_url(size)
     host.avatar_url(self, size)
   end
@@ -48,6 +52,41 @@ class Repository < ApplicationRecord
   def blob_url(sha = nil)
     sha ||= default_branch
     host.blob_url(self, sha = nil)
+  end
+
+  def parse_dependencies
+    connection = Faraday.new(url: "https://parser.ecosyste.ms") do |faraday|
+      faraday.use Faraday::FollowRedirects::Middleware
+    
+      faraday.adapter Faraday.default_adapter
+    end
+    
+    res = connection.post("/api/v1/jobs?url=#{download_url}")
+    url = res.env.url.to_s
+    p url
+    while
+      json = JSON.parse(res.body)
+      status = json['status']
+      break if ['complete', 'error'].include?(status)
+      puts 'waiting'
+      sleep 1
+      res = Faraday.get(url)
+    end
+
+    if json['status'] == 'complete'
+      new_manifests = json['results'].to_h.with_indifferent_access['manifests']
+      
+      pp new_manifests
+      
+      if new_manifests.blank?
+        manifests.each(&:destroy)
+        return
+      end
+  
+      new_manifests.each {|m| sync_manifest(m) }
+  
+      delete_old_manifests(new_manifests)
+    end
   end
 
   def download_manifests
@@ -83,7 +122,7 @@ class Repository < ApplicationRecord
   end
 
   def sync_manifest(m)
-    args = {ecosystem: m[:platform], kind: m[:kind], filepath: m[:path], sha: m[:sha]}
+    args = {ecosystem: (m[:platform] || m[:ecosystem]), kind: m[:kind], filepath: m[:path], sha: m[:sha]}
 
     unless manifests.find_by(args)
       return unless m[:dependencies].present? && m[:dependencies].any?
@@ -113,9 +152,8 @@ class Repository < ApplicationRecord
 
   def delete_old_manifests(new_manifests)
     existing_manifests = manifests.map{|m| [m.ecosystem, m.filepath] }
-    to_be_removed = existing_manifests - new_manifests.map{|m| [m[:platform], m[:path]] }
+    to_be_removed = existing_manifests - new_manifests.map{|m| [(m[:platform] || m[:ecosystem]), m[:path]] }
     to_be_removed.each do |m|
-      
       manifests.where(ecosystem: m[0], filepath: m[1]).each(&:destroy)
     end
     manifests.where.not(id: manifests.latest.map(&:id)).each(&:destroy)
