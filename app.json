@@ -7,6 +7,10 @@
     {
       "command": "bundle exec rake repositories:sync_recently_active",
       "schedule": "5,15,25,35,45,55 * * * *"
-    }
+    },
+    {
+      "command": "bundle exec rake repositories:parse_missing_dependencies",
+      "schedule": "*/15 * * * *"
+    },
   ]
 }

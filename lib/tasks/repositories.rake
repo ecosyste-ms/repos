@@ -12,4 +12,9 @@ namespace :repositories do
       host.sync_recently_changed_repos_async
     end
   end
+
+  desc 'parse missing dependencies'
+  task parse_missing_dependencies: :environment do 
+    Repository.where('last_synced_at > ?', 1.week.ago).where(dependencies_parsed_at: nil).limit(1000).each(&:parse_dependencies_async)
+  end
 end
