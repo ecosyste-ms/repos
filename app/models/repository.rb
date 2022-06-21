@@ -189,4 +189,32 @@ class Repository < ApplicationRecord
   def download_tags
     host.download_tags(self)
   end
+
+  def archive_list
+    begin
+      Oj.load(Faraday.get(archive_list_url).body)
+    rescue
+      []
+    end
+  end
+
+  def archive_contents(path)
+    begin
+      Oj.load(Faraday.get(archive_contents_url(path)).body)
+    rescue
+      {}
+    end
+  end
+
+  def archive_list_url
+    "https://archives.ecosyste.ms/api/v1/archives/list?url=#{CGI.escape(download_url)}"
+  end
+
+  def archive_contents_url(path)
+    "https://archives.ecosyste.ms/api/v1/archives/contents?url=#{CGI.escape(download_url)}&path=#{path}"
+  end
+
+  def archive_basename
+    default_branch
+  end
 end

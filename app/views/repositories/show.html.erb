@@ -6,34 +6,101 @@
   <p><%= @repository.description %></p>
 
   <div class="row">
-  <div class="col-md-4">
-    <p><small class='text-muted'>
-      Stars: <%= number_with_delimiter @repository.stargazers_count %><br/>
-      Forks: <%= number_with_delimiter @repository.forks_count %><br/>
-      Open Issues: <%= number_with_delimiter @repository.open_issues_count %><br/>
-    </small></p>
+    <div class="col-md-4">
+      <p><small class='text-muted'>
+        Stars: <%= number_with_delimiter @repository.stargazers_count %><br/>
+        Forks: <%= number_with_delimiter @repository.forks_count %><br/>
+        Open Issues: <%= number_with_delimiter @repository.open_issues_count %><br/>
+      </small></p>
+    </div>
+    <div class="col-md-4">
+      <p><small class='text-muted'>
+        License: <%= @repository.license %><br/>
+        Language: <%= @repository.language %><br/>
+        Repo Size: <%= number_to_human_size @repository.size*1000 %><br/>
+        Dependencies: <%= number_with_delimiter @repository.dependency_ids.length %>
+      </small></p>
+    </div>
+    <div class="col-md-4">
+      <p><small class='text-muted'>
+        Created: <%= distance_of_time_in_words_to_now @repository.created_at %> ago<br/>
+        Updated: <%= distance_of_time_in_words_to_now @repository.updated_at %> ago<br/>
+        Last pushed: <%= distance_of_time_in_words_to_now @repository.pushed_at %> ago<br/>
+        <% if @repository.last_synced_at %>
+          Last synced: <%= distance_of_time_in_words_to_now @repository.last_synced_at %> ago<br/>
+        <% end %>
+      </small></p>
+    </div>
   </div>
-  <div class="col-md-4">
-    <p><small class='text-muted'>
-      License: <%= @repository.license %><br/>
-      Language: <%= @repository.language %><br/>
-      Repo Size: <%= number_to_human_size @repository.size*1000 %><br/>
-      Dependencies: <%= number_with_delimiter @repository.dependency_ids.length %>
-    </small></p>
-  </div>
-  <div class="col-md-4">
-    <p><small class='text-muted'>
-      Created: <%= distance_of_time_in_words_to_now @repository.created_at %> ago<br/>
-      Updated: <%= distance_of_time_in_words_to_now @repository.updated_at %> ago<br/>
-      Last pushed: <%= distance_of_time_in_words_to_now @repository.pushed_at %> ago<br/>
-      <% if @repository.last_synced_at %>
-        Last synced: <%= distance_of_time_in_words_to_now @repository.last_synced_at %> ago<br/>
-      <% end %>
-    </small></p>
-  </div>
-</div>
+
+  <h5>Files</h5>
+  <% if params[:path].present? %>
+    <% contents = @repository.archive_contents(params[:path]) %>
+    <% if contents["directory"] %>
+      <div class="card">
+        <div class="card-header">
+          <%= link_to @repository.archive_basename, url_for(path:nil) %>
+          <% parts = params[:path].split('/') %>
+          <% parts.each_with_index do |part, i| %>
+            / <% if i == parts.length-1 %>
+              <%= part %>
+            <% else %>
+              <%= link_to part, url_for(path: parts[0..i].join('/')) %>
+            <% end %>
+          <% end %>
+        </div>
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item">
+            <% parent = params[:path].split('/')[0..-2].join('/') %>
+            <% parent = nil if parent == params[:path] %>
+            <%= link_to '..', url_for(path: parent) %>
+          </li>
+        
+          <% contents["contents"].each do |path| %>
+            <% next if path.split('/').length > 1 %>
+            <li class="list-group-item">
+              <%= link_to path, url_for(path: [params[:path],path].join('/')) %>
+            </li>
+          <% end %>
+        </ul>
+      </div>
+    <% else %>
+      <div class="card mb-3">
+        <div class="card-header">
+          <%= link_to @repository.archive_basename, url_for(path:nil) %>
+          <% parts = params[:path].split('/') %>
+          <% parts.each_with_index do |part, i| %>
+            / <% if i == parts.length-1 %>
+              <%= part %>
+            <% else %>
+              <%= link_to part, url_for(path: parts[0..i].join('/')) %>
+            <% end %>
+          <% end %>
+        </div>
+        <div class="card-body">
+          <pre><code><%= contents['contents'] %></code></pre>
+        </div>
+      </div>
+
+    <% end %>
+  <% else%>
+    <div class="card">
+      <div class="card-header">
+        <%= @repository.archive_basename %>
+      </div>
+      <ul class="list-group list-group-flush">
+        <% @repository.archive_list.each do |path| %>
+          <% next if path.split('/').length > 1 %>
+          <li class="list-group-item">
+            <%= link_to path, url_for(path: path) %>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
   
   <% if @manifests.present? %>
+    <h5 class='mt-3'>Dependencies</h5>
     <% @manifests.each do |manifest| %>
       <div class="card mb-3">
         <div class="card-header">

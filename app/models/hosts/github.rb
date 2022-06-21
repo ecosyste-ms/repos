@@ -53,7 +53,7 @@ module Hosts
     def download_url(repository, branch = nil)
       branch = repository.default_branch if branch.nil?
       # TODO allow passing a commit instead of branch/tag (no refs/heads/master)
-      "https://codeload.github.com/#{repository.full_name}/zip/refs/heads/#{branch}"
+      "https://codeload.github.com/#{repository.full_name}/tar.gz/refs/heads/#{branch}"
     end
 
     def watchers_url
