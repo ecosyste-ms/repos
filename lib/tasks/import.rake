@@ -78,8 +78,6 @@ namespace :import do
 
   desc 'import github repositories from timeline.ecosyste.ms api'
   task github_from_timeline: :environment do
-    ActiveRecord::Base.logger = Logger.new STDOUT
-    
     load_repos_from_timeline(ENV['BEFORE'])
   end
 end
