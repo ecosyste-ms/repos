@@ -114,12 +114,10 @@ def load_repos_from_timeline(id = nil)
     repo = host.repositories.find_by(uuid: repo_hash[:uuid])
     repo = host.repositories.find_by('lower(full_name) = ?', repo_hash[:full_name].downcase) if repo.nil?
 
-    # TODO don't skip if repo && e['created_at'] > repo.last_synced_at
+    next if repo && repo.last_synced_at && e['created_at'] < repo.last_synced_at
+    next if repo && repo.full_name.downcase != repo_hash[:full_name].downcase
 
-    next if repo.present? # don't reimport repos with older data
-
-    repo = host.repositories.new(uuid: repo_hash[:id], full_name: repo_hash[:full_name]) 
-    repo.full_name = repo_hash[:full_name] if repo.full_name.downcase != repo_hash[:full_name].downcase
+    repo = host.repositories.new(uuid: repo_hash[:id], full_name: repo_hash[:full_name]) if repo.nil?
 
     repo.assign_attributes(repo_hash)
     repo.last_synced_at = e['created_at']
