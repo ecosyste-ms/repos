@@ -104,7 +104,6 @@ def load_repos_from_timeline(id = nil)
   return unless events.present?
 
   events.each do |e| 
-    puts e['repository']
     hash = e['payload']['pull_request']['base']['repo'].to_hash.with_indifferent_access
     
     repo_hash = host.host_instance.map_repository_data(hash)
@@ -115,12 +114,16 @@ def load_repos_from_timeline(id = nil)
     next if repo && repo.last_synced_at && e['created_at'] < repo.last_synced_at
     next if repo && repo.full_name.downcase != repo_hash[:full_name].downcase
 
-    repo = host.repositories.new(uuid: repo_hash[:id], full_name: repo_hash[:full_name]) if repo.nil?
+    if repo.nil?
+      repo = host.repositories.new(uuid: repo_hash[:id], full_name: repo_hash[:full_name])
+      puts "new repo: #{repo.full_name}"
+    else
+      puts "update:   #{repo.full_name}"
+    end
 
     repo.assign_attributes(repo_hash)
     repo.last_synced_at = e['created_at']
     repo.save
-    puts "new repo: #{repo.full_name}"
   end
 
   if events.any?
