@@ -90,4 +90,55 @@ class Host < ApplicationRecord
   def host_instance
     host_class.new(self)
   end
+
+  def import_github_repos_from_timeline(id = nil)
+    return unless kind == 'github'
+    id = REDIS.get('last_timeline_id') if id.nil?
+  
+    url = "https://timeline.ecosyste.ms/api/v1/events?per_page=1000&event_type=PullRequestEvent"
+    url = url + "&before=#{id}" if id
+  
+    begin
+      puts "loading #{url}"
+      resp = Faraday.get(url) do |req|
+        req.options.timeout = 30
+      end
+  
+      events = Oj.load(resp.body)
+    rescue Faraday::Error
+      events = nil
+    end
+  
+    return unless events.present?
+  
+    events.each do |e| 
+      hash = e['payload']['pull_request']['base']['repo'].to_hash.with_indifferent_access
+      
+      repo_hash = host_instance.map_repository_data(hash)
+  
+      repo = repositories.find_by(uuid: repo_hash[:uuid])
+      repo = repositories.find_by('lower(full_name) = ?', repo_hash[:full_name].downcase) if repo.nil?
+  
+      next if repo && repo.last_synced_at && e['created_at'] < repo.last_synced_at
+      next if repo && repo.full_name.downcase != repo_hash[:full_name].downcase
+  
+      if repo.nil?
+        repo = repositories.new(uuid: repo_hash[:id], full_name: repo_hash[:full_name])
+        puts "new repo: #{repo.full_name}"
+      else
+        puts "update:   #{repo.full_name}"
+      end
+  
+      repo.assign_attributes(repo_hash)
+      repo.last_synced_at = e['created_at']
+      repo.save
+    end
+  
+    if events.any?
+      next_id = events.last['id']
+      puts "next id: #{next_id}" 
+      REDIS.set('last_timeline_id', next_id)
+      import_github_repos_from_timeline(next_id)
+    end
+  end
 end
