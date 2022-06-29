@@ -3,6 +3,6 @@ class ParseDependenciesWorker
   sidekiq_options lock: :until_executed, queue: 'dependencies'
 
   def perform(repository_id)
-    Repository.find_by_id(repository_id).try(:parse_dependencies)
+    Repository.includes(manifests: :dependencies).find_by_id(repository_id).try(:parse_dependencies)
   end
 end
