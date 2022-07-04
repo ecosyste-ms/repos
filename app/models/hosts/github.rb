@@ -3,7 +3,7 @@ module Hosts
     IGNORABLE_EXCEPTIONS = [
       Octokit::Unauthorized,
       Octokit::InvalidRepository,
-      Octokit::RepositoryUnavailable,
+      # Octokit::RepositoryUnavailable,
       # Octokit::NotFound,
       Octokit::Conflict,
       Octokit::Forbidden,
