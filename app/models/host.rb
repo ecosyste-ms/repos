@@ -37,7 +37,7 @@ class Host < ApplicationRecord
         repo
       end
     end
-  rescue host_class.api_missing_error_class
+  rescue *Array(host_class.api_missing_error_class)
     nil
   rescue ActiveRecord::RecordNotUnique
     nil
