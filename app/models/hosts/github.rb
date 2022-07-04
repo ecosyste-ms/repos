@@ -6,14 +6,17 @@ module Hosts
       # Octokit::RepositoryUnavailable,
       # Octokit::NotFound,
       Octokit::Conflict,
-      Octokit::Forbidden,
+      # Octokit::Forbidden,
       Octokit::InternalServerError,
       Octokit::BadGateway,
       Octokit::UnavailableForLegalReasons
     ]
 
     def self.api_missing_error_class
-      Octokit::NotFound
+      [
+        Octokit::NotFound,
+        Octokit::RepositoryUnavailable
+      ]
     end
 
     def token_set_key
@@ -95,7 +98,8 @@ module Hosts
       # end
 
       map_repository_data(hash)
-    rescue *IGNORABLE_EXCEPTIONS
+    rescue *IGNORABLE_EXCEPTIONS => e
+      p e
       nil
     end
 
