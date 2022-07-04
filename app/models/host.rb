@@ -4,6 +4,10 @@ class Host < ApplicationRecord
 
   has_many :repositories
 
+  def update_repository_counts
+    update_column(:repositories_count, repositories.count)
+  end
+
   def to_s
     name
   end
