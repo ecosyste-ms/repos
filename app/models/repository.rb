@@ -1,6 +1,6 @@
 class Repository < ApplicationRecord
   belongs_to :host
-  counter_culture :host
+  # counter_culture :host
   has_many :manifests, dependent: :destroy
   has_many :dependencies
   has_many :tags
