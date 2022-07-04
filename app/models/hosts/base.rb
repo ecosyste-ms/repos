@@ -131,8 +131,11 @@ module Hosts
         end
         
         repository.assign_attributes r
-        repository.save! if repository.changed?
-        repository.update_column(:last_synced_at, Time.now)
+        if repository.changed?
+          repository.last_synced_at = Time.now
+          repository.save! 
+        end
+        
       rescue *Array(self.class.api_missing_error_class)
         repository.destroy
       rescue *self.class::IGNORABLE_EXCEPTIONS
