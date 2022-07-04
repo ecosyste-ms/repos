@@ -9,13 +9,14 @@ module Hosts
       # Octokit::Forbidden,
       Octokit::InternalServerError,
       Octokit::BadGateway,
-      Octokit::UnavailableForLegalReasons
+      # Octokit::UnavailableForLegalReasons
     ]
 
     def self.api_missing_error_class
       [
         Octokit::NotFound,
-        Octokit::RepositoryUnavailable
+        Octokit::RepositoryUnavailable,
+        Octokit::UnavailableForLegalReasons
       ]
     end
 
