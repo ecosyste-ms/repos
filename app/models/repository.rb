@@ -82,12 +82,10 @@ class Repository < ApplicationRecord
       
       if new_manifests.blank?
         manifests.each(&:destroy)
-        return
+      else
+        new_manifests.each {|m| sync_manifest(m) }
+        delete_old_manifests(new_manifests)
       end
-  
-      new_manifests.each {|m| sync_manifest(m) }
-  
-      delete_old_manifests(new_manifests)
 
       update_column(:dependencies_parsed_at, Time.now)
     end
