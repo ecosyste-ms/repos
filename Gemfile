@@ -11,20 +11,16 @@ gem "jbuilder"
 gem "tzinfo-data", platforms: %i[ mingw mswin x64_mingw jruby ]
 gem "bootsnap", require: false
 gem "sassc-rails"
-gem "counter_culture"
 gem "faraday"
 gem "faraday-retry"
 gem "faraday-gzip"
 gem "faraday-follow_redirects"
 gem "nokogiri"
 gem "oj"
-gem "ox"
-gem "simple-rss"
 gem "hiredis"
 gem "redis", require: ["redis", "redis/connection/hiredis"]
 gem "sidekiq"
 gem "sidekiq-unique-jobs"
-gem "bibliothecary"
 gem "pagy"
 gem "pghero"
 gem "pg_query"
@@ -34,11 +30,8 @@ gem "rack-attack-rate-limit", require: "rack/attack/rate-limit"
 gem 'rack-cors'
 gem 'rswag-api'
 gem 'rswag-ui'
-gem 'spdx', '2.0.12'
 gem "semantic"
 gem "semantic_range"
-gem "sanitize-url"
-gem "toml-rb"
 gem "gitlab"
 gem "octokit"
 gem "bugsnag"
