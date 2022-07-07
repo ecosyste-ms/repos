@@ -60,10 +60,12 @@ class Repository < ApplicationRecord
   end
 
   def parse_dependencies_async
+    return if dependencies_parsed_at.present? # temp whilst backfilling db
     ParseDependenciesWorker.perform_async(self.id)
   end
 
   def parse_dependencies
+    return if dependencies_parsed_at.present? # temp whilst backfilling db
     connection = Faraday.new(url: "https://parser.ecosyste.ms") do |faraday|
       faraday.use Faraday::FollowRedirects::Middleware
     
