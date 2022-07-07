@@ -15,6 +15,6 @@ namespace :repositories do
 
   desc 'parse missing dependencies'
   task parse_missing_dependencies: :environment do 
-    Repository.where('last_synced_at > ?', 1.week.ago).where(fork: false).where(dependencies_parsed_at: nil).limit(1000).each(&:parse_dependencies_async)
+    Repository.parse_dependencies_async
   end
 end

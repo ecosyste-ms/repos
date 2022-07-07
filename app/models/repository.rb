@@ -17,6 +17,11 @@ class Repository < ApplicationRecord
   scope :with_manifests, -> { joins(:manifests).group(:id) }
   scope :without_manifests, -> { includes(:manifests).where(manifests: {repository_id: nil}) }
 
+  def self.parse_dependencies_async
+    Repository.where('last_synced_at > ?', 1.week.ago).where(fork: false).where.not(dependency_job_id: nil).limit(1000).each(&:parse_dependencies_async)
+    Repository.where('last_synced_at > ?', 1.week.ago).where(fork: false).where(dependencies_parsed_at: nil, dependency_job_id: nil).limit(1000).each(&:parse_dependencies_async)
+  end
+
   def to_s
     full_name
   end
@@ -64,65 +69,34 @@ class Repository < ApplicationRecord
     
       faraday.adapter Faraday.default_adapter
     end
+
+    if dependency_job_id
+      res = connection.get("/api/v1/jobs/#{dependency_job_id}")
+    else  
+      res = connection.post("/api/v1/jobs?url=#{CGI.escape(download_url)}")
+    end
     
-    res = connection.post("/api/v1/jobs?url=#{CGI.escape(download_url)}")
-    url = res.env.url.to_s
-    p url
-    while
-      json = JSON.parse(res.body)
-      status = json['status']
-      break if ['complete', 'error'].include?(status)
-      puts 'waiting'
-      sleep 1
-      res = Faraday.get(url)
-    end
-
-    if json['status'] == 'complete'
-      new_manifests = json['results'].to_h.with_indifferent_access['manifests']
-      
-      if new_manifests.blank?
-        manifests.each(&:destroy)
-      else
-        new_manifests.each {|m| sync_manifest(m) }
-        delete_old_manifests(new_manifests)
-      end
-
-      update_column(:dependencies_parsed_at, Time.now)
-    end
+    json = Oj.load(res.body)
+    record_dependency_parsing(json)
   end
 
-  def download_manifests
-    file_list = get_file_list
-    return if file_list.blank?
-    new_manifests = parse_manifests(file_list)
-
-    if new_manifests.blank?
-      manifests.each(&:destroy)
-      return
-    end
-
-    new_manifests.each {|m| sync_manifest(m) }
-
-    delete_old_manifests(new_manifests)
-
-    update_column(:dependencies_parsed_at, Time.now)
-  end
-
-  def parse_manifests(file_list)
-    manifest_paths = Bibliothecary.identify_manifests(file_list)
-
-    manifest_paths.map do |manifest_path|
-      file = get_file_contents(manifest_path)
-      if file.present? && file[:content].present?
-        begin
-          manifest = Bibliothecary.analyse_file(manifest_path, file[:content]).first
-          manifest.merge!(sha: file[:sha]) if manifest
-          manifest
-        rescue
-          nil
+  def record_dependency_parsing(json)
+    if ['complete', 'error'].include?(json['status'])
+      if json['status'] == 'complete'
+        new_manifests = json['results'].to_h.with_indifferent_access['manifests']
+        
+        if new_manifests.blank?
+          manifests.each(&:destroy)
+        else
+          new_manifests.each {|m| sync_manifest(m) }
+          delete_old_manifests(new_manifests)
         end
       end
-    end.reject(&:blank?)
+
+      update_columns(dependencies_parsed_at: Time.now, dependency_job_id: nil)
+    else
+      update_column(:dependency_job_id, json["id"]) if dependency_job_id != json["id"]
+    end
   end
 
   def sync_manifest(m)
@@ -162,19 +136,6 @@ class Repository < ApplicationRecord
     end
     manifests.where.not(id: manifests.latest.map(&:id)).each(&:destroy)
   end
-
-
-  # def update_file_list
-  #   file_list = get_file_list
-  #   return if file_list.nil?
-  #   self.readme_path          = file_list.find{|file| file.match(/^README/i) }
-  #   self.changelog_path       = file_list.find{|file| file.match(/^CHANGE|^HISTORY/i) }
-  #   self.contributing_path    = file_list.find{|file| file.match(/^(docs\/)?(.github\/)?CONTRIBUTING/i) }
-  #   self.license_path         = file_list.find{|file| file.match(/^LICENSE|^COPYING|^MIT-LICENSE/i) }
-  #   self.code_of_conduct_path = file_list.find{|file| file.match(/^(docs\/)?(.github\/)?CODE[-_]OF[-_]CONDUCT/i) }
-
-  #   save if self.changed?
-  # end
 
   def get_file_contents(path)
     host.get_file_contents(self, path)
