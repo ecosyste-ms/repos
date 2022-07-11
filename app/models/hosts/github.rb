@@ -115,6 +115,8 @@ module Hosts
         hash[:source_name] = hash[:parent][:full_name]
       end
 
+      hash = hash.transform_values{|v| v.is_a?(String) ? v.gsub(/\000/, '') : v }
+
       return hash.slice(*repository_columns)
     end
 
