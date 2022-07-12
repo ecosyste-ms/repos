@@ -19,7 +19,11 @@ class Repository < ApplicationRecord
 
   def self.parse_dependencies_async
     Repository.where.not(dependency_job_id: nil).limit(1000).each(&:parse_dependencies_async)
-    Repository.where('last_synced_at > ?', 1.week.ago).where(fork: false).where(dependencies_parsed_at: nil, dependency_job_id: nil).limit(1000).each(&:parse_dependencies_async)
+    Repository.where('last_synced_at > ?', 1.week.ago)
+              .where('size < ?', 50.megabytes)
+              .where(fork: false)
+              .where(dependencies_parsed_at: nil, dependency_job_id: nil)
+              .limit(1000).each(&:parse_dependencies_async)
   end
 
   def to_s
@@ -65,6 +69,7 @@ class Repository < ApplicationRecord
   end
 
   def parse_dependencies
+    return if size && size > 50.megabytes
     return if dependencies_parsed_at.present? # temp whilst backfilling db
     connection = Faraday.new(url: "https://parser.ecosyste.ms") do |faraday|
       faraday.use Faraday::FollowRedirects::Middleware
