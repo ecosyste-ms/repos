@@ -18,11 +18,12 @@ class Repository < ApplicationRecord
   scope :without_manifests, -> { includes(:manifests).where(manifests: {repository_id: nil}) }
 
   def self.parse_dependencies_async
-    Repository.where.not(dependency_job_id: nil).limit(1000).each(&:parse_dependencies_async)
+    Repository.where.not(dependency_job_id: nil).limit(1000).select('id, dependencies_parsed_at').each(&:parse_dependencies_async)
     Repository.where('last_synced_at > ?', 1.week.ago)
               .where('size < ?', 50.megabytes)
               .where(fork: false)
               .where(dependencies_parsed_at: nil, dependency_job_id: nil)
+              .select('id, dependencies_parsed_at')
               .limit(1000).each(&:parse_dependencies_async)
   end
 
