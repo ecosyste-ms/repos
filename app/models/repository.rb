@@ -44,7 +44,7 @@ class Repository < ApplicationRecord
   end
 
   def sync_async
-    host.sync_repository_async(full_name)
+    UpdateRepositoryWorker.perform_async(self.id)
   end
 
   def html_url
