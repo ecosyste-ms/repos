@@ -121,7 +121,7 @@ GEM
     httparty (0.20.0)
       mime-types (~> 3.0)
       multi_xml (>= 0.5.2)
-    i18n (1.11.0)
+    i18n (1.12.0)
       concurrent-ruby (~> 1.0)
     io-console (0.5.11)
     irb (1.4.1)
