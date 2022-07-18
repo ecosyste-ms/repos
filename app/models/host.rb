@@ -135,7 +135,9 @@ class Host < ApplicationRecord
   
       repo.assign_attributes(repo_hash)
       repo.last_synced_at = e['created_at']
-      repo.save
+      if repo.save
+        repo.sync_async
+      end
     end
   
     if events.any?
