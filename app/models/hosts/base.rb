@@ -138,7 +138,8 @@ module Hosts
         
       rescue *Array(self.class.api_missing_error_class)
         repository.destroy
-      rescue *self.class::IGNORABLE_EXCEPTIONS
+      rescue *self.class::IGNORABLE_EXCEPTIONS => e
+        p e
         nil
       end
     end
