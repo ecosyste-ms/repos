@@ -134,6 +134,8 @@ module Hosts
         if repository.changed?
           repository.last_synced_at = Time.now
           repository.save! 
+        else
+          repository.update_column(:last_synced_at, Time.now)
         end
         
       rescue *Array(self.class.api_missing_error_class)
