@@ -15,11 +15,15 @@
         <p class="card-subtitle mb-2 text-muted">
           <%= repository.description %>
         </p>
-        <% if repository.last_synced_at %>
-        <p class="card-subtitle mb-2 text-muted">
-          <i><small>Last synced: <%= repository.last_synced_at %></small></i>
-        </p>
-        <% end %>
+        <p class="card-subtitle mb-2 text-muted"><i><small>
+          Size: <%= number_to_human_size repository.size*1000 %> -
+          <% if repository.last_synced_at %>
+              Last synced: <%= distance_of_time_in_words_to_now repository.last_synced_at %> ago -
+          <% end %>
+          <% if repository.pushed_at %>
+              Pushed: <%= distance_of_time_in_words_to_now repository.pushed_at %> ago
+          <% end %>
+        </small></i></p>
       </div>
       <div class="flex-shrink-0">
         <img src="<%= repository.avatar_url(40) %>" class="rounded" height='40' width='40' onerror="this.style.display='none'">
