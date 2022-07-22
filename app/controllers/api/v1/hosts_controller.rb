@@ -4,6 +4,6 @@ class Api::V1::HostsController < Api::V1::ApplicationController
   end
 
   def show
-    @host = Host.find_by_name(params[:id])
+    @host = Host.find_by_name!(params[:id])
   end
 end

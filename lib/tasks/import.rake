@@ -78,7 +78,7 @@ namespace :import do
 
   desc 'import github repositories from timeline.ecosyste.ms api'
   task github_from_timeline: :environment do
-    Host.find_by_name('GitHub').import_github_repos_from_timeline(ENV['BEFORE'])
+    Host.find_by_name!('GitHub').import_github_repos_from_timeline(ENV['BEFORE'])
   end
 end
 
