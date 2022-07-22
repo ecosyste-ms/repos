@@ -18,7 +18,7 @@ class Api::V1::RepositoriesController < Api::V1::ApplicationController
   end
 
   def names
-    @host = Host.find_by_name!(params[:host_id])
+    @host = Host.find_by_name!(params[:id])
     scope = @host.repositories
     scope = scope.created_after(params[:created_after]) if params[:created_after].present?
     scope = scope.updated_after(params[:updated_after]) if params[:updated_after].present?
@@ -33,7 +33,7 @@ class Api::V1::RepositoriesController < Api::V1::ApplicationController
     end
 
     @pagy, @repositories = pagy_countless(scope, max_items: 10000)
-    render json: @repositories.pluck(:name)
+    render json: @repositories.pluck(:full_name)
   end
 
   def show
