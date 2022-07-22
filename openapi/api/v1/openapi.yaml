@@ -1,0 +1,435 @@
+openapi: 3.0.1
+info:
+  title: "Ecosyste.ms: Repos"
+  description: "An open API service providing repository metadata for many open source software ecosystems."
+  contact:
+    name: Ecosyste.ms
+    email: support@ecosyste.ms
+    url: https://ecosyste.ms 
+  manifest: 1.0.0
+  license:
+    name: CC-BY-SA-4.0
+    url: https://creativecommons.org/licenses/by-sa/4.0/
+externalDocs:
+  description: GitHub Repository
+  url: https://github.com/ecosyste-ms/repos
+servers:
+- url: https://repos.ecosyste.ms/api/v1
+paths:
+  /hosts:
+    get:
+      summary: list registies
+      operationId: getRegistries
+      parameters:
+        - name: page
+          in: query
+          description: pagination page number 
+          required: false
+          schema:
+            type: integer
+        - name: per_page
+          in: query
+          description: Number of records to return 
+          required: false
+          schema:
+            type: integer
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Host'
+  /hosts/{hostName}:
+    get:
+      summary: get a host by name
+      operationId: getHost
+      parameters:
+        - in: path
+          name: hostName
+          schema:
+            type: string
+          required: true
+          description: name of host
+        - name: page
+          in: query
+          description: pagination page number 
+          required: false
+          schema:
+            type: integer
+        - name: per_page
+          in: query
+          description: Number of records to return 
+          required: false
+          schema:
+            type: integer
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Host'
+  /hosts/{hostName}/repositories:
+    get:
+      summary: get a list of repositories from a host
+      operationId: getHostRepositories
+      parameters:
+        - in: path
+          name: hostName
+          schema:
+            type: string
+          required: true
+          description: name of host
+        - name: page
+          in: query
+          description: pagination page number 
+          required: false
+          schema:
+            type: integer
+        - name: per_page
+          in: query
+          description: Number of records to return 
+          required: false
+          schema:
+            type: integer
+        - name: created_after
+          in: query
+          description: filter by created_at after given time
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: updated_after
+          in: query
+          description: filter by updated_at after given time
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: sort
+          in: query
+          description: field to order results by
+          required: false
+          schema:
+            type: string
+        - name: order
+          in: query
+          description: direction to order results by
+          required: false
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Repository'
+  /hosts/{hostName}/repository_names:
+    get:
+      summary: get a list of repository names from a host
+      operationId: getHostRepositoryNames
+      parameters:
+        - in: path
+          name: hostName
+          schema:
+            type: string
+          required: true
+          description: name of host
+        - name: page
+          in: query
+          description: pagination page number 
+          required: false
+          schema:
+            type: integer
+        - name: per_page
+          in: query
+          description: Number of records to return 
+          required: false
+          schema:
+            type: integer
+        - name: created_after
+          in: query
+          description: filter by created_at after given time
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: updated_after
+          in: query
+          description: filter by updated_at after given time
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: sort
+          in: query
+          description: field to order results by
+          required: false
+          schema:
+            type: string
+        - name: order
+          in: query
+          description: direction to order results by
+          required: false
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+  /hosts/{hostName}/repositories/{repositoryName}:
+    get:
+      summary: get a repository by name
+      operationId: getHostRepository
+      parameters:
+        - in: path
+          name: hostName
+          schema:
+            type: string
+          required: true
+          description: name of host
+        - in: path
+          name: repositoryName
+          schema:
+            type: string
+          required: true
+          description: name of repository
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Repository'
+  /hosts/{hostName}/repositories/{repositoryName}/manifests:
+    get:
+      summary: get a list of manifests for a repository
+      operationId: getHostRepositoryManifests
+      parameters:
+        - in: path
+          name: hostName
+          schema:
+            type: string
+          required: true
+          description: name of host
+        - in: path
+          name: repositoryName
+          schema:
+            type: string
+          required: true
+          description: name of repository
+        - name: page
+          in: query
+          description: pagination page number 
+          required: false
+          schema:
+            type: integer
+        - name: per_page
+          in: query
+          description: Number of records to return 
+          required: false
+          schema:
+            type: integer
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Manifest'
+  /hosts/{hostName}/repositories/{repositoryName}/tags:
+    get:
+      summary: get a list of tags for a repository
+      operationId: getHostRepositoryTags
+      parameters:
+        - in: path
+          name: hostName
+          schema:
+            type: string
+          required: true
+          description: name of host
+        - in: path
+          name: repositoryName
+          schema:
+            type: string
+          required: true
+          description: name of repository
+        - name: page
+          in: query
+          description: pagination page number 
+          required: false
+          schema:
+            type: integer
+        - name: per_page
+          in: query
+          description: Number of records to return 
+          required: false
+          schema:
+            type: integer
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Tag'
+components:
+  schemas:
+    Host:
+      type: object
+      properties:
+        name:
+          type: string
+        url:
+          type: string
+        kind:
+          type: string
+        repositories_count:
+          type: integer
+    Repository:
+      type: object
+      properties:
+        uuid:
+          type: string
+        full_name:
+          type: string
+        owner:
+          type: string
+        description:
+          type: string
+        archived:
+          type: boolean
+        fork:
+          type: boolean
+        pushed_at:
+          type: string
+          format: date-time
+        size:
+          type: integer
+        stargazers_count:
+          type: integer
+        open_issues_count:
+          type: integer
+        forks_count:
+          type: integer
+        subscribers_count:
+          type: integer
+        default_branch:
+          type: string
+        last_synced_at:
+          type: string
+          format: date-time
+        etag:
+          type: string
+        topics:
+          type: array
+          items:
+            type: string
+        latest_commit_sha:
+          type: string
+        homepage:
+          type: string
+        language:
+          type: string
+        has_issues:
+          type: boolean
+        has_wiki:
+          type: boolean
+        has_pages:
+          type: boolean
+        mirror_url:
+          type: string
+        source_name:
+          type: string
+        license:
+          type: string
+        status:
+          type: string
+        scm:
+          type: string
+        pull_requests_enabled:
+          type: boolean
+        logo_url:
+          type: string
+        metadata:
+          type: object
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        dependencies_parsed_at:
+          type: string
+          format: date-time
+        dependency_job_id:
+          type: string
+    Manifest:
+      type: object
+      properties:
+          ecosystem:
+            type: string
+          filepath:
+            type: string
+          sha:
+            type: string
+          kind:
+            type: string
+          created_at:
+            type: string
+            format: date-time
+          updated_at:
+            type: string
+            format: date-time
+          dependencies:
+            type: array
+            items:
+              $ref: '#/components/schemas/Dependency'
+    Dependency:
+      type: object
+      properties:
+        package_name:
+          type: string
+        ecosystem:
+          type: string
+        requirements:
+          type: string
+        kind:
+          type: string
+        direct:
+          type: boolean
+        optional:
+          type: boolean
+    Tag:
+      type: object
+      properties:
+        name:
+          type: string
+        sha:
+          type: string
+        kind:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        published_at:
+          type: string
+          format: date-time

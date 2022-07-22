@@ -19,6 +19,10 @@ Rails.application.routes.draw do
           resources :tags
           resources :manifests
         end
+        
+        member do
+          get :repository_names, to: 'repositories#names', as: :repository_names
+        end
       end
     end
   end
