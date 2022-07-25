@@ -10,8 +10,12 @@ module Hosts
       ::Gitlab::Error::NotFound
     end
 
-    def avatar_url(_size = 60)
+    def avatar_url(repository, _size = 60)
       repository.logo_url
+    end
+
+    def html_url(repository)
+      "https://gitlab.com/#{repository.full_name}"
     end
 
     def domain
@@ -34,6 +38,13 @@ module Hosts
     def commits_url(author = nil)
       "#{url}/commits/#{repository.default_branch}"
     end
+
+    def download_url(repository, branch = nil)
+      branch = repository.default_branch if branch.nil?
+      name = repository.full_name.split('/').last
+      "https://gitlab.com/#{repository.full_name}/-/archive/#{branch}/#{name}-#{branch}.zip"
+    end
+
 
     def download_contributions(token = nil)
       # not implemented yet
@@ -129,40 +140,29 @@ module Hosts
       nil
     end
 
-    def self.recursive_gitlab_repos(page_number = 1, limit = 5, order = "created_asc")
+    def recursive_gitlab_repos(host_id, page_number = 1, limit = 5, order = "created_asc")
       return if limit.zero?
-      r = Typhoeus.get("https://gitlab.com/explore/projects?&page=#{page_number}&sort=#{order}")
-      if r.code == 500
-        recursive_gitlab_repos(page_number.to_i + 1, limit, order)
+      r = Faraday.get("https://gitlab.com/explore/projects?&page=#{page_number}&sort=#{order}")
+      if r.status == 500
+        recursive_gitlab_repos(host_id, page_number.to_i + 1, limit, order)
       else
         page = Nokogiri::HTML(r.body)
         names = page.css('a.project').map{|project| project.attributes["href"].value[1..-1] }
         names.each do |name|
-          if r = Repository.find_by('lower(full_name) = ?', name.downcase)
-            RepositoryDownloadWorker.perform_async(r.id)
-          else
-            CreateRepositoryWorker.perform_async('GitLab', name)
-          end
+          SyncRepositoryWorker.perform_async(host_id, name)
         end
       end
       if names.any?
         limit = limit - 1
-        REDIS.set 'gitlab-page', page_number
-        recursive_gitlab_repos(page_number.to_i + 1, limit, order)
+        recursive_gitlab_repos(host_id, page_number.to_i + 1, limit, order)
       end
     end
 
-    private
-
-    def self.api_client(token = nil)
+    def api_client(token = nil)
       ::Gitlab.client(endpoint: 'https://gitlab.com/api/v4', private_token: token || ENV['GITLAB_KEY'])
     end
 
-    def api_client(token = nil)
-      self.class.api_client
-    end
-
-    def self.fetch_repository(full_name, token = nil)
+    def fetch_repository(full_name, token = nil)
       project = api_client(token).project(full_name)
       repo_hash = project.to_hash.with_indifferent_access.slice(:id, :description, :created_at, :name, :open_issues_count, :forks_count, :default_branch)
 
@@ -184,6 +184,7 @@ module Hosts
           full_name: project.try(:forked_from_project).try(:path_with_namespace)
         }
       })
+      return repo_hash.slice(*repository_columns)
     rescue *IGNORABLE_EXCEPTIONS
       nil
     end

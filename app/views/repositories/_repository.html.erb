@@ -16,7 +16,9 @@
           <%= repository.description %>
         </p>
         <p class="card-subtitle mb-2 text-muted"><i><small>
-          Size: <%= number_to_human_size repository.size*1000 %> -
+          <% if repository.size %>
+            Size: <%= number_to_human_size repository.size*1000 %> -
+          <% end %>
           <% if repository.last_synced_at %>
               Last synced: <%= distance_of_time_in_words_to_now repository.last_synced_at %> ago -
           <% end %>
