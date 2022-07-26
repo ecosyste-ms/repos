@@ -178,7 +178,7 @@ GEM
     octokit (5.1.0)
       faraday (>= 1, < 3)
       sawyer (~> 0.9)
-    oj (3.13.17)
+    oj (3.13.18)
     pagy (5.10.1)
       activesupport
     pg (1.4.1)
