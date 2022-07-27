@@ -17,11 +17,17 @@
         </p>
         <p class="card-subtitle mb-2 text-muted"><i><small>
           <% if repository.size %>
-            Size: <%= number_to_human_size repository.size*1000 %> -
+            Size: <%= number_to_human_size repository.size*1000 %> 
           <% end %>
+          <% if repository.size && repository.last_synced_at %>
+            - 
+          <% end %>  
           <% if repository.last_synced_at %>
-              Last synced: <%= distance_of_time_in_words_to_now repository.last_synced_at %> ago -
+              Last synced: <%= distance_of_time_in_words_to_now repository.last_synced_at %> ago
           <% end %>
+          <% if repository.pushed_at && repository.last_synced_at %>
+            - 
+          <% end %>  
           <% if repository.pushed_at %>
               Pushed: <%= distance_of_time_in_words_to_now repository.pushed_at %> ago
           <% end %>
