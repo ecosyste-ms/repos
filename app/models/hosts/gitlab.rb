@@ -180,12 +180,12 @@ module Hosts
 
     def fetch_repository(full_name, token = nil)
       project = api_client(token).project(full_name)
-      repo_hash = project.to_hash.with_indifferent_access.slice(:id, :description, :created_at, :name, :open_issues_count, :forks_count, :default_branch)
+      repo_hash = project.to_hash.with_indifferent_access.slice(:id, :description, :created_at, :name, :open_issues_count, :forks_count, :default_branch, :archived, :topics)
 
       repo_hash.merge!({
-        host_type: 'GitLab',
+        uuid: project.id,
         full_name: project.path_with_namespace,
-        owner: {},
+        owner: project.path_with_namespace.split('/').first,
         fork: project.try(:forked_from_project).present?,
         updated_at: project.last_activity_at,
         stargazers_count: project.star_count,
@@ -195,7 +195,6 @@ module Hosts
         private: project.visibility != "public",
         pull_requests_enabled: project.merge_requests_enabled,
         logo_url: project.avatar_url,
-        keywords: project.tag_list,
         parent: {
           full_name: project.try(:forked_from_project).try(:path_with_namespace)
         }
