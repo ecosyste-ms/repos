@@ -162,7 +162,7 @@ module Hosts
     end
 
     def load_repo_names(page_number = 1, order = 'created_at')
-      api_client.projects(per_page: 100, page: page_number, order_by: order, archived: false)
+      api_client.projects(per_page: 100, page: page_number, order_by: order, archived: false, simple: true)
     end
 
     def recursive_gitlab_repos(page_number = 1, limit = 5, order = "created_asc")
@@ -200,6 +200,17 @@ module Hosts
         }
       })
       return repo_hash.slice(*repository_columns)
+    rescue *IGNORABLE_EXCEPTIONS
+      nil
+    end
+
+    def crawl_repositories
+      last_id = REDIS.get("gitlab_last_id:#{@host.id}")
+      repos = api_client.projects(per_page: 100, archived: false, id_before: last_id, simple: true)
+      if repos.any?
+        repos.each{|repo| @host.sync_repository_async(repo["path_with_namespace"])  }
+        REDIS.set("gitlab_last_id:#{@host.id}", repos.last["id"])
+      end
     rescue *IGNORABLE_EXCEPTIONS
       nil
     end

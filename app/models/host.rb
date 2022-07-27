@@ -59,6 +59,10 @@ class Host < ApplicationRecord
     end
   end 
 
+  def crawl_repositories
+    host_instance.crawl_repositories
+  end
+
   def download_tags(repository)
     host_instance.download_tags(repository)
   end

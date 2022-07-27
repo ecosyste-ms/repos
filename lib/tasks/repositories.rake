@@ -17,4 +17,11 @@ namespace :repositories do
   task parse_missing_dependencies: :environment do 
     Repository.parse_dependencies_async
   end
+
+  desc 'crawl repositories'
+  task crawl: :environment do
+    Host.all.each do |host|
+      host.crawl_repositories
+    end
+  end
 end

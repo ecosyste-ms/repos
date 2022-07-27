@@ -15,6 +15,10 @@
     {
       "command": "bundle exec rake hosts:update_repository_counts",
       "schedule": "*/15 * * * *"
+    },
+    {
+      "command": "bundle exec rake repositories:crawl",
+      "schedule": "*/5 * * * *"
     }
   ]
 }

@@ -143,20 +143,6 @@ module Hosts
     #   end
     # end
 
-    # def gather_maintenance_stats
-    #   if repository.host_type != "Bitbucket" || repository.projects.any? { |project| project.bitbucket_name_with_owner.blank? }
-    #     repository.repository_maintenance_stats.destroy_all
-    #     return []
-    #   end
-
-    #   metrics = []
-
-    #   metrics << MaintenanceStats::Stats::Bitbucket::CommitsStat.new(repository.retrieve_commits).get_stats
-
-    #   add_metrics_to_repo(metrics)
-    #   metrics
-    # end
-
     # private
 
     # def self.api_client(token = nil)
