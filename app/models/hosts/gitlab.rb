@@ -140,21 +140,37 @@ module Hosts
       nil
     end
 
-    def recursive_gitlab_repos(host_id, page_number = 1, limit = 5, order = "created_asc")
-      return if limit.zero?
-      r = Faraday.get("https://gitlab.com/explore/projects?&page=#{page_number}&sort=#{order}")
-      if r.status == 500
-        recursive_gitlab_repos(host_id, page_number.to_i + 1, limit, order)
-      else
-        page = Nokogiri::HTML(r.body)
-        names = page.css('a.project').map{|project| project.attributes["href"].value[1..-1] }
-        names.each do |name|
-          SyncRepositoryWorker.perform_async(host_id, name)
-        end
+    def recently_changed_repo_names(since = 1.hour)
+      target_time = Time.now - since
+      names = []
+      page = 1
+
+      repos = load_repo_names(page, 'updated_at')
+      return [] unless repos.any?
+      oldest = repos.last["last_activity_at"]
+      names += repos.map{|repo| repo["path_with_namespace"] }
+
+      while oldest > target_time
+        page += 1
+        repos = load_repo_names(page, 'updated_at')
+        break unless repos.any?
+        oldest = repos.last["last_activity_at"]
+        names += repos.map{|repo| repo["path_with_namespace"] }
       end
+
+      return names
+    end
+
+    def load_repo_names(page_number = 1, order = 'created_at')
+      api_client.projects(per_page: 100, page: page_number, order_by: order, archived: false)
+    end
+
+    def recursive_gitlab_repos(page_number = 1, limit = 5, order = "created_asc")
+      return if limit.zero?
+
       if names.any?
         limit = limit - 1
-        recursive_gitlab_repos(host_id, page_number.to_i + 1, limit, order)
+        recursive_gitlab_repos(page_number.to_i + 1, limit, order)
       end
     end
 
