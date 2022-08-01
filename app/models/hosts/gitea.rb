@@ -101,7 +101,7 @@ module Hosts
 
     def api_client
       Faraday.new(@host.url) do |conn|
-        conn.request :authorization, :bearer, REDIS.get('gitea_token:' + @host.id)
+        conn.request :authorization, :bearer, REDIS.get("gitea_token:#{@host.id}")
         conn.response :json 
       end
     end
