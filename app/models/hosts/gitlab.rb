@@ -18,21 +18,21 @@ module Hosts
       "https://gitlab.com/#{repository.full_name}"
     end
 
-    def forks_url
-      "#{url}/forks"
+    def forks_url(repository)
+      "#{url(repository)}/forks"
     end
 
-    def contributors_url
-      "#{url}/graphs/#{repository.default_branch}"
+    def contributors_url(repository)
+      "#{url(repository)}/graphs/#{repository.default_branch}"
     end
 
-    def blob_url(sha = nil)
+    def blob_url(repository, sha = nil)
       sha ||= repository.default_branch
-      "#{url}/blob/#{sha}/"
+      "#{url(repository)}/blob/#{sha}/"
     end
 
-    def commits_url(author = nil)
-      "#{url}/commits/#{repository.default_branch}"
+    def commits_url(repository, author = nil)
+      "#{url(repository)}/commits/#{repository.default_branch}"
     end
 
     def download_url(repository, branch = nil)
@@ -41,57 +41,15 @@ module Hosts
       "https://gitlab.com/#{repository.full_name}/-/archive/#{branch}/#{name}-#{branch}.zip"
     end
 
-
-    def download_contributions(token = nil)
-      # not implemented yet
-    end
-
-    def download_forks(token = nil)
-      # not implemented yet
-    end
-
-    def retrieve_commits
-      # not implemented yet
-    end
-
-    def download_owner
-      return if repository.owner && repository.repository_user_id && repository.owner.login == repository.owner
-      namespace = api_client.project(repository.full_name).try(:namespace)
-      return unless namespace
-      if namespace.kind == 'group'
-        o = RepositoryOwner::Gitlab.api_client.group(namespace.path)
-        org = RepositoryOrganisation.create_from_host('GitLab', o)
-        if org
-          repository.repository_organisation_id = org.id
-          repository.repository_user_id = nil
-          repository.save
-        end
-      elsif namespace.kind == 'user'
-        o = RepositoryOwner::Gitlab.fetch_user(namespace.path)
-        u = RepositoryUser.create_from_host('GitLab', o)
-        if u
-          repository.repository_user_id = u.id
-          repository.repository_organisation_id = nil
-          repository.save
-        end
-      end
-    rescue *IGNORABLE_EXCEPTIONS
-      nil
-    end
-
-    def create_webhook(token = nil)
-      # not implemented yet
-    end
-
-    def get_file_list(token = nil)
-      tree = api_client(token).tree(repository.full_name, recursive: true)
+    def get_file_list(repository)
+      tree = api_client.tree(repository.full_name, recursive: true)
       tree.select{|item| item.type == 'blob' }.map{|file| file.path }
     rescue *IGNORABLE_EXCEPTIONS
       nil
     end
 
-    def get_file_contents(path, token = nil)
-      file = api_client(token).get_file(repository.full_name, path, repository.default_branch)
+    def get_file_contents(repository, path)
+      file = api_client.get_file(repository.full_name, path, repository.default_branch)
       {
         sha: file.commit_id,
         content: Base64.decode64(file.content)
@@ -100,12 +58,12 @@ module Hosts
       nil
     end
 
-    def download_readme(token = nil)
-      files = api_client(token).tree(repository.full_name)
+    def download_readme(repository)
+      files = api_client.tree(repository.full_name)
       paths =  files.map(&:path)
       readme_path = paths.select{|path| path.match(/^readme/i) }.sort{|path| Readme.supported_format?(path) ? 0 : 1 }.first
       return if readme_path.nil?
-      file = get_file_contents(readme_path, token)
+      file = get_file_contents(readme_path)
       return unless file.present?
       content = Readme.format_markup(readme_path, file[:content])
       return unless content.present?
@@ -119,9 +77,9 @@ module Hosts
       nil
     end
 
-    def download_tags(token = nil)
+    def download_tags(repository)
       existing_tag_names = repository.tags.pluck(:name)
-      remote_tags = api_client(token).tags(repository.full_name).auto_paginate do |tag|
+      remote_tags = api_client.tags(repository.full_name).auto_paginate do |tag|
         next if existing_tag_names.include?(tag.name)
         next if tag.commit.nil?
         repository.tags.create({
@@ -170,12 +128,12 @@ module Hosts
       end
     end
 
-    def api_client(token = nil)
-      ::Gitlab.client(endpoint: 'https://gitlab.com/api/v4', private_token: token || ENV['GITLAB_KEY'])
+    def api_client
+      ::Gitlab.client(endpoint: 'https://gitlab.com/api/v4', private_token: ENV['GITLAB_KEY'])
     end
 
-    def fetch_repository(full_name, token = nil)
-      project = api_client(token).project(full_name)
+    def fetch_repository(full_name)
+      project = api_client.project(full_name)
       repo_hash = project.to_hash.with_indifferent_access.slice(:id, :description, :created_at, :name, :open_issues_count, :forks_count, :default_branch, :archived, :topics)
 
       repo_hash.merge!({

@@ -49,21 +49,25 @@ module Hosts
       "#{@host.url}/#{repository.full_name}"
     end
 
-    def issues_url
-      "#{url}/issues"
+    def html_url(repository)
+      url(repository)
+    end
+
+    def issues_url(repository)
+      "#{url(repository)}/issues"
     end
 
     def source_url(repository)
       "#{@host.url}/#{repository.source_name}"
     end
 
-    def raw_url(sha = nil)
+    def raw_url(repository, sha = nil)
       sha ||= repository.default_branch
-      "#{url}/raw/#{sha}/"
+      "#{url(repository)}/raw/#{sha}/"
     end
 
-    def compare_url(branch_one, branch_two)
-      "#{url}/compare/#{branch_one}...#{branch_two}"
+    def compare_url(repository, branch_one, branch_two)
+      "#{url(repository)}/compare/#{branch_one}...#{branch_two}"
     end
 
     def watchers_url
@@ -86,7 +90,7 @@ module Hosts
       []
     end
 
-    def avatar_url(size = 60)
+    def avatar_url(repository, size = 60)
       raise NotImplementedError
     end
 

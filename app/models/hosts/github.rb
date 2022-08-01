@@ -60,20 +60,20 @@ module Hosts
       "https://codeload.github.com/#{repository.full_name}/tar.gz/refs/heads/#{branch}"
     end
 
-    def watchers_url
-      "#{url}/watchers"
+    def watchers_url(repository)
+      "#{url(repository)}/watchers"
     end
 
-    def forks_url
-      "#{url}/network"
+    def forks_url(repository)
+      "#{url(repository)}/network"
     end
 
-    def stargazers_url
-      "#{url}/stargazers"
+    def stargazers_url(repository)
+      "#{url(repository)}/stargazers"
     end
 
-    def contributors_url
-      "#{url}/graphs/contributors"
+    def contributors_url(repository)
+      "#{url(repository)}/graphs/contributors"
     end
 
     def blob_url(repository, sha = nil)
@@ -81,9 +81,9 @@ module Hosts
       "#{url(repository)}/blob/#{sha}/"
     end
 
-    def commits_url(author = nil)
+    def commits_url(repository, author = nil)
       author_param = author.present? ? "?author=#{author}" : ''
-      "#{url}/commits#{author_param}"
+      "#{url(repository)}/commits#{author_param}"
     end
 
     def fetch_repository(id_or_name, token = nil)
@@ -199,7 +199,7 @@ module Hosts
     def load_repo_names(id = nil)
       puts "loading repo names since #{id}"
       url = "https://timeline.ecosyste.ms/api/v1/events/repository_names"
-      url = "#{url}?before=#{id}" if id.present?
+      url = "#{url(repository)}?before=#{id}" if id.present?
       begin
         resp = Faraday.get(url) do |req|
           req.options.timeout = 5
@@ -213,7 +213,7 @@ module Hosts
 
     def events_for_repo(full_name, event_type: nil, per_page: 100)
       url = "https://timeline.ecosyste.ms/api/v1/events/#{full_name}?per_page=#{per_page}"
-      url = "#{url}&event_type=#{event_type}" if event_type.present?
+      url = "#{url(repository)}&event_type=#{event_type}" if event_type.present?
 
       begin
         resp = Faraday.get(url) do |req|
