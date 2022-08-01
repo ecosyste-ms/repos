@@ -45,6 +45,10 @@ module Hosts
       @host = host
     end
 
+    def icon
+      @host.kind
+    end
+
     def url(repository)
       "#{@host.url}/#{repository.full_name}"
     end

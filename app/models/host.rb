@@ -16,6 +16,10 @@ class Host < ApplicationRecord
     name
   end
 
+  def icon
+    org || host_instance.icon
+  end
+
   def sync_repository_async(full_name)
     SyncRepositoryWorker.perform_async(id, full_name)
   end

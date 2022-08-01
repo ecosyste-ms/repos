@@ -20,6 +20,10 @@ module Hosts
       ]
     end
 
+    def icon
+      'github'
+    end
+
     def token_set_key
       "github_tokens"
     end

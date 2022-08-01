@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2022_07_07_120357) do
+ActiveRecord::Schema[7.0].define(version: 2022_08_01_132434) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_stat_statements"
   enable_extension "plpgsql"
@@ -36,6 +36,7 @@ ActiveRecord::Schema[7.0].define(version: 2022_07_07_120357) do
     t.integer "repositories_count", default: 0
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "org"
   end
 
   create_table "manifests", force: :cascade do |t|

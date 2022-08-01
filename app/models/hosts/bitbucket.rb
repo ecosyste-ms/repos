@@ -9,6 +9,10 @@ module Hosts
       Faraday::ResourceNotFound
     end
 
+    def icon
+      'atlassian'
+    end
+
     def avatar_url(repository, size = 60)
       "#{url(repository)}/#{repository.full_name}/avatar/#{size}"
     end
