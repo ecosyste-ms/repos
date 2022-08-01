@@ -1,8 +1,9 @@
 default_hosts = [
   {name: 'GitHub', url: 'https://github.com', kind: 'github'},
-  {name: 'GitLab', url: 'https://gitlab.com', kind: 'gitlab'},
-  {name: 'Bitbucket', url: 'https://bitbucket.org', kind: 'bitbucket'},
+  {name: 'GitLab.com', url: 'https://gitlab.com', kind: 'gitlab'},
+  {name: 'Bitbucket.org', url: 'https://bitbucket.org', kind: 'bitbucket'},
   {name: 'SourceHut', url: 'https://sr.ht', kind: 'sourcehut'},
+  {name: 'Gitea.com', url: 'https://gitea.com', kind: 'gitea'}
 ]
 
 default_hosts.each do |host|
