@@ -203,7 +203,7 @@ module Hosts
     def load_repo_names(id = nil)
       puts "loading repo names since #{id}"
       url = "https://timeline.ecosyste.ms/api/v1/events/repository_names"
-      url = "#{url(repository)}?before=#{id}" if id.present?
+      url = "#{url}?before=#{id}" if id.present?
       begin
         resp = Faraday.get(url) do |req|
           req.options.timeout = 5
@@ -217,7 +217,7 @@ module Hosts
 
     def events_for_repo(full_name, event_type: nil, per_page: 100)
       url = "https://timeline.ecosyste.ms/api/v1/events/#{full_name}?per_page=#{per_page}"
-      url = "#{url(repository)}&event_type=#{event_type}" if event_type.present?
+      url = "#{url}&event_type=#{event_type}" if event_type.present?
 
       begin
         resp = Faraday.get(url) do |req|
