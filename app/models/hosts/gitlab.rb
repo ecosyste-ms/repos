@@ -18,10 +18,6 @@ module Hosts
       "https://gitlab.com/#{repository.full_name}"
     end
 
-    def domain
-      'https://gitlab.com'
-    end
-
     def forks_url
       "#{url}/forks"
     end
