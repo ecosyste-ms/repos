@@ -8,6 +8,7 @@ default_hosts = [
   {name: "git.fsfe.org", url: "https://git.fsfe.org", kind: "gitea", org: 'fsfe'},
   {name: "opendev.org", url: "https://opendev.org", kind: "gitea", org: 'openstack-infra'},
   {name: "code-repo.d4science.org", url: "https://code-repo.d4science.org/", kind: "gitea", org: 'd4science'},
+  {name: "salsa.debian.org", url: "https://salsa.debian.org", kind: "gitlab", org: 'debian'},
 ]
 
 default_hosts.each do |host|
