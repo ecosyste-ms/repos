@@ -66,8 +66,9 @@ module Hosts
       else
         url = "/api/v1/repos/#{id_or_name}"
       end
-      data = api_client.get(url).body
-      map_repository_data(data)
+      resp = api_client.get(url)
+      return nil unless resp.success?
+      map_repository_data(resp.body)
     end
 
     def map_repository_data(data)
