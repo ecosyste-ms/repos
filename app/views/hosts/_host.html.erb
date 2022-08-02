@@ -9,6 +9,9 @@
           <% else %>
             <%= link_to host.name, host_path(host.name) %>
           <% end %>
+          <% if host.display_kind? %>
+            <i><small class="text-muted"><%= host.kind %></small></i>
+          <% end %>
         </h5>
       
         <p class="card-subtitle mb-2 text-muted">

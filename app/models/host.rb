@@ -20,6 +20,11 @@ class Host < ApplicationRecord
     org || host_instance.icon
   end
 
+  def display_kind?
+    return false if name.split('.').length == 2 && name.split('.').first.downcase == kind
+    name.downcase != kind
+  end
+
   def sync_repository_async(full_name)
     SyncRepositoryWorker.perform_async(id, full_name)
   end
