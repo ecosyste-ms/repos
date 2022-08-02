@@ -1,6 +1,6 @@
 <div class="container-sm">
   <h1 class='mb-4'>
-    <%= @host %>
+    <%= link_to @host, @host.url, target: :_blank %>
     <small class='text-muted'>
       <%= pluralize number_with_delimiter(@host.repositories_count), 'repository' %>
     </small>
