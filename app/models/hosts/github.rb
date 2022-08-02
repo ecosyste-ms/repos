@@ -10,6 +10,7 @@ module Hosts
       Octokit::InternalServerError,
       Octokit::BadGateway,
       # Octokit::UnavailableForLegalReasons
+      Octokit::SAMLProtected
     ]
 
     def self.api_missing_error_class
