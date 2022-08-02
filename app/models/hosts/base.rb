@@ -154,6 +154,10 @@ module Hosts
       end
     end
 
+    def crawl_repositories_async
+      # to be implemented by subclasses
+    end
+
     def crawl_repositories
       # to be implemented by subclasses
     end

@@ -158,11 +158,22 @@ module Hosts
       nil
     end
 
-    def crawl_repositories
+    def crawl_repositories_async
       last_id = REDIS.get("gitlab_last_id:#{@host.id}")
       repos = api_client.projects(per_page: 100, archived: false, id_before: last_id, simple: true)
       if repos.any?
         repos.each{|repo| @host.sync_repository_async(repo["path_with_namespace"])  }
+        REDIS.set("gitlab_last_id:#{@host.id}", repos.last["id"])
+      end
+    rescue *IGNORABLE_EXCEPTIONS
+      nil
+    end
+
+    def crawl_repositories
+      last_id = REDIS.get("gitlab_last_id:#{@host.id}")
+      repos = api_client.projects(per_page: 100, archived: false, id_before: last_id, simple: true)
+      if repos.any?
+        repos.each{|repo| @host.sync_repository(repo["path_with_namespace"])  }
         REDIS.set("gitlab_last_id:#{@host.id}", repos.last["id"])
       end
     rescue *IGNORABLE_EXCEPTIONS

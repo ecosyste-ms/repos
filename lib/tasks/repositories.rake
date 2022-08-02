@@ -21,7 +21,7 @@ namespace :repositories do
   desc 'crawl repositories'
   task crawl: :environment do
     Host.all.each do |host|
-      host.crawl_repositories
+      host.crawl_repositories_async
     end
   end
 end

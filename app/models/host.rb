@@ -68,6 +68,10 @@ class Host < ApplicationRecord
     end
   end 
 
+  def crawl_repositories_async
+    host_instance.crawl_repositories_async
+  end
+
   def crawl_repositories
     host_instance.crawl_repositories
   end

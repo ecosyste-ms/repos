@@ -47,13 +47,24 @@ module Hosts
       data['data']
     end
 
-    def crawl_repositories
+    def crawl_repositories_async
       page = (REDIS.get("gitea_last_page:#{@host.id}") || 0).to_i
       page += 1
       data = api_client.get("/api/v1/repos/search?sort=id&page=#{page}&limit=100").body
       repos = data['data']
       if repos.any?
         repos.each{|repo| @host.sync_repository_async(repo["full_name"])  }
+        REDIS.set("gitea_last_page:#{@host.id}", page)
+      end
+    end
+
+    def crawl_repositories
+      page = (REDIS.get("gitea_last_page:#{@host.id}") || 0).to_i
+      page += 1
+      data = api_client.get("/api/v1/repos/search?sort=id&page=#{page}&limit=100").body
+      repos = data['data']
+      if repos.any?
+        repos.each{|repo| @host.sync_repository(repo["full_name"])  }
         REDIS.set("gitea_last_page:#{@host.id}", page)
       end
     end
