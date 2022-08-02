@@ -1,5 +1,5 @@
 ---
 :queues:
-  - critical
-  - default
-  - dependencies
+  - [critical, 2]
+  - [default, 1]
+  - [dependencies, 1]
