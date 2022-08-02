@@ -92,16 +92,7 @@ module Hosts
 
     def fetch_repository(id_or_name, token = nil)
       id_or_name = id_or_name.to_i if id_or_name.match(/\A\d+\Z/)
-
-      # if id_or_name.is_a?(String)
-      #   hash = attempt_load_from_timeline(id_or_name)
-      #   puts "loaded #{id_or_name} from timeline" if hash.present?
-      # end
-
-      # if hash.nil?
-        hash = api_client(token).repo(id_or_name, accept: 'application/vnd.github.drax-preview+json,application/vnd.github.mercy-preview+json').to_hash.with_indifferent_access
-      # end
-
+      hash = api_client(token).repo(id_or_name, accept: 'application/vnd.github.drax-preview+json,application/vnd.github.mercy-preview+json').to_hash.with_indifferent_access
       map_repository_data(hash)
     rescue *IGNORABLE_EXCEPTIONS => e
       p e
