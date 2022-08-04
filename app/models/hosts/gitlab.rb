@@ -15,7 +15,7 @@ module Hosts
     end
 
     def html_url(repository)
-      "https://gitlab.com/#{repository.full_name}"
+      "#{@host.url}/#{repository.full_name}"
     end
 
     def forks_url(repository)
@@ -38,7 +38,7 @@ module Hosts
     def download_url(repository, branch = nil)
       branch = repository.default_branch if branch.nil?
       name = repository.full_name.split('/').last
-      "https://gitlab.com/#{repository.full_name}/-/archive/#{branch}/#{name}-#{branch}.zip"
+      "#{@host.url}/#{repository.full_name}/-/archive/#{branch}/#{name}-#{branch}.zip"
     end
 
     def get_file_list(repository)
@@ -129,7 +129,7 @@ module Hosts
     end
 
     def api_client
-      ::Gitlab.client(endpoint: 'https://gitlab.com/api/v4', private_token:  REDIS.get("gitlab_token:#{@host.id}"))
+      ::Gitlab.client(endpoint: '#{@host.url}/api/v4', private_token:  REDIS.get("gitlab_token:#{@host.id}"))
     end
 
     def fetch_repository(full_name)

@@ -7,7 +7,7 @@ default_hosts = [
   {name: "Codeberg.org", url: "https://codeberg.org", kind: "gitea", org: 'Codeberg-org'},
   {name: "git.fsfe.org", url: "https://git.fsfe.org", kind: "gitea", org: 'fsfe'},
   {name: "opendev.org", url: "https://opendev.org", kind: "gitea", org: 'openstack-infra'},
-  {name: "code-repo.d4science.org", url: "https://code-repo.d4science.org/", kind: "gitea", org: 'd4science'},
+  {name: "code-repo.d4science.org", url: "https://code-repo.d4science.org", kind: "gitea", org: 'd4science'},
   {name: "salsa.debian.org", url: "https://salsa.debian.org", kind: "gitlab", org: 'debian'},
 ]
 
