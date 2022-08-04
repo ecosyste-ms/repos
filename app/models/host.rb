@@ -136,7 +136,7 @@ class Host < ApplicationRecord
       hash = e['payload']['pull_request']['base']['repo'].to_hash.with_indifferent_access
       
       repo_hash = host_instance.map_repository_data(hash)
-  
+      next if repo_hash[:fork]
       repo = repositories.find_by(uuid: repo_hash[:uuid])
       repo = repositories.find_by('lower(full_name) = ?', repo_hash[:full_name].downcase) if repo.nil?
   
