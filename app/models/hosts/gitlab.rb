@@ -129,7 +129,7 @@ module Hosts
     end
 
     def api_client
-      ::Gitlab.client(endpoint: '#{@host.url}/api/v4', private_token:  REDIS.get("gitlab_token:#{@host.id}"))
+      ::Gitlab.client(endpoint: "#{@host.url}/api/v4", private_token:  REDIS.get("gitlab_token:#{@host.id}"))
     end
 
     def fetch_repository(full_name)
