@@ -27,14 +27,14 @@ module Hosts
       page = 1
 
       repos = load_repo_names(page, 'updated')
-      return [] unless repos.any?
+      return [] unless repos.present?
       oldest = repos.last["updated_at"]
       names += repos.map{|repo| repo["full_name"] }
 
       while oldest > target_time
         page += 1
         repos = load_repo_names(page, 'updated')
-        break unless repos.any?
+        break unless repos.present?
         oldest = repos.last["updated_at"]
         names += repos.map{|repo| repo["full_name"] }
       end
@@ -52,7 +52,7 @@ module Hosts
       page += 1
       data = api_client.get("/api/v1/repos/search?sort=id&page=#{page}&limit=100").body
       repos = data['data']
-      if repos.any?
+      if repos.present?
         repos.each{|repo| @host.sync_repository_async(repo["full_name"])  }
         REDIS.set("gitea_last_page:#{@host.id}", page)
       end
@@ -63,7 +63,7 @@ module Hosts
       page += 1
       data = api_client.get("/api/v1/repos/search?sort=id&page=#{page}&limit=100").body
       repos = data['data']
-      if repos.any?
+      if repos.present?
         repos.each{|repo| @host.sync_repository(repo["full_name"])  }
         REDIS.set("gitea_last_page:#{@host.id}", page)
       end

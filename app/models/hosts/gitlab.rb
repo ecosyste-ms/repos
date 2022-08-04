@@ -100,14 +100,14 @@ module Hosts
       page = 1
 
       repos = load_repo_names(page, 'updated_at')
-      return [] unless repos.any?
+      return [] unless repos.present?
       oldest = repos.last["last_activity_at"]
       names += repos.map{|repo| repo["path_with_namespace"] }
 
       while oldest > target_time
         page += 1
         repos = load_repo_names(page, 'updated_at')
-        break unless repos.any?
+        break unless repos.present?
         oldest = repos.last["last_activity_at"]
         names += repos.map{|repo| repo["path_with_namespace"] }
       end
@@ -161,7 +161,7 @@ module Hosts
     def crawl_repositories_async
       last_id = REDIS.get("gitlab_last_id:#{@host.id}")
       repos = api_client.projects(per_page: 100, archived: false, id_before: last_id, simple: true)
-      if repos.any?
+      if repos.present?
         repos.each{|repo| @host.sync_repository_async(repo["path_with_namespace"])  }
         REDIS.set("gitlab_last_id:#{@host.id}", repos.last["id"])
       end
@@ -172,7 +172,7 @@ module Hosts
     def crawl_repositories
       last_id = REDIS.get("gitlab_last_id:#{@host.id}")
       repos = api_client.projects(per_page: 100, archived: false, id_before: last_id, simple: true)
-      if repos.any?
+      if repos.present?
         repos.each{|repo| @host.sync_repository(repo["path_with_namespace"])  }
         REDIS.set("gitlab_last_id:#{@host.id}", repos.last["id"])
       end
