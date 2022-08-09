@@ -169,6 +169,8 @@ module Hosts
       end
 
       repository.tags.create(tag_hash)
+    rescue *IGNORABLE_EXCEPTIONS
+      nil
     end
 
     def recently_changed_repo_names(since = 1.hour)
