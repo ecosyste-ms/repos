@@ -24,7 +24,7 @@
           Repo Size: <%= number_to_human_size @repository.size*1000 %><br/>
         <% end %>
         Dependencies: <% if @repository.dependencies_parsed_at %>
-          <%= number_with_delimiter @repository.dependency_ids.length %>
+          <%= number_with_delimiter @repository.manifests.sum{|m| m.dependencies.length } %>
         <% else %>
           pending
         <% end %>
