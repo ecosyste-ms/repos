@@ -193,6 +193,33 @@ module Hosts
       return names
     end
 
+    def sync_repos_with_tags
+      data = load_repos_with_tags
+      names = data.map{|r| r['repository']}
+      host = Host.find_by_name('GitHub')
+      names.each do |name|
+        repository = host.repositories.find_by('lower(full_name) = ?', name.downcase)
+        if repository
+          repository.download_tags_async
+        else
+          host.sync_repository_async(name)
+        end
+      end
+    end
+
+    def load_repos_with_tags(id = nil)
+      url = "https://timeline.ecosyste.ms/api/v1/events?per_page=100&event_type=ReleaseEvent&before=#{id}"
+      begin
+        resp = Faraday.get(url) do |req|
+          req.options.timeout = 5
+        end
+
+        Oj.load(resp.body)
+      rescue Faraday::Error
+        []
+      end
+    end
+
     def load_repo_names(id = nil)
       puts "loading repo names since #{id}"
       url = "https://timeline.ecosyste.ms/api/v1/events/repository_names"

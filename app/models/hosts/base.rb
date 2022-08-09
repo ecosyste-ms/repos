@@ -162,6 +162,10 @@ module Hosts
       # to be implemented by subclasses
     end
 
+    def download_tags(repository)
+      # to be implemented by subclasses
+    end
+
     private
 
     attr_reader :repository

@@ -157,6 +157,10 @@ class Repository < ApplicationRecord
     host.download_tags(self)
   end
 
+  def download_tags_async
+    DownloadTagsWorker.perform_async(self.id)
+  end
+
   def archive_list
     begin
       Oj.load(Faraday.get(archive_list_url).body)

@@ -18,6 +18,12 @@ namespace :repositories do
     Repository.parse_dependencies_async
   end
 
+  desc 'download tags'
+  task download_tags: :environment do 
+    host = Host.find_by_name('GitHub')
+    host.host_instance.sync_repos_with_tags
+  end
+
   desc 'crawl repositories'
   task crawl: :environment do
     Host.all.each do |host|
