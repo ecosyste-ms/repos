@@ -24,7 +24,7 @@ class Repository < ApplicationRecord
               .where(fork: false)
               .where(dependencies_parsed_at: nil, dependency_job_id: nil)
               .select('id, dependencies_parsed_at')
-              .limit(2000).find_each(&:parse_dependencies_async)
+              .limit(3000).find_each(&:parse_dependencies_async)
   end
 
   def to_s
