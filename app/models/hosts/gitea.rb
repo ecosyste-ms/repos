@@ -21,6 +21,11 @@ module Hosts
       "#{url(repository)}/archive/#{CGI.escape(sha)}.zip"
     end
 
+    def blob_url(repository, sha = nil)
+      sha = branch || repository.default_branch
+      "#{url(repository)}/raw/#{CGI.escape(sha)}/"
+    end
+
     def recently_changed_repo_names(since = 1.hour)
       target_time = Time.now - since
       names = []
