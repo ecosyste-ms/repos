@@ -155,6 +155,8 @@ class Host < ApplicationRecord
       if repo.save
         repo.sync_async
       end
+    rescue TypeError
+      next
     end
   
     if events.any?
