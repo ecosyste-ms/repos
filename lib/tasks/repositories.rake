@@ -1,9 +1,7 @@
 namespace :repositories do
   desc 'sync least recently synced repos'
   task sync_least_recent: :environment do 
-    Host.all.each do |host|
-      host.repositories.order('last_synced_at ASC').where(fork: false).limit(5_000).select('id').each(&:sync_async)
-    end
+    Repository.order('last_synced_at ASC').limit(5_000).select('id').each(&:sync_async)
   end
 
   desc 'sync repos that have been recently active'
