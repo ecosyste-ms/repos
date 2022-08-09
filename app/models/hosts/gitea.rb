@@ -22,7 +22,7 @@ module Hosts
     end
 
     def blob_url(repository, sha = nil)
-      sha = branch || repository.default_branch
+      sha ||= repository.default_branch
       "#{url(repository)}/raw/#{CGI.escape(sha)}/"
     end
 
