@@ -195,7 +195,7 @@ module Hosts
 
     def sync_repos_with_tags
       data = load_repos_with_tags
-      names = data.map{|r| r['repository']}
+      names = data.map{|r| r['repository']}.uniq
       host = Host.find_by_name('GitHub')
       names.each do |name|
         repository = host.repositories.find_by('lower(full_name) = ?', name.downcase)
