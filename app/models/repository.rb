@@ -83,9 +83,10 @@ class Repository < ApplicationRecord
     else  
       res = connection.post("/api/v1/jobs?url=#{CGI.escape(download_url)}")
     end
-    
-    json = Oj.load(res.body)
-    record_dependency_parsing(json)
+    if res.success?
+      json = Oj.load(res.body)
+      record_dependency_parsing(json)
+    end
   end
 
   def record_dependency_parsing(json)
