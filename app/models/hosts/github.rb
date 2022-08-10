@@ -143,7 +143,7 @@ module Hosts
         next unless tag && tag.is_a?(Sawyer::Resource) && tag['ref']
         download_tag(repository, token, tag, existing_tag_names)
       end
-    rescue *IGNORABLE_EXCEPTIONS
+    rescue *IGNORABLE_EXCEPTIONS, Octokit::NotFound
       nil
     end
 
@@ -169,7 +169,7 @@ module Hosts
       end
 
       repository.tags.create(tag_hash)
-    rescue *IGNORABLE_EXCEPTIONS
+    rescue *IGNORABLE_EXCEPTIONS, Octokit::NotFound
       nil
     end
 
