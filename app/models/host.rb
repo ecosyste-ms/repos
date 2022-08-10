@@ -56,14 +56,14 @@ class Host < ApplicationRecord
     nil
   end
 
-  def sync_recently_changed_repos(since = 10.minutes)
-    host_instance.recently_changed_repo_names(since).each do |full_name|
+  def sync_recently_changed_repos(since = 15.minutes)
+    host_instance.recently_changed_repo_names(since).limit(1000).each do |full_name|
       sync_repository(full_name)
     end
   end
 
-  def sync_recently_changed_repos_async(since = 10.minutes)
-    host_instance.recently_changed_repo_names(since).each do |full_name|
+  def sync_recently_changed_repos_async(since = 15.minutes)
+    host_instance.recently_changed_repo_names(since).limit(1000).each do |full_name|
       sync_repository_async(full_name)
     end
   end 
