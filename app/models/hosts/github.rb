@@ -192,7 +192,7 @@ module Hosts
         next_id = next_response['oldest']['id']
       end
 
-      return names
+      return names.uniq
     end
 
     def sync_repos_with_tags

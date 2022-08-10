@@ -44,7 +44,7 @@ module Hosts
         names += repos.map{|repo| repo["full_name"] }
       end
 
-      return names
+      return names.uniq
     end
 
     def load_repo_names(page, order)

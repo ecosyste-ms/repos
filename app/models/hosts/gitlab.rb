@@ -112,7 +112,7 @@ module Hosts
         names += repos.map{|repo| repo["path_with_namespace"] }
       end
 
-      return names
+      return names.uniq
     end
 
     def load_repo_names(page_number = 1, order = 'created_at')
