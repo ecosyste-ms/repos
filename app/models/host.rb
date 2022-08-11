@@ -30,6 +30,7 @@ class Host < ApplicationRecord
   end
 
   def sync_repository(full_name)
+    puts "syncing #{full_name}"
     repo = repositories.find_by('lower(full_name) = ?', full_name.downcase)
 
     if repo
@@ -50,9 +51,11 @@ class Host < ApplicationRecord
         repo
       end
     end
-  rescue *Array(host_class.api_missing_error_class)
+  rescue *Array(host_class.api_missing_error_class) => e
+    p e
     nil
-  rescue ActiveRecord::RecordNotUnique
+  rescue ActiveRecord::RecordNotUnique => e
+    p e
     nil
   end
 

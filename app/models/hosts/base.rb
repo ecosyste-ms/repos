@@ -126,6 +126,7 @@ module Hosts
     end
 
     def update_from_host(repository, token = nil)
+      puts "updating #{repository.full_name} (uuid: #{repository.uuid})"
       begin
         r = self.fetch_repository(repository.id_or_name)
         return unless r.present?
@@ -146,7 +147,8 @@ module Hosts
           repository.update_column(:last_synced_at, Time.now)
         end
         
-      rescue *Array(self.class.api_missing_error_class)
+      rescue *Array(self.class.api_missing_error_class) => e
+        p e
         repository.destroy
       rescue *self.class::IGNORABLE_EXCEPTIONS => e
         p e
