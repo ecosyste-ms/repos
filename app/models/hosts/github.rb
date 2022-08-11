@@ -29,6 +29,10 @@ module Hosts
       "github_tokens"
     end
 
+    def list_tokens
+      REDIS.smembers(token_set_key)
+    end
+
     def fetch_random_token
       REDIS.srandmember(token_set_key)
     end
@@ -42,9 +46,9 @@ module Hosts
     end
 
     def check_tokens
-      REDIS.smembers(token_set_key).each do |token|
+      list_tokens.each do |token|
         begin
-          api_client(token).rate_limit!
+          api_client.rate_limit!
         rescue Octokit::Unauthorized, Octokit::AccountSuspended
           remove_token(token)
         end
@@ -91,13 +95,10 @@ module Hosts
       "#{url(repository)}/commits#{author_param}"
     end
 
-    def fetch_repository(id_or_name, token = nil)
+    def fetch_repository(id_or_name)
       id_or_name = id_or_name.to_i if id_or_name.match(/\A\d+\Z/)
-      hash = api_client(token).repo(id_or_name, accept: 'application/vnd.github.drax-preview+json,application/vnd.github.mercy-preview+json').to_hash.with_indifferent_access
+      hash = api_client.repo(id_or_name, accept: 'application/vnd.github.drax-preview+json,application/vnd.github.mercy-preview+json').to_hash.with_indifferent_access
       map_repository_data(hash)
-    rescue *IGNORABLE_EXCEPTIONS => e
-      p e
-      nil
     end
 
     def map_repository_data(hash)
@@ -117,15 +118,15 @@ module Hosts
       return hash.slice(*repository_columns)
     end
 
-    def get_file_list(repository, token = nil)
-      tree = api_client(token).tree(repository.full_name, repository.default_branch, recursive: true).tree
+    def get_file_list(repository)
+      tree = api_client.tree(repository.full_name, repository.default_branch, recursive: true).tree
       tree.select{|item| item.type == 'blob' }.map{|file| file.path }
     rescue *IGNORABLE_EXCEPTIONS
       nil
     end
 
-    def get_file_contents(repository, path, token = nil)
-      file = api_client(token).contents(repository.full_name, path: path)
+    def get_file_contents(repository, path)
+      file = api_client.contents(repository.full_name, path: path)
       {
         sha: file.sha,
         content: file.content.present? ? Base64.decode64(file.content) : file.content
@@ -136,24 +137,24 @@ module Hosts
       nil
     end
 
-    def download_tags(repository, token = nil)
+    def download_tags(repository)
       existing_tag_names = repository.tags.pluck(:name)
-      tags = api_client(token).refs(repository.full_name, 'tags')
+      tags = api_client.refs(repository.full_name, 'tags')
       Array(tags).each do |tag|
         next unless tag && tag.is_a?(Sawyer::Resource) && tag['ref']
-        download_tag(repository, token, tag, existing_tag_names)
+        download_tag(repository, tag, existing_tag_names)
       end
     rescue *IGNORABLE_EXCEPTIONS, Octokit::NotFound
       nil
     end
 
-    def download_tag(repository, token, tag, existing_tag_names)
+    def download_tag(repository, tag, existing_tag_names)
       match = tag.ref.match(/refs\/tags\/(.*)/)
       return unless match
       name = match[1]
       return if existing_tag_names.include?(name)
 
-      object = api_client(token).get(tag.object.url)
+      object = api_client.get(tag.object.url)
 
       tag_hash = {
         name: name,

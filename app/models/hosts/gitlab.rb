@@ -154,8 +154,6 @@ module Hosts
         }
       })
       return repo_hash.slice(*repository_columns)
-    rescue *IGNORABLE_EXCEPTIONS
-      nil
     end
 
     def crawl_repositories_async

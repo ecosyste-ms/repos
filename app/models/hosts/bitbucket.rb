@@ -118,9 +118,6 @@ module Hosts
       project = api_client.get("/2.0/repositories/#{user_name}/#{repo_name.downcase}").body
       repo_hash = project.to_hash.with_indifferent_access.slice(:description, :uuid, :language, :full_name, :has_wiki, :has_issues, :scm)
 
-      pp project
-      pp repo_hash
-
       repo_hash.merge!({
         owner: project['owner']['username'],
         homepage: project['website'],
@@ -132,8 +129,6 @@ module Hosts
         size: project['size'].to_f/1000,
         source_name: project.fetch('parent', {}).fetch('full_name', nil)
       })
-    rescue *IGNORABLE_EXCEPTIONS
-      nil
     end
   end
 end
