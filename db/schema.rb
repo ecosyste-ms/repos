@@ -10,9 +10,8 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2022_08_02_101219) do
+ActiveRecord::Schema[7.0].define(version: 2022_08_17_142125) do
   # These are extensions that must be enabled in order to support this database
-  enable_extension "pg_stat_statements"
   enable_extension "plpgsql"
 
   create_table "dependencies", force: :cascade do |t|
@@ -27,6 +26,14 @@ ActiveRecord::Schema[7.0].define(version: 2022_08_02_101219) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["manifest_id"], name: "index_dependencies_on_manifest_id"
+  end
+
+  create_table "exports", force: :cascade do |t|
+    t.string "date"
+    t.string "bucket_name"
+    t.integer "repositories_count"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "hosts", force: :cascade do |t|

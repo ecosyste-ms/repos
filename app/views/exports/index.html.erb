@@ -1,0 +1,9 @@
+<div class="container-sm">
+  <h1>Open Data Releases</h1>
+
+  <% if @exports.any? %>
+    <%= render @exports %>
+  <% else %>
+    <p class='my-5'>Coming soon...</p>
+  <% end%>
+</div>

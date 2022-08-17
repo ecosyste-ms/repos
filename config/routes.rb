@@ -31,5 +31,7 @@ Rails.application.routes.draw do
     resources :repositories, constraints: { id: /.*/ }, only: [:index, :show]
   end
 
+  resources :exports, only: [:index], path: 'open-data'
+
   root "home#index"
 end
