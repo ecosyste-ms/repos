@@ -115,7 +115,9 @@ module Hosts
 
     def fetch_repository(full_name)
       user_name, repo_name = full_name.split('/')
-      project = api_client.get("/2.0/repositories/#{user_name}/#{repo_name.downcase}").body
+      resp = api_client.get("/2.0/repositories/#{user_name}/#{repo_name.downcase}")
+      return nil unless resp.success?
+      project = resp.body
       repo_hash = project.to_hash.with_indifferent_access.slice(:description, :uuid, :language, :full_name, :has_wiki, :has_issues, :scm)
 
       repo_hash.merge!({
@@ -129,6 +131,8 @@ module Hosts
         size: project['size'].to_f/1000,
         source_name: project.fetch('parent', {}).fetch('full_name', nil)
       })
+    rescue *IGNORABLE_EXCEPTIONS
+      nil
     end
   end
 end
