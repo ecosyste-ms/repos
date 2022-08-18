@@ -25,4 +25,14 @@ class ApiV1RepositoriesControllerTest < ActionDispatch::IntegrationTest
 
     assert_equal actual_response["full_name"], @repository.full_name
   end
+
+  test 'lookup a repository for a host' do
+    get api_v1_repositories_lookup_path(url: 'https://github.com/ecosyste-ms/repos/')
+    assert_response :success
+    assert_template 'repositories/show', file: 'repositories/show.json.jbuilder'
+    
+    actual_response = JSON.parse(@response.body)
+
+    assert_equal actual_response["full_name"], @repository.full_name
+  end
 end

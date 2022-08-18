@@ -4,6 +4,10 @@ class Host < ApplicationRecord
 
   has_many :repositories
 
+  def self.find_by_domain(domain)
+    Host.all.find { |host| host.domain == domain }
+  end
+  
   def update_repository_counts
     update_column(:repositories_count, repositories.count)
   end
@@ -14,6 +18,10 @@ class Host < ApplicationRecord
 
   def to_param
     name
+  end
+
+  def domain
+    Addressable::URI.parse(url).host
   end
 
   def icon

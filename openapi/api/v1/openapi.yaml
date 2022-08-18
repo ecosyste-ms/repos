@@ -16,6 +16,24 @@ externalDocs:
 servers:
 - url: https://repos.ecosyste.ms/api/v1
 paths:
+  /repositories/lookup:
+    get:
+      summary: "Lookup repository metadata"
+      operationId: "repositoriesLookup"
+      parameters:
+        - name: url
+          in: query
+          description: "The URL of the repository to lookup"
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Repository'
   /hosts:
     get:
       summary: list registies
