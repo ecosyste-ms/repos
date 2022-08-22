@@ -138,5 +138,33 @@ module Hosts
     rescue *IGNORABLE_EXCEPTIONS
       nil
     end
+
+    def crawl_repositories_async
+      url = REDIS.get("bitbucket_next_crawl_url").presence || "/2.0/repositories?pagelen=100"
+      resp = api_client.get(url)
+      return nil unless resp.success?
+      json = resp.body
+      repos = json['values']
+      if repos.present?
+        repos.each{|repo| @host.sync_repository_async(repo["full_name"]) }
+        REDIS.set("bitbucket_next_crawl_url", json["next"])
+      end
+    rescue *IGNORABLE_EXCEPTIONS
+      nil
+    end
+
+    def crawl_repositories
+      url = REDIS.get("bitbucket_next_crawl_url").presence || "/2.0/repositories?pagelen=100"
+      resp = api_client.get(url)
+      return nil unless resp.success?
+      json = resp.body
+      repos = json['values']
+      if repos.present?
+        repos.each{|repo| @host.sync_repository(repo["full_name"]) }
+        REDIS.set("bitbucket_next_crawl_url", json["next"])
+      end
+    rescue *IGNORABLE_EXCEPTIONS
+      nil
+    end
   end
 end
