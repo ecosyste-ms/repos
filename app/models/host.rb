@@ -59,6 +59,9 @@ class Host < ApplicationRecord
         repo
       end
     end
+  rescue *Array(host_class::IGNORABLE_EXCEPTIONS) => e
+    p e
+    nil
   rescue *Array(host_class.api_missing_error_class) => e
     p e
     nil

@@ -113,6 +113,10 @@ module Hosts
       end
     end
 
+    def repository_id_or_name(repository)
+      repository.full_name
+    end
+
     def fetch_repository(full_name)
       user_name, repo_name = full_name.split('/')
       resp = api_client.get("/2.0/repositories/#{user_name}/#{repo_name.downcase}")

@@ -125,10 +125,14 @@ module Hosts
       RepositoryOwner.const_get(repository.host_type.capitalize)
     end
 
+    def repository_id_or_name(repository)
+      repository.id_or_name
+    end
+
     def update_from_host(repository, token = nil)
       puts "updating #{repository.full_name} (uuid: #{repository.uuid})"
       begin
-        r = self.fetch_repository(repository.id_or_name)
+        r = self.fetch_repository(repository_id_or_name(repository))
         return unless r.present?
         repository.uuid = r[:id] unless repository.uuid.to_s == r[:id].to_s
         if repository.full_name.downcase != r[:full_name].downcase
@@ -154,6 +158,10 @@ module Hosts
         p e
         nil
       end
+    end
+
+    def fetch_repository(id_or_name, token = nil)
+      # to be implemented by subclasses
     end
 
     def crawl_repositories_async

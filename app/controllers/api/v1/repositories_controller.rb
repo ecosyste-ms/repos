@@ -57,7 +57,7 @@ class Api::V1::RepositoriesController < Api::V1::ApplicationController
       @repository.sync_async unless @repository.last_synced_at.present? && @repository.last_synced_at > 1.day.ago
       render :show
     else
-      @host.sync_repository_async(path)
+      @host.sync_repository_async(path) if path.present?
       render json: { error: 'Repository not found' }, status: :not_found
     end
   end
