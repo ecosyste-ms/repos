@@ -35,7 +35,7 @@ module Hosts
       "#{url(repository)}/commits/#{repository.default_branch}"
     end
 
-    def download_url(repository, branch = nil)
+    def download_url(repository, branch = nil, kind = 'branch')
       branch = repository.default_branch if branch.nil?
       name = repository.full_name.split('/').last
       "#{@host.url}/#{repository.full_name}/-/archive/#{branch}/#{name}-#{branch}.zip"

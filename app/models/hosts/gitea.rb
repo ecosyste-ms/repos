@@ -16,7 +16,7 @@ module Hosts
       repository.logo_url
     end
 
-    def download_url(repository, branch = nil)
+    def download_url(repository, branch = nil, kind = 'branch')
       sha = branch || repository.default_branch
       "#{url(repository)}/archive/#{CGI.escape(sha)}.zip"
     end

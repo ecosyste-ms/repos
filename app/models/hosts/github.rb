@@ -63,10 +63,13 @@ module Hosts
       "https://github.com/#{repository.owner}.png?size=#{size}"
     end
 
-    def download_url(repository, branch = nil)
-      branch = repository.default_branch if branch.nil?
-      # TODO allow passing a commit instead of branch/tag (no refs/heads/master)
-      "https://codeload.github.com/#{repository.full_name}/tar.gz/refs/heads/#{branch}"
+    def download_url(repository, branch = nil, kind = 'branch')
+      if kind == 'branch'
+        branch = repository.default_branch if branch.nil?
+        "https://codeload.github.com/#{repository.full_name}/tar.gz/refs/heads/#{branch}"
+      else
+        "https://codeload.github.com/#{repository.full_name}/tar.gz/#{branch}"
+      end
     end
 
     def watchers_url(repository)

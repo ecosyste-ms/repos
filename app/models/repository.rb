@@ -50,8 +50,8 @@ class Repository < ApplicationRecord
     host.html_url(self)
   end
 
-  def download_url(branch = default_branch)
-    host.download_url(self, branch)
+  def download_url(branch = default_branch, kind = 'branch')
+    host.download_url(self, branch, kind)
   end
 
   def avatar_url(size)

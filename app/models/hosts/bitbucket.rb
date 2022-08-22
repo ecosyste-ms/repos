@@ -22,7 +22,7 @@ module Hosts
       "#{url(repository)}/src/#{CGI.escape(sha)}/"
     end
 
-    def download_url(repository, branch = nil)
+    def download_url(repository, branch = nil, kind = 'branch')
       sha ||= repository.default_branch
       "#{url(repository)}/get/#{CGI.escape(sha)}.zip"
     end

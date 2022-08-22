@@ -44,9 +44,27 @@
     </div>
   </div>
 
+  <% if @tags.any? %>
+    <div class="dropdown">
+      <button class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+        Tags
+      </button>
+      <ul class="dropdown-menu">
+        <li>
+            <%= link_to @repository.default_branch, url_for(sha: nil), class: "dropdown-item #{'active' if @sha == @repository.default_branch}" %>
+          </li>
+        <% @tags.each do |tag| %>
+          <li>
+            <%= link_to tag, url_for(sha: tag.name), class: "dropdown-item #{'active' if tag.name == @sha}" %>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
   <h5>Files</h5>
 
-  <div class='card' id="files" data-url="<%= @repository.download_url %>" data-basename="<%= @repository.archive_basename %>" data-path="<%= params[:path] %>">
+  <div class='card' id="files" data-url="<%= @repository.download_url(@sha, params['sha'].present? ? 'tag' : 'branch') %>" data-basename="<%= @sha || @repository.archive_basename %>" data-path="<%= params[:path] %>">
     <div id='files-header' class="card-header"></div>
     <ul id="files-list" class="list-group list-group-flush"></ul>
     <div id="files-content" class="card-body">Loading...</div>

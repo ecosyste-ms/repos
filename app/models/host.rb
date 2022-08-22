@@ -106,8 +106,8 @@ class Host < ApplicationRecord
     host_instance.html_url(repository)
   end
 
-  def download_url(repository, branch = nil)
-    host_instance.download_url(repository, branch)
+  def download_url(repository, branch = nil, kind = 'branch')
+    host_instance.download_url(repository, branch, kind)
   end
 
   def avatar_url(repository, size)
