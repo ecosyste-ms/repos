@@ -147,6 +147,7 @@ module Hosts
         next unless tag && tag.is_a?(Sawyer::Resource) && tag['ref']
         download_tag(repository, tag, existing_tag_names)
       end
+      repository.update_column(:tags_last_synced_at, Time.now)
     rescue *IGNORABLE_EXCEPTIONS, Octokit::NotFound
       nil
     end

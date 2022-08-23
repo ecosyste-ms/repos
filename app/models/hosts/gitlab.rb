@@ -89,7 +89,7 @@ module Hosts
           published_at: tag.commit.committed_date
         })
       end
-      repository.projects.find_each(&:forced_save) if remote_tags.present?
+      repository.update_column(:tags_last_synced_at, Time.now)
     rescue *IGNORABLE_EXCEPTIONS
       nil
     end

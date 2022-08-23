@@ -72,6 +72,7 @@ module Hosts
 
     def download_tags(repository)
       remote_tags = api_client.get("/2.0/repositories/#{repository.owner}/#{repository.project_name}/refs/tags").body['values']
+      return unless remote_tags.present?
       existing_tag_names = repository.tags.pluck(:name)
       remote_tags.each do |name, data|
         next if existing_tag_names.include?(name)
@@ -82,7 +83,7 @@ module Hosts
           published_at: data.utctimestamp
         })
       end
-      repository.projects.find_each(&:forced_save) if remote_tags.present?
+      repository.update_column(:tags_last_synced_at, Time.now)
     rescue *IGNORABLE_EXCEPTIONS
       nil
     end

@@ -38,6 +38,10 @@ class Repository < ApplicationRecord
     uuid || full_name
   end
 
+  def project_name
+    full_name.split('/')[1..-1].join('/')
+  end
+
   def sync
     host.host_instance.update_from_host(self)
   end

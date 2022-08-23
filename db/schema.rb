@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2022_08_17_142125) do
+ActiveRecord::Schema[7.0].define(version: 2022_08_23_110902) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -96,6 +96,7 @@ ActiveRecord::Schema[7.0].define(version: 2022_08_17_142125) do
     t.datetime "updated_at", null: false
     t.datetime "dependencies_parsed_at"
     t.string "dependency_job_id"
+    t.datetime "tags_last_synced_at"
     t.index "host_id, lower((full_name)::text)", name: "index_repositories_on_host_id_lower_full_name", unique: true
     t.index ["dependencies_parsed_at"], name: "index_repositories_on_dependencies_parsed_at"
     t.index ["host_id", "uuid"], name: "index_repositories_on_host_id_uuid", unique: true
