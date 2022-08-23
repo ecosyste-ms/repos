@@ -26,6 +26,10 @@ class Repository < ApplicationRecord
               .limit(3000).each(&:parse_dependencies_async)
   end
 
+  def self.download_tags_async
+    Repository.where(fork: false).order('tags_last_synced_at ASC nulls first').limit(1_000).select('id').each(&:download_tags_async)
+  end
+
   def to_s
     full_name
   end
