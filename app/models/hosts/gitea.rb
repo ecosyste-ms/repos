@@ -50,7 +50,10 @@ module Hosts
     def download_tags(repository)
       existing_tag_names = repository.tags.pluck(:name)
 
-      remote_tags = api_client.get("/api/v1/repos/#{repository.full_name}/tags").body
+      resp = api_client.get("/api/v1/repos/#{repository.full_name}/tags")
+      return nil unless resp.success?
+
+      remote_tags = resp.body
 
       remote_tags.each do |tag|
         next if existing_tag_names.include?(tag['name'])
