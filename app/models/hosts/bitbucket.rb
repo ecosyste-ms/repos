@@ -77,7 +77,7 @@ module Hosts
       remote_tags.each do |tag|
         next if existing_tag_names.include?(tag['name'])
         repository.tags.create({
-          name: name,
+          name: tag['name'],
           kind: "tag",
           sha: tag['target']['hash'],
           published_at: tag['date'].presence || tag['target']['date']
