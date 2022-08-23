@@ -47,6 +47,26 @@ module Hosts
       return names.uniq
     end
 
+    def download_tags(repository)
+      existing_tag_names = repository.tags.pluck(:name)
+
+      remote_tags = api_client.get("/api/v1/repos/#{repository.full_name}/tags").body
+
+      remote_tags.each do |tag|
+        next if existing_tag_names.include?(tag['name'])
+        next if tag['commit'].blank?
+        repository.tags.create!({
+          name: tag['name'],
+          kind: "tag",
+          sha: tag['commit']['sha'],
+          published_at: tag['commit']['created']
+        })
+      end
+      repository.update_column(:tags_last_synced_at, Time.now)
+    rescue *IGNORABLE_EXCEPTIONS
+      nil
+    end
+
     def load_repo_names(page, order)
       data = api_client.get("/api/v1/repos/search?sort=#{order}&page=#{page}&limit=100").body
       data['data']
