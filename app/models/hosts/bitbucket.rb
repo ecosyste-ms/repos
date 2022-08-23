@@ -74,13 +74,13 @@ module Hosts
       remote_tags = api_client.get("/2.0/repositories/#{repository.owner}/#{repository.project_name}/refs/tags").body['values']
       return unless remote_tags.present?
       existing_tag_names = repository.tags.pluck(:name)
-      remote_tags.each do |name, data|
-        next if existing_tag_names.include?(name)
+      remote_tags.each do |tag|
+        next if existing_tag_names.include?(tag['name'])
         repository.tags.create({
           name: name,
           kind: "tag",
-          sha: data.raw_node,
-          published_at: data.utctimestamp
+          sha: tag['target']['hash'],
+          published_at: tag['date'].presence || tag['target']['date']
         })
       end
       repository.update_column(:tags_last_synced_at, Time.now)
