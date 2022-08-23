@@ -142,7 +142,7 @@ module Hosts
 
     def download_tags(repository)
       existing_tag_names = repository.tags.pluck(:name)
-      tags = api_client.refs(repository.full_name, 'tags')
+      tags = api_client.tags(repository.full_name)
       Array(tags).each do |tag|
         next unless tag && tag.is_a?(Sawyer::Resource) && tag['ref']
         download_tag(repository, tag, existing_tag_names)
