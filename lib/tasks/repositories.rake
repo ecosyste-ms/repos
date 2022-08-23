@@ -22,6 +22,11 @@ namespace :repositories do
     host.host_instance.sync_repos_with_tags
   end
 
+  desc 'sync tags'
+  task sync_tags: :environment do
+    Repository.order('tags_last_synced_at ASC nulls first').limit(1_000).select('id').each(&:download_tags_async)
+  end
+
   desc 'crawl repositories'
   task crawl: :environment do
     Host.all.each do |host|
