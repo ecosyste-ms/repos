@@ -2,7 +2,7 @@ require 'test_helper'
 
 class HomeControllerTest < ActionDispatch::IntegrationTest
   setup do
-
+    @host = Host.create(name: 'GitHub', url: 'https://github.com', kind: 'github')
   end
 
   test 'renders index' do
