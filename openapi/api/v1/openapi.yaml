@@ -397,6 +397,9 @@ components:
           format: date-time
         dependency_job_id:
           type: string
+        host:
+          type: object
+          $ref: '#/components/schemas/Host'
     Manifest:
       type: object
       properties:
