@@ -72,6 +72,10 @@ module Hosts
       end
     end
 
+    def tag_url(repository, tag_name)
+      "#{url(repository)}/releases/tag/#{tag_name}"
+    end
+
     def watchers_url(repository)
       "#{url(repository)}/watchers"
     end

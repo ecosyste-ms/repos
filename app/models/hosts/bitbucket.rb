@@ -22,6 +22,10 @@ module Hosts
       "#{url(repository)}/src/#{CGI.escape(sha)}/"
     end
 
+    def tag_url(repository, tag_name)
+      "#{url(repository)}/src/#{tag_name}"
+    end
+
     def download_url(repository, branch = nil, kind = 'branch')
       sha ||= repository.default_branch
       "#{url(repository)}/get/#{CGI.escape(sha)}.zip"

@@ -35,6 +35,10 @@ module Hosts
       "#{url(repository)}/commits/#{repository.default_branch}"
     end
 
+    def tag_url(repository, tag_name)
+      "#{url(repository)}/-/tags/#{tag_name}"
+    end
+
     def download_url(repository, branch = nil, kind = 'branch')
       branch = repository.default_branch if branch.nil?
       name = repository.full_name.split('/').last

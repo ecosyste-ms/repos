@@ -62,16 +62,24 @@ class Tag < ApplicationRecord
     name
   end
 
-  def repository_url
-    case repository.host_type
-    when 'GitHub'
-      "#{repository.url}/releases/tag/#{name}"
-    when 'GitLab'
-      "#{repository.url}/tags/#{name}"
-    when 'Bitbucket'
-      "#{repository.url}/commits/tag/#{name}"
-    end
+  def download_url
+    repository.host.download_url(repository, name, 'tag')
   end
+
+  def html_url
+    repository.host.tag_url(repository, name)
+  end
+
+  # def repository_url
+  #   case repository.host_type
+  #   when 'GitHub'
+  #     "#{repository.url}/releases/tag/#{name}"
+  #   when 'GitLab'
+  #     "#{repository.url}/tags/#{name}"
+  #   when 'Bitbucket'
+  #     "#{repository.url}/commits/tag/#{name}"
+  #   end
+  # end
 
   def related_tags
     repository.sorted_tags
