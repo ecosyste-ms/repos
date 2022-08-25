@@ -142,40 +142,73 @@ module Hosts
 
     def download_tags(repository)
       existing_tag_names = repository.tags.pluck(:name)
-      tags = api_client.tags(repository.full_name)
+      tags = fetch_tags(repository)
       Array(tags).each do |tag|
-        next unless tag && tag.is_a?(Sawyer::Resource) && tag['ref']
-        download_tag(repository, tag, existing_tag_names)
+        next if existing_tag_names.include?(tag[:name])
+        repository.tags.create(tag)
       end
       repository.update_column(:tags_last_synced_at, Time.now)
     rescue *IGNORABLE_EXCEPTIONS, Octokit::NotFound
       nil
     end
 
-    def download_tag(repository, tag, existing_tag_names)
-      match = tag.ref.match(/refs\/tags\/(.*)/)
-      return unless match
-      name = match[1]
-      return if existing_tag_names.include?(name)
-
-      object = api_client.get(tag.object.url)
-
-      tag_hash = {
-        name: name,
-        kind: tag.object.type,
-        sha: tag.object.sha
-      }
-
-      case tag.object.type
-      when 'commit'
-        tag_hash[:published_at] = object.committer.date
-      when 'tag'
-        tag_hash[:published_at] = object.tagger.date
-      end
-
-      repository.tags.create(tag_hash)
-    rescue *IGNORABLE_EXCEPTIONS, Octokit::NotFound
-      nil
+    def fetch_tags(repository)
+      query = <<-GRAPHQL
+        {
+          repository(owner: "#{repository.owner}", name: "#{repository.project_name}") {
+            refs(
+              refPrefix: "refs/tags/"
+              orderBy: {field: TAG_COMMIT_DATE, direction: DESC}
+              last: 100
+            ) {
+              nodes {
+                name
+                target {
+                  __typename
+                  ... on Commit{
+                    oid
+                    committer{
+                      ... on GitActor {
+                        date
+                      }
+                    }
+                  }
+                  ... on Tag {
+                    target {
+                      ... on GitObject {
+                        oid
+                      }
+                    }
+                    tagger {
+                      ... on GitActor {
+                        date
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      GRAPHQL
+      res = api_client.post('/graphql', { query: query }.to_json).to_h
+      res[:data][:repository][:refs][:nodes].map do |tag|
+        if tag[:target][:__typename] == 'Tag'
+          {
+            name: tag[:name],
+            sha: tag[:target][:target][:oid],
+            published_at: tag[:target][:tagger][:date],
+            kind: 'tag'
+          }
+        elsif tag[:target][:__typename] == 'Commit'
+          {
+            name: tag[:name],
+            sha: tag[:target][:oid],
+            published_at: tag[:target][:committer][:date],
+            kind: 'commit'
+          }
+        end
+      end.compact
     end
 
     def recently_changed_repo_names(since = 1.hour)
