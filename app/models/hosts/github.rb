@@ -220,7 +220,7 @@ module Hosts
       names = []
 
       first_response = load_repo_names
-      return if first_response.blank?
+      return [] if first_response.blank?
       most_recent = first_response["newest"]["created_at"]
       target_time = Time.parse(most_recent) - since
       next_id = first_response['oldest']['id']
