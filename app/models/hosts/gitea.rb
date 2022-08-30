@@ -75,8 +75,9 @@ module Hosts
     end
 
     def load_repo_names(page, order)
-      data = api_client.get("/api/v1/repos/search?sort=#{order}&page=#{page}&limit=100").body
-      data['data']
+      resp = api_client.get("/api/v1/repos/search?sort=#{order}&page=#{page}&limit=100")
+      return [] unless resp.success?
+      resp.body['data']
     end
 
     def crawl_repositories_async
