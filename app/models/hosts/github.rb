@@ -196,7 +196,7 @@ module Hosts
         }
       GRAPHQL
       res = api_client.post('/graphql', { query: query }.to_json).to_h
-      return [] unless res[:data][:repository].present? && res[:data][:repository][:refs].present? && res[:data][:repository][:refs][:nodes].present?
+      return [] unless res && res[:data] && res[:data][:repository].present? && res[:data][:repository][:refs].present? && res[:data][:repository][:refs][:nodes].present?
       res[:data][:repository][:refs][:nodes].map do |tag|
         if tag[:target][:__typename] == 'Tag'
           {
