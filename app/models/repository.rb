@@ -18,7 +18,7 @@ class Repository < ApplicationRecord
   scope :without_manifests, -> { includes(:manifests).where(manifests: {repository_id: nil}) }
 
   def self.parse_dependencies_async
-    Repository.where.not(dependency_job_id: nil).limit(4000).select('id, dependencies_parsed_at').each(&:parse_dependencies_async)
+    Repository.where.not(dependency_job_id: nil).limit(5000).select('id, dependencies_parsed_at').each(&:parse_dependencies_async)
     Repository.where('last_synced_at > ?', 1.month.ago)
               .where(fork: false)
               .where(dependencies_parsed_at: nil, dependency_job_id: nil)
@@ -27,7 +27,7 @@ class Repository < ApplicationRecord
   end
 
   def self.download_tags_async
-    Repository.where(fork: false).order('tags_last_synced_at ASC nulls first').limit(4_000).select('id').each(&:download_tags_async)
+    Repository.where(fork: false).order('tags_last_synced_at ASC nulls first').limit(5_000).select('id').each(&:download_tags_async)
   end
 
   def to_s
