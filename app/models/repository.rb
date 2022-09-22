@@ -20,6 +20,7 @@ class Repository < ApplicationRecord
   def self.parse_dependencies_async
     Repository.where.not(dependency_job_id: nil).limit(5000).select('id, dependencies_parsed_at').each(&:parse_dependencies_async)
     Repository.where('last_synced_at > ?', 1.month.ago)
+              .where(status: nil)
               .where(fork: false)
               .where(dependencies_parsed_at: nil, dependency_job_id: nil)
               .select('id, dependencies_parsed_at')
