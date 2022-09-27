@@ -9,6 +9,7 @@ default_hosts = [
   {name: "opendev.org", url: "https://opendev.org", kind: "gitea", org: 'openstack-infra'},
   {name: "code-repo.d4science.org", url: "https://code-repo.d4science.org", kind: "gitea", org: 'd4science'},
   {name: "salsa.debian.org", url: "https://salsa.debian.org", kind: "gitlab", org: 'debian'},
+  {name: "gitlab.haskell.org", url: "https://gitlab.haskell.org", kind: "gitlab", org: 'haskell'},
 ]
 
 default_hosts.each do |host|
