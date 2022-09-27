@@ -91,6 +91,7 @@ class Host < ApplicationRecord
 
   def crawl_repositories
     host_instance.crawl_repositories
+    update_repository_counts
   end
 
   def download_tags(repository)
