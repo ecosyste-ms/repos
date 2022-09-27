@@ -55,7 +55,10 @@ class Host < ApplicationRecord
         repo.assign_attributes(repo_hash)
         repo.last_synced_at = Time.now
         repo.save
-        # TODO sync extra things if stuff changed
+        if repo.latest_commit_sha_changed?
+          repo.parse_dependencies_async 
+          repo.download_tags_async
+        end
         repo
       end
     end
