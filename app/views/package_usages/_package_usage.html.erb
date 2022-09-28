@@ -11,7 +11,7 @@
           <%#= repository.description %>
         </p>
         <p class="card-subtitle mb-2 text-muted"><i><small>
-          <%= number_with_delimiter package_usage.dependents_count %> dependents
+          <%= pluralize number_with_delimiter(package_usage.dependents_count), 'Dependent Repository' %>
         </small></i></p>
       </div>
     </div>
