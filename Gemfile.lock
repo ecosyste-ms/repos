@@ -83,6 +83,7 @@ GEM
     bugsnag (6.24.2)
       concurrent-ruby (~> 1.0)
     builder (3.2.4)
+    chartkick (4.2.1)
     concurrent-ruby (1.1.10)
     connection_pool (2.3.0)
     crack (0.4.5)
@@ -311,6 +312,7 @@ DEPENDENCIES
   bootsnap
   bootstrap
   bugsnag
+  chartkick
   debug
   faraday
   faraday-follow_redirects

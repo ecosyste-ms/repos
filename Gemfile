@@ -37,6 +37,7 @@ gem "octokit"
 gem "bugsnag"
 gem "groupdate"
 gem 'jquery-rails'
+gem 'chartkick'
 
 group :development, :test do
   gem "debug", platforms: %i[ mri mingw x64_mingw ]

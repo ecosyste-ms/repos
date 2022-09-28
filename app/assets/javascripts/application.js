@@ -1,6 +1,8 @@
 //= require popper
 //= require bootstrap 
 //= require jquery
+//= require chartkick
+//= require Chart.bundle
 
 function renderFileList(files, path) {
   $('#files-content').hide().html('');
