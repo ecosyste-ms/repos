@@ -1,0 +1,19 @@
+<div class="card mb-3 repository d-flex">
+  <div class="card-body pb-1">
+    <div class="d-flex">
+      
+      <div class="flex-grow-1 ms-3 text-break">
+        <h5 class='card-title'>
+          <%= link_to package_usage.name, usage_path(package_usage.ecosystem, package_usage.name) %>
+        </h5>
+      
+        <p class="card-subtitle mb-2 text-muted">
+          <%#= repository.description %>
+        </p>
+        <p class="card-subtitle mb-2 text-muted"><i><small>
+          <%= number_with_delimiter package_usage.dependents_count %> dependents
+        </small></i></p>
+      </div>
+    </div>
+  </div>
+</div>

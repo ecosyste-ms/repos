@@ -1,0 +1,25 @@
+<div class="container-sm">
+  <h1>Package Usage</h1>
+  
+  <% @ecosystems.each do |ecosystem, count| %>
+    <div class="card mb-3 host d-flex">
+      <div class="card-body pb-1">
+        <div class="d-flex">
+          
+          <div class="flex-grow-1 ms-3 text-break">
+            <h5 class='card-title'>
+              <%= link_to ecosystem, ecosystem_usage_path(ecosystem) %>
+            </h5>
+          
+            <p class="card-subtitle mb-2 text-muted">
+                <%= number_with_delimiter count %> packages
+            </p>
+          </div>
+          <div class="flex-shrink-0">
+            <img src="https://github.com/<%= ecosystem %>.png" class="rounded" height='40' width='40' onerror="this.style.display='none'">
+          </div>  
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div>

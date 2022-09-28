@@ -1,0 +1,9 @@
+<div class="container-sm">
+  <h1>
+    <%= link_to 'Package Usage', usage_index_path %>:
+    <%= @ecosystem %>
+  </h1>
+
+  <%= render @package_usages %>
+  <%== pagy_bootstrap_nav(@pagy) if @pagy.pages > 1 %>  
+</div>

@@ -77,6 +77,9 @@
         <div class="card mb-3">
           <div class="card-header">
             <%= link_to manifest.filepath, manifest.repository_link, target: :_blank %>
+            <span class='text-muted'>
+              <%= manifest.ecosystem %>
+            </span>
           </div>
           <ul class="list-group list-group-flush">
             <% if manifest.lockfile? && manifest.dependencies.length > 100 %>
@@ -86,7 +89,7 @@
             <% else %>
               <% manifest.dependencies.sort_by{|d| [d.kind, d.package_name]}.each do |dependency| %>
                 <li class="list-group-item">
-                  <%= dependency.package_name %>
+                  <%= link_to dependency.package_name, usage_path(dependency.ecosystem, dependency.package_name) %>
                   <i><%= dependency.requirements %></i>
                   <small class='text-muted'>
                   <% if dependency.kind != 'runtime' %>
