@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2022_09_28_123100) do
+ActiveRecord::Schema[7.0].define(version: 2022_09_28_145718) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -66,6 +66,7 @@ ActiveRecord::Schema[7.0].define(version: 2022_09_28_123100) do
     t.json "requirements", default: {}
     t.json "kind", default: {}
     t.json "direct", default: {}
+    t.index ["ecosystem", "name"], name: "index_package_usages_on_ecosystem_and_name"
   end
 
   create_table "repositories", force: :cascade do |t|
