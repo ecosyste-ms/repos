@@ -8,13 +8,13 @@ class PackageUsage < ApplicationRecord
         package_usage.repo_ids |= [dependency.repository_id]
         package_usage.dependents_count = package_usage.repo_ids.length
         package_usage.requirements[dependency.requirements] ||= 0
-        package_usage.requirements[dependency.requirements] += 1 
+        package_usage.requirements[dependency.requirements] += 1 # TODO split into direct vs transitive
         package_usage.kind[dependency.kind] ||= 0
-        package_usage.kind[dependency.kind] += 1
+        package_usage.kind[dependency.kind] += 1 # TODO this may be too large
 
         direct = dependency.direct ? 'direct' : 'transitive'
         package_usage.direct[direct] ||= 0
-        package_usage.direct[direct] += 1
+        package_usage.direct[direct] += 1 # TODO this may be too large
         package_usage.save!
       end
       REDIS.set('package_usage_id', dependency.id)
@@ -22,6 +22,8 @@ class PackageUsage < ApplicationRecord
   end
 
   # TODO sync some details in from packages.ecosyste.ms
+
+  # TODO usages need to be updated after dependency updates
 
   def dependent_repos
     Repository.where(id: repo_ids)
