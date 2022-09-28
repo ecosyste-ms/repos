@@ -5,7 +5,7 @@ class UsageController < ApplicationController
 
   def ecosystem
     @ecosystem = params[:ecosystem]
-    @scope = PackageUsage.where(ecosystem: @ecosystem).order('dependents_count DESC')
+    @scope = PackageUsage.where(ecosystem: @ecosystem).select('ecosystem,name,dependents_count').order('dependents_count DESC')
     @pagy, @package_usages = pagy(@scope)
   end
 

@@ -4,6 +4,7 @@ class PackageUsage < ApplicationRecord
     end_id = start_id.to_i + limit
 
     Dependency.where('id > ?', start_id).where('id < ?', end_id).find_each do |dependency|
+      # TODO upsert in batches
       PackageUsage.find_or_create_by!(ecosystem: dependency.ecosystem.downcase, name: dependency.package_name).tap do |package_usage|
         package_usage.repo_ids |= [dependency.repository_id]
         package_usage.dependents_count = package_usage.repo_ids.length
@@ -26,6 +27,6 @@ class PackageUsage < ApplicationRecord
   # TODO usages need to be updated after dependency updates
 
   def dependent_repos
-    Repository.where(id: repo_ids)
+    Repository.where(id: repo_ids).includes(:host)
   end
 end
