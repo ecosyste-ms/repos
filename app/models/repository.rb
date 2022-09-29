@@ -27,7 +27,7 @@ class Repository < ApplicationRecord
   end
 
   def self.download_tags_async
-    Repository.where(fork: false, status: nil).order('tags_last_synced_at ASC nulls first').limit(5_000).select('id').each(&:download_tags_async)
+    Repository.where(fork: false, status: nil).order('tags_last_synced_at ASC nulls first').limit(10_000).select('id').each(&:download_tags_async)
   end
 
   def to_s
