@@ -33,7 +33,7 @@ class PackageUsage < ApplicationRecord
         deps[d.ecosystem][d.package_name][:kind] ||= []
         deps[d.ecosystem][d.package_name][:kind] |= [d.kind]
         deps[d.ecosystem][d.package_name][:direct] ||= []
-        deps[d.ecosystem][d.package_name][:direct] |= [d.direct]
+        deps[d.ecosystem][d.package_name][:direct] |= [d.direct ? 'direct' : 'transitive']
       end
     end
 
