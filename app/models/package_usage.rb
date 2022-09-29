@@ -74,6 +74,7 @@ class PackageUsage < ApplicationRecord
         end
       end
     end
+    repository.update_column(:usage_updated_at, Time.now)
   end
 
   # TODO sync some details in from packages.ecosyste.ms
