@@ -34,6 +34,63 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Repository'
+  /usage:
+    get:
+      summary: "Get package usage ecosystems"
+      operationId: "usage"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Ecosystem'
+  /usage/{ecosystem}:
+    get:
+      summary: "Get package usage for an ecosystem"
+      operationId: "usageEcosystem"
+      parameters:
+        - name: ecosystem
+          in: path
+          description: "The ecosystem to get usage for"
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PackageUsage'
+  /usage/{ecosystem}/{package}:
+    get:
+      summary: "Get package usage for a package"
+      operationId: "usagePackage"
+      parameters:
+        - name: ecosystem
+          in: path
+          description: "The ecosystem to get usage for"
+          required: true
+          schema:
+            type: string
+        - name: package
+          in: path
+          description: "The package to get usage for"
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PackageUsage'
   /hosts:
     get:
       summary: list registies
