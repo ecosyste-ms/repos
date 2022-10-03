@@ -1,0 +1,1 @@
+json.array! @ecosystems, partial: 'api/v1/usage/ecosystem', as: :ecosystem

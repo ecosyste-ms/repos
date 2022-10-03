@@ -319,6 +319,12 @@ components:
           type: string
         repositories_count:
           type: integer
+        host_url:
+          type: string
+        repositoris_url:
+          type: string
+        repository_names_url:
+          type: string
     Repository:
       type: object
       properties:
@@ -397,6 +403,12 @@ components:
           format: date-time
         dependency_job_id:
           type: string
+        repository_url:
+          type: string
+        tags_url:
+          type: string
+        manifests_url:
+          type: string
         host:
           type: object
           $ref: '#/components/schemas/Host'
@@ -458,4 +470,29 @@ components:
           type: string
         html_url:
           type: string
-        
+    Ecosystem:
+      type: object
+      properties:
+        name:
+          type: string
+        packages_count:
+          type: integer
+        ecosystem_url:
+          type: string
+    PackageUsage:
+      type: object
+      properties:
+        ecosystem:
+          type: string
+        name:
+          type: string
+        dependents_count:
+          type: integer
+        requirements:
+          type: object
+        kind:
+          type: object
+        direct:
+          type: object
+        package_usage_url:
+          type: string

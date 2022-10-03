@@ -14,6 +14,11 @@ Rails.application.routes.draw do
 
   namespace :api, :defaults => {:format => :json} do
     namespace :v1 do
+
+      get 'usage', to: 'usage#index', as: :usage_index
+      get 'usage/:ecosystem', to: 'usage#ecosystem', as: :ecosystem_usage
+      get 'usage/:ecosystem/:name', to: 'usage#show', as: :usage, constraints: { name: /.*/ }
+
       get 'repositories/lookup', to: 'repositories#lookup', as: :repositories_lookup
       resources :hosts, constraints: { id: /.*/ }, only: [:index, :show] do
         resources :repositories, constraints: { id: /.*/ }, only: [:index, :show] do
