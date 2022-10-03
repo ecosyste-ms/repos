@@ -30,6 +30,13 @@ class Repository < ApplicationRecord
     Repository.where(fork: false, status: nil).order('tags_last_synced_at ASC nulls first').limit(10_000).select('id').each(&:download_tags_async)
   end
 
+  def self.update_package_usages_async
+    return if Sidekiq::Queue.new('usage').size > 10_000
+    Repository.with_manifests.where(fork: false, status: nil).order('usage_updated_at ASC nulls first').limit(5_000).select('id').each do |repo|
+      PackageUsageWorker.perform_async(repo.id)
+    end
+  end
+
   def to_s
     full_name
   end

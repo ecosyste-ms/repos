@@ -10,7 +10,7 @@
     },
     {
       "command": "bundle exec rake repositories:parse_missing_dependencies",
-      "schedule": "*/10 * * * *"
+      "schedule": "*/15 * * * *"
     },
     {
       "command": "bundle exec rake repositories:download_tags",
@@ -27,6 +27,10 @@
     {
       "command": "bundle exec rake repositories:crawl",
       "schedule": "*/5 * * * *"
+    },
+    {
+      "command": "bundle exec rake repositories:update_package_usages",
+      "schedule": "*/15 * * * *"
     }
   ]
 }

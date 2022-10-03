@@ -33,4 +33,9 @@ namespace :repositories do
       host.crawl_repositories_async
     end
   end
+
+  desc 'update package usages'
+  task update_package_usages: :environment do
+    Repository.update_package_usages_async
+  end
 end
