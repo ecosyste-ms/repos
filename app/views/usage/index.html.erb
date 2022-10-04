@@ -16,7 +16,9 @@
             </p>
           </div>
           <div class="flex-shrink-0">
-            <img src="https://github.com/<%= ecosystem %>.png" class="rounded" height='40' width='40' onerror="this.style.display='none'">
+            <% if registry = Registry.find_by_ecosystem(ecosystem) %>
+              <img src="https://github.com/<%= registry.github %>.png" class="rounded" height='40' width='40' onerror="this.style.display='none'">
+            <% end %>
           </div>  
         </div>
       </div>
