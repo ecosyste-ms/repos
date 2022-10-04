@@ -1,19 +1,40 @@
-<div class="card mb-3 repository d-flex">
-  <div class="card-body pb-1">
-    <div class="d-flex">
-      
-      <div class="flex-grow-1 ms-3 text-break">
-        <h5 class='card-title'>
-          <%= link_to package_usage.name, usage_path(package_usage.ecosystem, package_usage.name) %>
-        </h5>
-      
-        <p class="card-subtitle mb-2 text-muted">
-          <%#= repository.description %>
-        </p>
-        <p class="card-subtitle mb-2 text-muted"><i><small>
-          <%= pluralize number_with_delimiter(package_usage.dependents_count), 'Dependent Repository' %>
-        </small></i></p>
-      </div>
-    </div>
+<div class="card mb-3">
+  <div class="card-body">
+    <h5 class="card-title">
+      <%= link_to package_usage.name, usage_path(package_usage.ecosystem, package_usage.name) %>
+      <% if package_usage.package['latest_release_number'] %>
+        <small class='text-muted'>
+        <%= package_usage.package['latest_release_number'] %>
+        </small>
+      <% end %>
+      <% if package_usage.package['status'] %>
+        <small class='badge bg-secondary'>
+        <%= package_usage.package['status'] %>
+        </small>
+      <% end %>
+    </h5>
+
+    <%= truncate package_usage.package['description'], :length => 100 %><br/>
+
+    <small class='text-muted'>
+      <%= pluralize number_with_delimiter(package_usage.dependents_count), 'dependent repository' %>
+
+      <% if package_usage.package['versions_count'] %>
+        - <%= pluralize number_with_delimiter(package_usage.package['versions_count']), 'version' %>
+      <% end %>
+
+      <% if package_usage.package['latest_release_published_at'] %>
+        - <span title="<%= package_usage.package['latest_release_published_at'] %>">Latest release: <%= time_ago_in_words package_usage.package['latest_release_published_at'] %> ago</span>
+      <% end %>
+
+      <% if package_usage.package['dependent_packages_count'] && package_usage.package['dependent_packages_count'] > 0 %>
+        - <%= pluralize number_with_delimiter(package_usage.package['dependent_packages_count']), 'dependent package' %>
+      <% end %>
+
+      <% if package_usage.package['downloads'] %>
+        - <%= number_with_delimiter(package_usage.package['downloads']) %> downloads <%= download_period(package_usage.package['downloads_period']) %>
+      <% end %>
+
+    </small>
   </div>
 </div>

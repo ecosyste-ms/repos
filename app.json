@@ -31,6 +31,14 @@
     {
       "command": "bundle exec rake repositories:update_package_usages",
       "schedule": "*/15 * * * *"
+    },
+    {
+      "command": "bundle exec rake packages:sync_registries",
+      "schedule": "0 8 * * *"
+    },
+    {
+      "command": "bundle exec rake packages:sync_packages",
+      "schedule": "*/30 * * *"
     }
   ]
 }

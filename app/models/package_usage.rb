@@ -77,7 +77,21 @@ class PackageUsage < ApplicationRecord
     repository.update_column(:usage_updated_at, Time.now)
   end
 
-  # TODO sync some details in from packages.ecosyste.ms
+  def registry
+    @registry ||= Registry.find_by_ecosystem(ecosystem)
+  end
+
+  def sync
+    return unless registry
+    response = Faraday.get("https://packages.ecosyste.ms/api/v1/registries/#{registry.name}/packages/#{name}")
+    return unless response.success?
+    json = JSON.parse(response.body)
+    update_columns(package: json, package_last_synced_at: Time.now)
+  end
+
+  def self.sync_packages
+    PackageUsage.order('package_last_synced_at desc nulls first').limit(1000).each(&:sync)
+  end
 
   # TODO usages need to be updated after dependency updates
 

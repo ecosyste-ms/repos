@@ -10,4 +10,13 @@ module ApplicationHelper
                  .split('.').map{|i| i.to_i}
                }.reverse
   end
+
+  def download_period(downloads_period)
+    case downloads_period
+    when "last-month"
+      "last month"
+    when "total"
+      "total"
+    end
+  end
 end
