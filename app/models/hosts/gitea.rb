@@ -122,7 +122,6 @@ module Hosts
         uuid: data['id'],
         full_name: data['full_name'],
         owner: data['owner']['login'],
-        main_language: data['language'],
         language: data['language'],
         archived: data['archived'],
         fork: data['fork'],

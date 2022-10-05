@@ -113,7 +113,6 @@ module Hosts
       hash[:uuid] = hash[:id]
       hash[:license] = hash[:license][:key] if hash[:license]
       hash[:owner] = hash[:owner][:login]
-      hash[:main_language] = hash[:language]
       hash[:pull_requests_enabled] = true
 
       if hash[:fork] && hash[:parent]
