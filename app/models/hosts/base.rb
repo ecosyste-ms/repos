@@ -14,7 +14,7 @@ module Hosts
         :homepage,                                                                        
         :size,                                                                            
         :stargazers_count,                                                                                                                          
-        :language,                                                                        
+        :main_language,                                                                        
         :has_issues,                                                                      
         :forks_count,
         :mirror_url,
