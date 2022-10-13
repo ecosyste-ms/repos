@@ -81,9 +81,19 @@ class PackageUsage < ApplicationRecord
     @registry ||= Registry.find_by_ecosystem(ecosystem)
   end
 
+  def packages_html_url
+    return nil unless registry
+    "https://packages.ecosyste.ms/registries/#{registry.name}/packages/#{name}"
+  end
+
+  def packages_api_url
+    return nil unless registry
+    "https://packages.ecosyste.ms/api/v1/registries/#{registry.name}/packages/#{name}"
+  end
+
   def sync
     return unless registry
-    response = Faraday.get("https://packages.ecosyste.ms/api/v1/registries/#{registry.name}/packages/#{name}")
+    response = Faraday.get(packages_api_url)
     return unless response.success?
     json = JSON.parse(response.body)
     update_columns(package: json, package_last_synced_at: Time.now)

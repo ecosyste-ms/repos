@@ -4,6 +4,12 @@
     <%= link_to @package_usage.ecosystem, ecosystem_usage_path(@package_usage.ecosystem) %>:
     <%= @package_usage.name %></h1>
 
+  <% if @package_usage.registry %>
+    <p>
+      View more package details on: <%= link_to 'packages.ecosyste.ms', @package_usage.packages_html_url, target: :_blank %>
+    </p>
+  <% end%>
+
   <h3>Requirements</h3>
   <% max_rows = 20 %>
   <% rows = [@package_usage.requirements.length, max_rows].min %>
