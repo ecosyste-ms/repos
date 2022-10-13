@@ -9,6 +9,7 @@ class RepositoriesController < ApplicationController
       @manifests = @repository.manifests.includes(:dependencies).order('kind DESC')
       @tags = @repository.tags.order('published_at DESC')
       @sha = params[:sha] || @repository.default_branch
+      @pagy, @package_usages = pagy(@repository.package_usages)
     end
   end
 end
