@@ -103,10 +103,12 @@ class PackageUsage < ApplicationRecord
     return unless response.success?
     json = JSON.parse(response.body)
     update_columns(package: json, package_last_synced_at: Time.now)
+  rescue
+    update_columns(package_last_synced_at: Time.now) # swallow errors for now
   end
 
   def self.sync_packages
-    PackageUsage.order('package_last_synced_at desc nulls first').limit(1000).each(&:sync)
+    PackageUsage.order('package_last_synced_at desc nulls first').limit(2000).each(&:sync)
   end
 
   # TODO usages need to be updated after dependency updates
