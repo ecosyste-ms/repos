@@ -6,7 +6,13 @@
 
   <% if @package_usage.registry %>
     <p>
-      View more package details on: <%= link_to 'packages.ecosyste.ms', @package_usage.packages_html_url, target: :_blank %>
+      View more package details: <%= link_to @package_usage.packages_html_url, @package_usage.packages_html_url, target: :_blank %>
+    </p>
+  <% end%>
+
+  <% if @package_usage.repository %>
+    <p>
+      View more repository details: <%= link_to host_repository_url(@package_usage.host, @package_usage.repository), host_repository_path(@package_usage.host, @package_usage.repository) %>
     </p>
   <% end%>
 

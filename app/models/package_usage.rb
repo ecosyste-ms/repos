@@ -1,4 +1,10 @@
 class PackageUsage < ApplicationRecord
+
+  scope :with_package_metadata, -> { where('length(package::text) > 2 ') }
+  scope :with_repo_metadata, -> { with_package_metadata.where("length(package ->> 'repo_metadata') > 2") }
+  scope :host, ->(host_name) { where("package -> 'repo_metadata' -> 'host' ->> 'name' = ?", host_name.to_s) }
+  scope :repo_uuid, ->(repo_uuid) { where("package -> 'repo_metadata' ->> 'uuid' = ?", repo_uuid.to_s) }
+
   def self.aggregate_dependencies(limit = 1_000_000)
     start_id = REDIS.get('package_usage_id') || 0
     end_id = start_id.to_i + limit
@@ -104,6 +110,32 @@ class PackageUsage < ApplicationRecord
   end
 
   # TODO usages need to be updated after dependency updates
+
+  def repo_metadata
+    return {} unless package
+    package['repo_metadata']
+  end
+
+  def repository
+    return nil unless host
+    @repository ||= host.repositories.find_by('lower(full_name) = ?', repo_metadata['full_name'].downcase)
+  end
+
+  def sync_repository
+    return unless host
+    host.sync_repository(repo_metadata['full_name'])
+  end
+
+  def sync_repository_async
+    return unless host
+    host.sync_repository_async(repo_metadata['full_name'])    
+  end
+
+  def host
+    return nil unless repo_metadata
+    return nil unless repo_metadata['host'] && repo_metadata['host']['name']
+    @host ||= Host.find_by_name(repo_metadata['host']['name'])
+  end
 
   def dependent_repos
     Repository.where(id: repo_ids).includes(:host)

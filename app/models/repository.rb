@@ -208,4 +208,8 @@ class Repository < ApplicationRecord
   def archive_basename
     default_branch
   end
+
+  def package_usages
+    PackageUsage.host(host.name).repo_uuid(uuid)
+  end
 end
