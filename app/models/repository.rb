@@ -18,23 +18,28 @@ class Repository < ApplicationRecord
   scope :without_manifests, -> { includes(:manifests).where(manifests: {repository_id: nil}) }
 
   def self.parse_dependencies_async
-    Repository.where.not(dependency_job_id: nil).limit(5000).select('id, dependencies_parsed_at').each(&:parse_dependencies_async)
-    return if Sidekiq::Queue.new('dependencies').size > 5_000
+    Repository.where.not(dependency_job_id: nil).limit(2000).select('id, dependencies_parsed_at').each(&:parse_dependencies_async)
+    return if Sidekiq::Queue.new('dependencies').size > 2_000
     Repository.where(status: nil)
               .where(fork: false)
               .where(dependencies_parsed_at: nil, dependency_job_id: nil)
               .select('id, dependencies_parsed_at')
-              .limit(4000).each(&:parse_dependencies_async)
+              .limit(2000).each(&:parse_dependencies_async)
   end
 
   def self.download_tags_async
     return if Sidekiq::Queue.new('tags').size > 5_000
-    Repository.where(fork: false, status: nil).order('tags_last_synced_at ASC nulls first').limit(5_000).select('id').each(&:download_tags_async)
+    Repository.where(fork: false, status: nil)
+              .where(tags_last_synced_at: nil)
+              # .order('tags_last_synced_at ASC nulls first')
+              .limit(5_000)
+              .select('id')
+              .each(&:download_tags_async)
   end
 
   def self.update_package_usages_async
-    return if Sidekiq::Queue.new('usage').size > 5_000
-    Repository.where(fork: false, status: nil).order('usage_updated_at ASC nulls first').limit(5_000).select('id').each do |repo|
+    return if Sidekiq::Queue.new('usage').size > 2_000
+    Repository.where(fork: false, status: nil).order('usage_updated_at ASC nulls first').limit(2_000).select('id').each do |repo|
       PackageUsageWorker.perform_async(repo.id)
     end
   end
