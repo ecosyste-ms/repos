@@ -49,7 +49,7 @@ class Repository < ApplicationRecord
   end
 
   def to_param
-    full_name
+    full_name.gsub('.', '%2E')
   end
 
   def id_or_name
