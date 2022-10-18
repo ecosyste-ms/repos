@@ -30,8 +30,7 @@ class Repository < ApplicationRecord
   def self.download_tags_async
     return if Sidekiq::Queue.new('tags').size > 5_000
     Repository.where(fork: false, status: nil)
-              .where(tags_last_synced_at: nil)
-              # .order('tags_last_synced_at ASC nulls first')
+              .order('tags_last_synced_at ASC nulls first')
               .limit(5_000)
               .select('id')
               .each(&:download_tags_async)
