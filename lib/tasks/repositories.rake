@@ -37,6 +37,6 @@ namespace :repositories do
 
   desc 'update package usages'
   task update_package_usages: :environment do
-    Repository.update_package_usages_async
+    # Repository.update_package_usages_async
   end
 end
