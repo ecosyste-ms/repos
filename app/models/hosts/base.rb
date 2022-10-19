@@ -147,6 +147,7 @@ module Hosts
         if repository.changed?
           repository.last_synced_at = Time.now
           repository.save! 
+          repository.download_tags_async
         else
           repository.update_column(:last_synced_at, Time.now)
         end
