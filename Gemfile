@@ -38,6 +38,7 @@ gem "bugsnag"
 gem "groupdate"
 gem 'jquery-rails'
 gem 'chartkick'
+gem 'google-protobuf', '3.21.7'
 
 group :development, :test do
   gem "debug", platforms: %i[ mri mingw x64_mingw ]
