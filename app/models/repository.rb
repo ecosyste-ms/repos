@@ -211,4 +211,30 @@ class Repository < ApplicationRecord
   def package_usages
     PackageUsage.host(host.name).repo_uuid(uuid)
   end
+
+  def fetch_metadata_files_list
+    file_list = get_file_list
+    return if file_list.blank?
+    {
+      readme:           file_list.find{|file| file.match(/^README/i) },
+      changelog:        file_list.find{|file| file.match(/^CHANGE|^HISTORY/i) },
+      contributing:     file_list.find{|file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?CONTRIBUTING/i) },
+      funding:          file_list.find{|file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?CONTRIBUTING/i) },
+      license:          file_list.find{|file| file.match(/^LICENSE|^COPYING|^MIT-LICENSE/i) },
+      code_of_conduct:  file_list.find{|file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?CODE[-_]OF[-_]CONDUCT/i) },
+      threat_model:     file_list.find{|file| file.match(/^THREAT[-_]MODEL/i) },
+      audit:            file_list.find{|file| file.match(/^AUDIT/i) },
+      citation:         file_list.find{|file| file.match(/^CITATION/i) },
+      codeowners:       file_list.find{|file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?CODEOWNERS/i) },
+      security:         file_list.find{|file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?SECURITY/i) },
+      support:          file_list.find{|file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?SUPPORT$/i) },
+    }
+  end
+
+  def update_metadata_files
+    metadata_files = fetch_metadata_files_list
+    return if metadata_files.nil?
+    metadata['files'] = metadata_files
+    save
+  end
 end
