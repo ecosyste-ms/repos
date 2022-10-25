@@ -236,5 +236,16 @@ class Repository < ApplicationRecord
     return if metadata_files.nil?
     metadata['files'] = metadata_files
     save
+    parse_funding
+  end
+
+  def parse_funding
+    return if metadata['files']['funding'].blank?
+    file = get_file_contents(metadata['files']['funding'])
+    return if file.blank?
+    metadata['funding'] = YAML.load(file[:content])
+    save
+  rescue
+    nil # invalid yaml
   end
 end
