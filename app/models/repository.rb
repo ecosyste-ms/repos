@@ -267,6 +267,7 @@ class Repository < ApplicationRecord
   end
 
   def related_dot_github_repo
+    return nil if project_name == '.github'
     host.repositories.find_by('lower(full_name) = ?', "#{owner}/.github")
   end
 end
