@@ -98,6 +98,13 @@ module Hosts
       raise NotImplementedError
     end
 
+    def get_file_list(repository)
+      files_and_folders = JSON.parse(Faraday.get("https://archives.ecosyste.ms/api/v1/archives/list?url=#{CGI.escape(download_url(repository))}").body)
+      files_and_folders.reject{|f| files_and_folders.any?{|ff| ff.starts_with?(f+'/')}}
+    rescue
+      []
+    end
+
     def download_fork_source(token = nil)
       self.class.fetch_repository(repository.source_name, token) if download_fork_source?
     end
