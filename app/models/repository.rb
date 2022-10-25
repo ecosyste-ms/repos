@@ -43,6 +43,15 @@ class Repository < ApplicationRecord
     end
   end
 
+  def self.update_metadata_files_async
+    return if Sidekiq::Queue.new('default').size > 10_000
+    Repository.where(status: nil, fork: false)
+              .where('length(metadata::text) = 2')
+              .limit(5_000)
+              .select('id')
+              .each(&:update_metadata_files_async)
+  end
+
   def to_s
     full_name
   end
@@ -229,6 +238,10 @@ class Repository < ApplicationRecord
       security:         file_list.find{|file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?SECURITY/i) },
       support:          file_list.find{|file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?SUPPORT$/i) },
     }
+  end
+
+  def update_metadata_files_async
+    UpdateMetadataFilesWorker.perform_async(self.id)
   end
 
   def update_metadata_files
