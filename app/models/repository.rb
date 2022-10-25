@@ -219,7 +219,7 @@ class Repository < ApplicationRecord
       readme:           file_list.find{|file| file.match(/^README/i) },
       changelog:        file_list.find{|file| file.match(/^CHANGE|^HISTORY/i) },
       contributing:     file_list.find{|file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?CONTRIBUTING/i) },
-      funding:          file_list.find{|file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?FUNDING/i) },
+      funding:          file_list.find{|file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?FUNDING.yml/i) },
       license:          file_list.find{|file| file.match(/^LICENSE|^COPYING|^MIT-LICENSE/i) },
       code_of_conduct:  file_list.find{|file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?CODE[-_]OF[-_]CONDUCT/i) },
       threat_model:     file_list.find{|file| file.match(/^THREAT[-_]MODEL/i) },
