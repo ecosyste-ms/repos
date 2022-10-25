@@ -253,12 +253,20 @@ class Repository < ApplicationRecord
   end
 
   def parse_funding
-    return if metadata['files']['funding'].blank?
-    file = get_file_contents(metadata['files']['funding'])
-    return if file.blank?
-    metadata['funding'] = YAML.load(file[:content])
+    if related_dot_github_repo.present? && related_dot_github_repo.metadata['funding'].present?
+      metadata['funding'] = related_dot_github_repo.metadata['funding']
+    else
+      return if metadata['files']['funding'].blank?
+      file = get_file_contents(metadata['files']['funding'])
+      return if file.blank?
+      metadata['funding'] = YAML.load(file[:content])
+    end
     save
   rescue
     nil # invalid yaml
+  end
+
+  def related_dot_github_repo
+    host.repositories.find_by('lower(full_name) = ?', "#{owner}/.github")
   end
 end
