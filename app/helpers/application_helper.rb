@@ -1,5 +1,6 @@
 module ApplicationHelper
   include Pagy::Frontend
+  include SanitizeUrl
 
   def sort_by_semver_range(hash, limit)
     hash.sort_by{|_k,v| -v}
@@ -18,5 +19,10 @@ module ApplicationHelper
     when "total"
       "total"
     end
+  end
+
+  def sanitize_user_url(url)
+    return unless url =~ /\A#{URI::regexp}\z/
+    sanitize_url(url, :schemes => ['http', 'https'])
   end
 end

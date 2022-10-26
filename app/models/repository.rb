@@ -270,4 +270,34 @@ class Repository < ApplicationRecord
     return nil if project_name == '.github'
     host.repositories.find_by('lower(full_name) = ?', "#{owner}/.github")
   end
+
+  def funding_links
+    return [] if metadata.blank? ||  metadata["funding"].blank?
+    metadata["funding"].map do |key,v|
+      case key
+      when "github"
+        Array(v).map{|username| "https://github.com/sponsors/#{username}" }
+      when "tidelift"
+        "https://tidelift.com/funding/github/#{v}"
+      when "community_bridge"
+        "https://funding.communitybridge.org/projects/#{v}"
+      when "issuehunt"
+        "https://issuehunt.io/r/#{v}"
+      when "open_collective"
+        "https://opencollective.com/#{v}"
+      when "ko_fi"
+        "https://ko-fi.com/#{v}"
+      when "liberapay"
+        "https://liberapay.com/#{v}"
+      when "custom"
+        v
+      when "otechie"
+        "https://otechie.com/#{v}"
+      when "patreon"
+        "https://patreon.com/#{v}"
+      else
+        v
+      end
+    end.flatten
+  end
 end

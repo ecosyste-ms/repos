@@ -44,6 +44,12 @@
     </div>
   </div>
 
+  <% if @repository.funding_links.any? %>
+    <p><small class='text-muted'>
+    Funding links: <% @repository.funding_links.each_with_index do |url,i| %><%= ', ' if i > 0 %><%= link_to(url, sanitize_user_url(url), target: :_blank) %><% end %>
+    </small></p>
+  <% end %>
+
   <% if @tags.any? %>
     <div class="dropdown">
       <button class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
