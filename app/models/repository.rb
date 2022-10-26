@@ -5,7 +5,7 @@ class Repository < ApplicationRecord
   has_many :dependencies
   has_many :tags
 
-  scope :owner, ->(owner) { where('lower(full_name) ilike ?', "#{owner}/%") }
+  scope :owner, ->(owner) { where(owner: owner) }
   scope :language, ->(language) { where(language: language) }
   scope :fork, ->(fork) { where(fork: fork) }
   scope :archived, ->(archived) { where(archived: archived) }
