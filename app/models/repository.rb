@@ -53,6 +53,10 @@ class Repository < ApplicationRecord
               .each(&:update_metadata_files_async)
   end
 
+  def owner
+    read_attribute(:owner) || full_name.split('/').first
+  end
+
   def to_s
     full_name
   end
