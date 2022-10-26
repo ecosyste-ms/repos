@@ -37,8 +37,9 @@ Rails.application.routes.draw do
   get 'usage/:ecosystem', to: 'usage#ecosystem', as: :ecosystem_usage
   get 'usage/:ecosystem/:name', to: 'usage#show', as: :usage, constraints: { name: /.*/ }
 
-  resources :hosts, constraints: { id: /.*/ }, only: [:index, :show] do
+  resources :hosts, constraints: { id: /.*/ }, only: [:index, :show], :defaults => {:format => :html} do
     resources :repositories, constraints: { id: /.*/ }, only: [:index, :show]
+    resources :owners, only:[:show]
   end
 
   resources :exports, only: [:index], path: 'open-data'

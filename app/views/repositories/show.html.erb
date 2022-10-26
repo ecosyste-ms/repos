@@ -1,6 +1,6 @@
 <div class="container-sm">
   <h1>
-    <%= link_to @host, host_path(@host) %> / <%= link_to @repository, @repository.html_url, target: :_blank %>
+    <%= link_to @host, host_path(@host) %> / <%= link_to @repository.owner, host_owner_path(@host, @repository.owner) %> / <%= link_to @repository.project_name, @repository.html_url, target: :_blank %>
   </h1>
 
   <p><%= @repository.description %></p>
