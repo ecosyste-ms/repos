@@ -130,7 +130,7 @@ module Hosts
       repo_hash = project.to_hash.with_indifferent_access.slice(:description, :uuid, :language, :full_name, :has_wiki, :has_issues, :scm)
 
       repo_hash.merge!({
-        owner: project['owner']['username'],
+        owner: user_name,
         homepage: project['website'],
         fork: project['parent'].present?,
         created_at: project['created_on'],
