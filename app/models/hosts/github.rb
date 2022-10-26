@@ -127,7 +127,7 @@ module Hosts
     def get_file_list(repository)
       tree = api_client.tree(repository.full_name, repository.default_branch, recursive: true).tree
       tree.select{|item| item.type == 'blob' }.map{|file| file.path }
-    rescue *IGNORABLE_EXCEPTIONS
+    rescue *IGNORABLE_EXCEPTIONS, Octokit::NotFound, Octokit::RepositoryUnavailable, Octokit::UnavailableForLegalReasons
       nil
     end
 
@@ -139,7 +139,7 @@ module Hosts
       }
     rescue URI::InvalidURIError
       nil
-    rescue *IGNORABLE_EXCEPTIONS
+    rescue *IGNORABLE_EXCEPTIONS, Octokit::NotFound, Octokit::RepositoryUnavailable, Octokit::UnavailableForLegalReasons
       nil
     end
 
