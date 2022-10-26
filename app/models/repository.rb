@@ -6,6 +6,7 @@ class Repository < ApplicationRecord
   has_many :tags
 
   scope :owner, ->(owner) { where(owner: owner) }
+  scope :subgroup, ->(owner, subgroup) { where(owner: owner).where('lower(full_name) ilike ?', "#{owner}/#{subgroup}/%") }
   scope :language, ->(language) { where(language: language) }
   scope :fork, ->(fork) { where(fork: fork) }
   scope :archived, ->(archived) { where(archived: archived) }
@@ -62,6 +63,15 @@ class Repository < ApplicationRecord
 
   def id_or_name
     uuid || full_name
+  end
+
+  def subgroups
+    return [] if full_name.split('/').size < 3
+    full_name.split('/')[1..-2]
+  end
+
+  def project_slug
+    full_name.split('/').last
   end
 
   def project_name
