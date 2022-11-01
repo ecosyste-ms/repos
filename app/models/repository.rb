@@ -287,7 +287,9 @@ class Repository < ApplicationRecord
 
   def funding_links
     return [] if metadata.blank? ||  metadata["funding"].blank?
+    return [] unless metadata["funding"].is_a?(Hash)
     metadata["funding"].map do |key,v|
+      next if v.blank?
       case key
       when "github"
         Array(v).map{|username| "https://github.com/sponsors/#{username}" }
@@ -312,6 +314,6 @@ class Repository < ApplicationRecord
       else
         v
       end
-    end.flatten
+    end.flatten.compact
   end
 end
