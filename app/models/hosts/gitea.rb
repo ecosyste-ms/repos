@@ -151,5 +151,26 @@ module Hosts
         conn.response :json        
       end
     end
+
+    def fetch_owner(login)
+      url = "/api/v1/users/#{login}"
+      resp = api_client.get(url)
+      return nil unless resp.success?
+      owner = resp.body
+
+      resp = api_client.get("/api/v1/orgs/#{login}")
+      is_org = resp.success?
+      {
+        uuid: owner['id'],
+        login: owner['login'],
+        name: owner['full_name'],
+        email: owner['email'],
+        location: owner['location'],
+        website: owner['website'],
+        description: owner['description'],
+        avatar_url: owner['avatar_url'],
+        kind: is_org ? 'organization' : 'user'
+      }
+    end
   end
 end

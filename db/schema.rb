@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2022_11_02_102904) do
+ActiveRecord::Schema[7.0].define(version: 2022_11_02_112519) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -56,6 +56,28 @@ ActiveRecord::Schema[7.0].define(version: 2022_11_02_102904) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["repository_id"], name: "index_manifests_on_repository_id"
+  end
+
+  create_table "owners", force: :cascade do |t|
+    t.integer "host_id"
+    t.string "login"
+    t.string "name"
+    t.string "uuid"
+    t.string "kind"
+    t.string "description"
+    t.string "email"
+    t.string "website"
+    t.string "location"
+    t.string "twitter"
+    t.string "company"
+    t.string "avatar_url"
+    t.integer "repositories_count", default: 0
+    t.datetime "last_synced_at"
+    t.json "metadata", default: {}
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index "host_id, lower((login)::text)", name: "index_owners_on_host_id_lower_login", unique: true
+    t.index ["host_id", "uuid"], name: "index_owners_on_host_id_uuid", unique: true
   end
 
   create_table "package_usages", force: :cascade do |t|

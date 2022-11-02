@@ -215,6 +215,58 @@ module Hosts
       end.compact
     end
 
+    def fetch_owner(login)
+      query = <<-GRAPHQL
+        {
+          repositoryOwner(login: "#{login}") {
+            login
+            __typename
+            ... on User {
+              hasSponsorsListing
+              name
+              databaseId
+              bio
+              email
+              websiteUrl
+              location
+              twitterUsername
+              avatarUrl
+              company
+            }
+            ... on Organization{
+              hasSponsorsListing
+              name
+              databaseId
+              description
+              email
+              websiteUrl
+              location
+              twitterUsername
+              avatarUrl
+            }
+          }
+        }
+      GRAPHQL
+      res = api_client.post('/graphql', { query: query }.to_json).to_h
+      return nil unless res && res[:data] && res[:data][:repositoryOwner].present?
+      {
+        login: res[:data][:repositoryOwner][:login],
+        name: res[:data][:repositoryOwner][:name],
+        uuid: res[:data][:repositoryOwner][:databaseId],
+        description: res[:data][:repositoryOwner][:description] || res[:data][:repositoryOwner][:bio],
+        email: res[:data][:repositoryOwner][:email],
+        website: res[:data][:repositoryOwner][:websiteUrl],
+        location: res[:data][:repositoryOwner][:location],
+        twitter: res[:data][:repositoryOwner][:twitterUsername],
+        company: res[:data][:repositoryOwner][:company],
+        kind: res[:data][:repositoryOwner][:__typename].downcase,
+        avatar_url: res[:data][:repositoryOwner][:avatarUrl],
+        metadata: {
+          has_sponsors_listing: res[:data][:repositoryOwner][:hasSponsorsListing]
+        }
+      }
+    end
+
     def recently_changed_repo_names(since = 1.hour)
       names = []
 

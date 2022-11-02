@@ -181,5 +181,38 @@ module Hosts
     rescue *IGNORABLE_EXCEPTIONS
       nil
     end
+
+    def fetch_owner(login)
+      search = api_client.get "/users?username=#{login}"
+      
+      if search.present?
+        user = search.first.to_hash
+        id = user["id"]
+        user_hash = api_client.user(id).to_hash
+
+        {
+          uuid: user_hash["id"],
+          login: user_hash["username"],
+          name: user_hash["name"],
+          website: user_hash["website_url"],
+          location: user_hash["location"],
+          description: user_hash["bio"],
+          avatar_url: user_hash['avatar_url'],
+          kind: 'user'
+        }
+      else
+        group = api_client.group(login, with_projects: false)
+        {
+          uuid: group["id"],
+          login: group["path"],
+          name: group["name"],
+          description: group["description"],
+          avatar_url: group['avatar_url'],
+          kind: 'organization'
+        }
+      end
+    rescue *IGNORABLE_EXCEPTIONS
+      nil
+    end
   end
 end

@@ -53,6 +53,18 @@ class Repository < ApplicationRecord
               .each(&:update_metadata_files_async)
   end
 
+  def sync_owner
+    host.sync_owner(owner) if owner_record.nil?
+  end
+
+  def sync_owner_async
+    host.sync_owner_async(owner) if owner_record.nil?
+  end
+
+  def owner_record
+    host.owners.find_by('lower(login) = ?', owner.downcase)
+  end
+
   def owner
     read_attribute(:owner) || full_name.split('/').first
   end

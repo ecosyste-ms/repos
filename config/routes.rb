@@ -39,7 +39,7 @@ Rails.application.routes.draw do
 
   resources :hosts, constraints: { id: /.*/ }, only: [:index, :show], :defaults => {:format => :html} do
     resources :repositories, constraints: { id: /.*/ }, only: [:index, :show]
-    resources :owners, only:[:show] do
+    resources :owners, only:[:index, :show] do
       member do
         get '*subgroup', to: 'owners#subgroup', as: :subgroup, constraints: { subgroup: /.*/ }, format: :html
       end

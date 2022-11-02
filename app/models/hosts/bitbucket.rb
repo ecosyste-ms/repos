@@ -171,5 +171,9 @@ module Hosts
     rescue *IGNORABLE_EXCEPTIONS
       nil
     end
+
+    def fetch_owner(login)
+      nil # Bitbucket user/team api is broken
+    end
   end
 end

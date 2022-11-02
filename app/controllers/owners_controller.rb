@@ -1,4 +1,9 @@
 class OwnersController < ApplicationController
+  def index
+    @host = Host.find_by_name!(params[:host_id])
+    @pagy, @owners = pagy(@host.owners)
+  end
+
   def show
     @host = Host.find_by_name!(params[:host_id])
     @owner = params[:id]

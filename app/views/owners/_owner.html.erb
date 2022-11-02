@@ -1,0 +1,20 @@
+<div class="card mb-3 owner d-flex" id="owner_<%= owner.id %>">
+  <div class="card-body pb-1">
+    <div class="d-flex">
+      
+      <div class="flex-grow-1 ms-3 text-break">
+        <h5 class='card-title'>
+          <%= link_to owner.to_s, host_owner_path(@host, owner.login) %>
+          <i><small class="text-muted"><%= owner.kind %></small></i>
+        </h5>
+      
+        <p class="card-subtitle mb-2 text-muted">
+          <%= pluralize number_with_delimiter(owner.repositories_count), 'repository' %> 
+        </p>
+      </div>
+      <div class="flex-shrink-0">
+        <img src="<%= owner.avatar_url %>" class="rounded" height='40' width='40' onerror="this.style.display='none'">
+      </div>  
+    </div>
+  </div>
+</div>

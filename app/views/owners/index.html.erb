@@ -1,0 +1,8 @@
+<div class="container-sm">
+    <h1 class='mb-4'>
+    <%= link_to @host, host_path(@host) %> / owners
+  </h1>
+
+  <%= render @owners %>
+  <%== pagy_bootstrap_nav(@pagy) if @pagy.pages > 1 %>  
+</div>

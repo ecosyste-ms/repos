@@ -3,6 +3,7 @@ class Host < ApplicationRecord
   validates_uniqueness_of :name, :url
 
   has_many :repositories
+  has_many :owners
 
   def self.find_by_domain(domain)
     Host.all.find { |host| host.domain == domain }
@@ -188,5 +189,25 @@ class Host < ApplicationRecord
       REDIS.set('last_timeline_id', next_id)
       import_github_repos_from_timeline(next_id)
     end
+  end
+
+  def sync_owner(login)
+    owner_hash = host_instance.fetch_owner(login)
+    return nil if owner_hash.nil?
+    
+    owner = owners.find_by(uuid: owner_hash[:uuid])
+    owner = owners.find_by('lower(login) = ?', owner_hash[:login].downcase) if owner.nil?
+    if owner.nil?
+      owner = owners.new(uuid: owner_hash[:id], login: owner_hash[:login])
+    end
+    owner.assign_attributes(owner_hash)
+    owner.last_synced_at = Time.now
+    owner.repositories_count = repositories.where(owner: owner.login).count
+    owner.save!
+    owner
+  end
+
+  def sync_owner_async(login)
+    SyncOwnerWorker.perform_async(id, login)
   end
 end
