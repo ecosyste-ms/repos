@@ -298,6 +298,14 @@ class Repository < ApplicationRecord
   end
 
   def funding_links
+    (owner_funding_links + repo_funding_links).uniq
+  end
+
+  def owner_funding_links
+    owner_record.try(:funding_links)
+  end
+
+  def repo_funding_links
     return [] if metadata.blank? ||  metadata["funding"].blank?
     return [] unless metadata["funding"].is_a?(Hash)
     metadata["funding"].map do |key,v|
