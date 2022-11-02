@@ -8,7 +8,7 @@ class OwnersController < ApplicationController
     @host = Host.find_by_name!(params[:host_id])
     @owner = params[:id]
     @pagy, @repositories = pagy_countless(@host.repositories.owner(@owner))
-    raise ActiveRecord::RecordNotFound if @pagy.count.zero?
+    raise ActiveRecord::RecordNotFound if @repositories.length.zero?
   end
 
   def subgroup
@@ -18,6 +18,6 @@ class OwnersController < ApplicationController
     @subgroups = parts[1..-1]
 
     @pagy, @repositories = pagy_countless(@host.repositories.subgroup(@owner, @subgroups.join('/')))
-    raise ActiveRecord::RecordNotFound if @pagy.count.zero?
+    raise ActiveRecord::RecordNotFound if @repositories.length.zero?
   end
 end
