@@ -18,6 +18,10 @@ class Owner < ApplicationRecord
   end
 
   def funding_links
-    metadata['has_sponsors_listing'] ? ["https://github.com/sponsors/#{login}/"] : []
+    metadata['has_sponsors_listing'] ? ["https://github.com/sponsors/#{login}"] : []
+  end
+
+  def html_url
+    "#{host.html_url}/#{login}"
   end
 end
