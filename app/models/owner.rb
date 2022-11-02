@@ -16,4 +16,8 @@ class Owner < ApplicationRecord
   def sync_async(login)
     SyncOwnerWorker.perform_async(host_id, login)
   end
+
+  def funding_links
+    metadata['has_sponsors_listing'] ? ["https://github.com/sponsors/#{login}/"] : []
+  end
 end
