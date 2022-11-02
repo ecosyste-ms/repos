@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2022_10_04_133458) do
+ActiveRecord::Schema[7.0].define(version: 2022_11_02_102904) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -127,6 +127,7 @@ ActiveRecord::Schema[7.0].define(version: 2022_10_04_133458) do
     t.index ["dependencies_parsed_at"], name: "index_repositories_on_dependencies_parsed_at"
     t.index ["host_id", "uuid"], name: "index_repositories_on_host_id_uuid", unique: true
     t.index ["last_synced_at"], name: "index_repositories_on_last_synced_at"
+    t.index ["owner"], name: "index_repositories_on_owner"
   end
 
   create_table "tags", force: :cascade do |t|
