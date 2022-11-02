@@ -302,7 +302,7 @@ class Repository < ApplicationRecord
   end
 
   def owner_funding_links
-    owner_record.try(:funding_links)
+    owner_record.try(:funding_links) || []
   end
 
   def repo_funding_links
