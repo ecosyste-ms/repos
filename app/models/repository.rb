@@ -15,6 +15,9 @@ class Repository < ApplicationRecord
   scope :no_topic, -> { where("topics = '{}'") }
   scope :topic, ->(topic) { where("topics @> ARRAY[?]::varchar[]", topic) }
   
+  scope :created_after, ->(date) { where('created_at > ?', date) }
+  scope :updated_after, ->(date) { where('updated_at > ?', date) }
+
   scope :with_manifests, -> { joins(:manifests).group(:id) }
   scope :without_manifests, -> { includes(:manifests).where(manifests: {repository_id: nil}) }
 

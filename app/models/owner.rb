@@ -1,8 +1,17 @@
 class Owner < ApplicationRecord
   belongs_to :host
+
+  validates :login, presence: true
+
+  scope :created_after, ->(date) { where('created_at > ?', date) }
+  scope :updated_after, ->(date) { where('updated_at > ?', date) }
   
   def to_s
     name.presence || login
+  end
+
+  def to_param
+    login
   end
 
   def repositories

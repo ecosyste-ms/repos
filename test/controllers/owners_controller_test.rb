@@ -3,7 +3,14 @@ require 'test_helper'
 class OwnersControllerTest < ActionDispatch::IntegrationTest
   setup do
     @host = Host.create(name: 'GitHub', url: 'https://github.com', kind: 'github')
+    @owner = Owner.create(login: 'ecosyste-ms', host: @host)
     @repository = @host.repositories.create(full_name: 'ecosyste-ms/repos', owner: 'ecosyste-ms')
+  end
+
+  test 'get owners' do 
+    get host_owners_url(@host)
+    assert_response :success
+    assert_template 'owners/index', file: 'owners/index.html.erb'
   end
 
   test 'get an owner' do

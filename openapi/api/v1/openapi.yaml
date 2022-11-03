@@ -147,6 +147,88 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Host'
+  /hosts/{hostName}/owners:
+    get:
+      summary: get a list of owners from a host
+      operationId: getHostOwners
+      parameters:
+        - in: path
+          name: hostName
+          schema:
+            type: string
+          required: true
+          description: name of host
+        - name: page
+          in: query
+          description: pagination page number 
+          required: false
+          schema:
+            type: integer
+        - name: per_page
+          in: query
+          description: Number of records to return 
+          required: false
+          schema:
+            type: integer
+        - name: created_after
+          in: query
+          description: filter by created_at after given time
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: updated_after
+          in: query
+          description: filter by updated_at after given time
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: sort
+          in: query
+          description: field to order results by
+          required: false
+          schema:
+            type: string
+        - name: order
+          in: query
+          description: direction to order results by
+          required: false
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Owner'
+  /hosts/{hostName}/owners/{ownerLogin}:
+    get:
+      summary: get a owner by login
+      operationId: getHostOwner
+      parameters:
+        - in: path
+          name: hostName
+          schema:
+            type: string
+          required: true
+          description: name of host
+        - in: path
+          name: ownerLogin
+          schema:
+            type: string
+          required: true
+          description: login of owner
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Owner'
   /hosts/{hostName}/repositories:
     get:
       summary: get a list of repositories from a host
@@ -546,4 +628,44 @@ components:
         direct:
           type: object
         package_usage_url:
+          type: string
+    Owner:
+      type: object
+      properties:
+        name:
+          type: string
+        uuid:
+          type: string
+        kind:
+          type: string
+        email:
+          type: string
+        login:
+          type: string
+        company:
+          type: string
+        location:
+          type: string
+        description:
+          type: string
+        twitter:
+          type: string
+        website:
+          type: string
+        metadata:
+          type: object
+        avatar_url:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        repositories_count:
+          type: integer
+        last_synced_at:
+          type: string
+          format: date-time
+        owner_url:
           type: string
