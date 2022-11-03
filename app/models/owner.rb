@@ -6,7 +6,7 @@ class Owner < ApplicationRecord
   end
 
   def repositories
-    registry.repositories.where(owner: login)
+    host.repositories.where(owner: login)
   end
 
   def sync
@@ -23,5 +23,9 @@ class Owner < ApplicationRecord
 
   def html_url
     "#{host.html_url}/#{login}"
+  end
+
+  def update_repositories_count
+    update_column(:repositories_count, repositories.count)
   end
 end

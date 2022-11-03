@@ -1,12 +1,13 @@
 class OwnersController < ApplicationController
   def index
     @host = Host.find_by_name!(params[:host_id])
-    @pagy, @owners = pagy_countless(@host.owners)
+    @pagy, @owners = pagy_countless(@host.owners.order('updated_at DESC'))
   end
 
   def show
     @host = Host.find_by_name!(params[:host_id])
     @owner = params[:id]
+    @owner_record = @host.owners.find_by('lower(login) = ?', @owner.downcase)
     @pagy, @repositories = pagy_countless(@host.repositories.owner(@owner))
     raise ActiveRecord::RecordNotFound if @repositories.length.zero?
   end
