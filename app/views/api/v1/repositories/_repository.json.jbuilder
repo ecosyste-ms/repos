@@ -5,6 +5,4 @@ json.extract! repository, :uuid, :full_name, :owner, :description, :archived, :f
 json.repository_url api_v1_host_repository_url(repository.host, repository)
 json.tags_url api_v1_host_repository_tags_url(repository.host, repository)
 json.manifests_url api_v1_host_repository_manifests_url(repository.host, repository)
-
-
-
+json.owner_url api_v1_host_owner_url(repository.host, repository.owner)
