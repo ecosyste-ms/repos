@@ -35,6 +35,10 @@ Rails.application.routes.draw do
       resources :package_names do
         collection do
           get :docker
+          get :actions
+          get :swiftpm
+          get :carthage
+          get :meteor
         end
       end
     end
