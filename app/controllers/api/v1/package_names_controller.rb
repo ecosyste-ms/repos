@@ -42,7 +42,9 @@ class Api::V1::PackageNamesController < Api::V1::ApplicationController
 
   def meteor
     names = Manifest.where(ecosystem: 'meteor').joins(:dependencies).pluck('DISTINCT(dependencies.package_name)')
-    @unique_names = names.compact.uniq.sort
+    @unique_names = names.compact.reject do |n|
+      n.match?(/^[\W]/) || n.include?('.')
+    end.uniq.sort
 
     render json: @unique_names
   end
