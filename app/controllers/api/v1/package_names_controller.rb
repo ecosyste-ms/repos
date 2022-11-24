@@ -9,6 +9,8 @@ class Api::V1::PackageNamesController < Api::V1::ApplicationController
         "library/#{n}"
       end
     end.sort.uniq
+
+    # TODO include names from github action dependencies
     
     render json: @unique_names
   end
