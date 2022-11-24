@@ -31,6 +31,12 @@ Rails.application.routes.draw do
           get :repository_names, to: 'repositories#names', as: :repository_names
         end
       end
+
+      resources :package_names do
+        collection do
+          get :docker
+        end
+      end
     end
   end
 
