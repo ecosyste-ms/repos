@@ -38,7 +38,7 @@ gem "bugsnag"
 gem "groupdate"
 gem 'jquery-rails'
 gem 'chartkick'
-gem 'google-protobuf', '3.21.9'
+gem 'google-protobuf', '3.21.10'
 gem "sanitize-url"
 
 group :development, :test do
