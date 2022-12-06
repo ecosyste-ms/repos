@@ -93,6 +93,8 @@ GEM
       irb (>= 1.5.0)
       reline (>= 0.3.1)
     erubi (1.11.0)
+    ethon (0.16.0)
+      ffi (>= 1.15.0)
     execjs (2.8.1)
     faraday (2.7.1)
       faraday-net_http (>= 2.0, < 3.1)
@@ -105,6 +107,9 @@ GEM
     faraday-net_http (3.0.2)
     faraday-retry (2.0.0)
       faraday (~> 2.0)
+    faraday-typhoeus (1.0.0)
+      faraday (~> 2.0)
+      typhoeus (~> 1.4)
     ffi (1.15.5)
     gitlab (4.19.0)
       httparty (~> 0.20)
@@ -281,6 +286,8 @@ GEM
     thor (1.2.1)
     tilt (2.0.11)
     timeout (0.3.1)
+    typhoeus (1.4.0)
+      ethon (>= 0.9.0)
     tzinfo (2.0.5)
       concurrent-ruby (~> 1.0)
     unicode-display_width (2.3.0)
@@ -316,6 +323,7 @@ DEPENDENCIES
   faraday-follow_redirects
   faraday-gzip
   faraday-retry
+  faraday-typhoeus
   gitlab
   google-protobuf (= 3.21.9)
   groupdate

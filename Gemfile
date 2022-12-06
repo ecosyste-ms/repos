@@ -40,6 +40,7 @@ gem 'jquery-rails'
 gem 'chartkick'
 gem 'google-protobuf', '3.21.9'
 gem "sanitize-url"
+gem 'faraday-typhoeus'
 
 group :development, :test do
   gem "debug", platforms: %i[ mri mingw x64_mingw ]
