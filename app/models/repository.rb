@@ -175,10 +175,10 @@ class Repository < ApplicationRecord
       deps = dependencies.map do |dep|
         ecosystem = manifest.ecosystem
         next unless dep.is_a?(Hash)
-
+        next unless dep[:name].present?
         {
           manifest_id: manifest.id,
-          package_name: dep[:name].try(:strip),
+          package_name: dep[:name].strip[0..255],
           ecosystem: ecosystem,
           requirements: dep[:requirement],
           kind: dep[:type],
