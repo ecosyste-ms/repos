@@ -3,7 +3,6 @@
   
   <% @ecosystems.each do |ecosystem, count| %>
     <% registry = Registry.find_by_ecosystem(ecosystem) %>
-    <% next unless registry %>
     <div class="card mb-3 host d-flex">
       <div class="card-body pb-1">
         <div class="d-flex">
@@ -18,7 +17,9 @@
             </p>
           </div>
           <div class="flex-shrink-0">
-            <img src="https://github.com/<%= registry.github %>.png" class="rounded" height='40' width='40' onerror="this.style.display='none'">
+            <% if registry %>
+              <img src="https://github.com/<%= registry.github %>.png" class="rounded" height='40' width='40' onerror="this.style.display='none'">
+            <% end %>
           </div>  
         </div>
       </div>
