@@ -83,6 +83,31 @@ class PackageUsage < ApplicationRecord
     repository.update_column(:usage_updated_at, Time.now)
   end
 
+  def aggregate_dependencies
+    dependents_count = 0
+    repo_ids = []
+    requirements = {}
+    kind = {}
+    direct = {}
+
+    Dependency.where(ecosystem: ecosystem, package_name: name).find_each(batch_size: 10_000) do |dependency|
+      repo_ids |= [dependency.repository_id]
+      requirements[dependency.requirements] ||= 0
+      requirements[dependency.requirements] += 1
+      kind[dependency.kind] ||= 0
+      kind[dependency.kind] += 1
+      direct[dependency.direct ? 'direct' : 'transitive'] ||= 0
+      direct[dependency.direct ? 'direct' : 'transitive'] += 1
+    end
+
+    update_columns({
+      dependents_count: repo_ids.length,
+      requirements: requirements,
+      kind: kind,
+      direct: direct
+    })
+  end
+
   def registry
     @registry ||= Registry.find_by_ecosystem(ecosystem)
   end
@@ -100,9 +125,11 @@ class PackageUsage < ApplicationRecord
   def sync
     return unless registry
     response = Faraday.get(packages_api_url)
-    return unless response.success?
-    json = JSON.parse(response.body)
-    update_columns(package: json, package_last_synced_at: Time.now)
+    if response.success?
+      update_columns(package: JSON.parse(response.body), package_last_synced_at: Time.now)
+    else
+      update_columns(package_last_synced_at: Time.now)  
+    end
   rescue
     update_columns(package_last_synced_at: Time.now) # swallow errors for now
   end
