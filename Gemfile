@@ -1,7 +1,7 @@
 source "https://rubygems.org"
 git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
-ruby "3.1.3"
+ruby "3.2.0"
 
 gem "rails", "~> 7.0.4"
 gem "sprockets-rails"
@@ -15,7 +15,7 @@ gem "faraday"
 gem "faraday-retry"
 gem "faraday-gzip"
 gem "faraday-follow_redirects"
-gem "nokogiri"
+gem "nokogiri", '1.14.0.rc1'
 gem "oj"
 gem "hiredis"
 gem "redis", '<5', require: ["redis", "redis/connection/hiredis"]
@@ -38,7 +38,7 @@ gem "bugsnag"
 gem "groupdate"
 gem 'jquery-rails'
 gem 'chartkick'
-gem 'google-protobuf', '3.21.12'
+gem 'google-protobuf'
 gem "sanitize-url"
 gem 'faraday-typhoeus'
 
