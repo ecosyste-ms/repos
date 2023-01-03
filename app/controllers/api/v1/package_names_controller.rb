@@ -16,14 +16,7 @@ class Api::V1::PackageNamesController < Api::V1::ApplicationController
   end
 
   def actions
-    names = Manifest.where(ecosystem: 'actions').joins(:dependencies).pluck('DISTINCT(dependencies.package_name)')
-    @unique_names = names.reject do |n|
-      n.match?(/^[\W\.]/) || n.split('/').length != 2 || n.match?(/:/)
-    end.map{|n| n.split('@').last}.uniq.sort
-
-    # only list names of known repos, ordered by recently pushed
-    h = Host.find_by(name: 'GitHub')
-    @unique_names = h.repositories.where(full_name: @unique_names).order('pushed_at DESC').pluck(:full_name)
+    @unique_names = Manifest.where(ecosystem: 'actions', filepath: ['action.yml', 'action.yaml']).joins(:repository).order('repositories.pushed_at DESC').pluck("repositories.full_name").uniq
 
     render json: @unique_names
   end
