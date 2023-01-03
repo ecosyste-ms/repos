@@ -21,6 +21,10 @@ class Api::V1::PackageNamesController < Api::V1::ApplicationController
       n.match?(/^[\W\.]/) || n.split('/').length != 2 || n.match?(/:/)
     end.map{|n| n.split('@').last}.uniq.sort
 
+    # only list names of known repos, ordered by recently pushed
+    h = Host.find_by(name: 'GitHub')
+    @unique_names = h.repositories.where(full_name: @unique_names).order('pushed_at DESC').pluck(:full_name)
+
     render json: @unique_names
   end
 
