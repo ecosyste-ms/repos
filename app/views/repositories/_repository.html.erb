@@ -10,11 +10,6 @@
             Fork of <%= link_to repository.source_name, host_repository_path(host_id: repository.host, id: repository.source_name) %>
           </i></small>
           <% end %>
-          <% if repository.funding_links.any? %>
-            <small title='Accepts funding'>
-              💰
-            </small>
-          <% end %>
           <% if repository.archived %>
             <span title='Archived'>📦</span>
           <% end %>
