@@ -10,9 +10,6 @@ class Api::V1::UsageController < Api::V1::ApplicationController
   end
 
   def show
-    @usage = PackageUsage.find_by(ecosystem: params[:ecosystem], name: params[:name])
-    raise ActiveRecord::RecordNotFound unless @usage
-    @scope = @usage.dependent_repos
-    @pagy, @repositories = pagy(@scope)
+    @usage = PackageUsage.find_by!(ecosystem: params[:ecosystem], name: params[:name])
   end
 end

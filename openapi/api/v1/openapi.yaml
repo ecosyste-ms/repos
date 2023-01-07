@@ -631,6 +631,8 @@ components:
           type: object
         package_usage_url:
           type: string
+        dependencies_url:
+          type: string
     Owner:
       type: object
       properties:
