@@ -149,7 +149,12 @@ class Host < ApplicationRecord
         req.options.timeout = 30
       end
   
-      events = Oj.load(resp.body)
+      if resp.success?
+        events = Oj.load(resp.body)
+      else
+        events = nil
+      end
+
     rescue Faraday::Error
       events = nil
     end

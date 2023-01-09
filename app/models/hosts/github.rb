@@ -310,7 +310,11 @@ module Hosts
           req.options.timeout = 5
         end
 
-        Oj.load(resp.body)
+        if resp.success?
+          Oj.load(resp.body)
+        else
+          []
+        end
       rescue Faraday::Error
         []
       end
@@ -325,7 +329,11 @@ module Hosts
           req.options.timeout = 5
         end
 
-        Oj.load(resp.body)
+        if resp.success?
+          Oj.load(resp.body)
+        else
+          {}
+        end
       rescue Faraday::Error
         {}
       end
@@ -340,7 +348,11 @@ module Hosts
           req.options.timeout = 5
         end
 
-        Oj.load(resp.body)
+        if resp.success?
+          Oj.load(resp.body)
+        else
+          {}
+        end
       rescue Faraday::Error
         {}
       end
