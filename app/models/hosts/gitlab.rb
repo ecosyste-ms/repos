@@ -83,7 +83,7 @@ module Hosts
 
     def download_tags(repository)
       existing_tag_names = repository.tags.pluck(:name)
-      remote_tags = api_client.tags(repository.full_name).auto_paginate do |tag|
+      remote_tags = api_client.tags(repository.full_name).each do |tag|
         next if existing_tag_names.include?(tag.name)
         next if tag.commit.nil?
         repository.tags.create({
