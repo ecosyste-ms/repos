@@ -542,6 +542,8 @@ components:
           format: date-time
         dependency_job_id:
           type: string
+        html_url:
+          type: string
         repository_url:
           type: string
         tags_url:
