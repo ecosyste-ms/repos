@@ -1,6 +1,6 @@
 ---
 :queues:
-  - [critical, 3]
+  - [critical, 6]
   - [default, 2]
   - [dependencies, 1]
   - [tags, 1]
