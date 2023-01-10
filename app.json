@@ -9,32 +9,12 @@
       "schedule": "*/10 * * * *"
     },
     {
-      "command": "bundle exec rake repositories:parse_missing_dependencies",
-      "schedule": "*/15 * * * *"
-    },
-    {
-      "command": "bundle exec rake repositories:download_tags",
-      "schedule": "*/15 * * * *"
-    },
-    {
-      "command": "bundle exec rake repositories:sync_tags",
-      "schedule": "*/10 * * * *"
-    },
-    {
       "command": "bundle exec rake hosts:update_repository_counts",
       "schedule": "*/15 * * * *"
     },
     {
       "command": "bundle exec rake repositories:crawl",
       "schedule": "*/5 * * * *"
-    },
-    {
-      "command": "bundle exec rake repositories:update_package_usages",
-      "schedule": "*/15 * * * *"
-    },
-    {
-      "command": "bundle exec rake repositories:update_metadata_files",
-      "schedule": "*/15 * * * *"
     },
     {
       "command": "bundle exec rake packages:sync_registries",

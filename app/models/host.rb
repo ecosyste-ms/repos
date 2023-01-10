@@ -55,11 +55,10 @@ class Host < ApplicationRecord
 
         repo.assign_attributes(repo_hash)
         repo.last_synced_at = Time.now
-        repo.save
         if repo.latest_commit_sha_changed?
-          repo.update_metadata_files_async
-          repo.parse_dependencies_async 
-          repo.download_tags_async
+          repo.files_changed = true
+        end
+        repo.save
         end
         repo
       end

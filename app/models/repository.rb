@@ -201,6 +201,19 @@ class Repository < ApplicationRecord
     manifests.where.not(id: manifests.latest.map(&:id)).each(&:destroy)
   end
 
+  def sync_extra_details_async
+    SyncExtraDetailsWorker.perform_async(self.id)
+  end
+
+  def sync_extra_details
+    # if files_changed?
+    # TODO all in one rather than three asyn    
+    update_metadata_files_async
+    parse_dependencies_async 
+    download_tags_async
+    files_changed = false
+  end
+
   def get_file_contents(path)
     host.get_file_contents(self, path)
   end
