@@ -48,8 +48,9 @@ module Hosts
     def check_tokens
       list_tokens.each do |token|
         begin
-          api_client.rate_limit!
+          api_client(token).rate_limit!
         rescue Octokit::Unauthorized, Octokit::AccountSuspended
+          puts "Removing token #{token}"
           remove_token(token)
         end
       end
