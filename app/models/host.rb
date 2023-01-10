@@ -59,7 +59,6 @@ class Host < ApplicationRecord
           repo.files_changed = true
         end
         repo.save
-        end
         repo
       end
     end
