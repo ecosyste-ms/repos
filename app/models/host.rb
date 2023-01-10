@@ -55,7 +55,7 @@ class Host < ApplicationRecord
 
         repo.assign_attributes(repo_hash)
         repo.last_synced_at = Time.now
-        if repo.latest_commit_sha_changed?
+        if repo.pushed_at_changed?
           repo.files_changed = true
         end
         repo.save
