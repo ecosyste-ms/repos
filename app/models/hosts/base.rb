@@ -153,8 +153,11 @@ module Hosts
         repository.assign_attributes r
         if repository.changed?
           repository.last_synced_at = Time.now
+          if repository.pushed_at_changed?
+            repository.files_changed = true
+          end
           repository.save! 
-          repository.download_tags_async
+          # repository.download_tags_async
         else
           repository.update_column(:last_synced_at, Time.now)
         end
