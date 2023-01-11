@@ -23,12 +23,12 @@ class Repository < ApplicationRecord
 
   def self.parse_dependencies_async
     Repository.where.not(dependency_job_id: nil).limit(2000).select('id, dependencies_parsed_at').each(&:parse_dependencies_async)
-    return if Sidekiq::Queue.new('dependencies').size > 2_000
-    Repository.where(status: nil)
-              .where(fork: false)
-              .where(dependencies_parsed_at: nil, dependency_job_id: nil)
-              .select('id, dependencies_parsed_at')
-              .limit(2000).each(&:parse_dependencies_async)
+    # return if Sidekiq::Queue.new('dependencies').size > 2_000
+    # Repository.where(status: nil)
+    #           .where(fork: false)
+    #           .where(dependencies_parsed_at: nil, dependency_job_id: nil)
+    #           .select('id, dependencies_parsed_at')
+    #           .limit(2000).each(&:parse_dependencies_async)
   end
 
   def self.download_tags_async
@@ -206,12 +206,12 @@ class Repository < ApplicationRecord
   end
 
   def sync_extra_details
-    # if files_changed?
-    # TODO all in one rather than three asyn    
-    update_metadata_files_async
-    parse_dependencies_async 
-    download_tags_async
-    files_changed = false
+    return unless files_changed?
+    parse_dependencies
+    update_metadata_files
+    download_tags
+    parse_dependencies if dependency_job_id.present?
+    update(files_changed: false)
   end
 
   def get_file_contents(path)

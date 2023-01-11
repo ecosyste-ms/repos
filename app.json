@@ -17,6 +17,10 @@
       "schedule": "*/15 * * * *"
     },
     {
+      "command": "bundle exec rake repositories:parse_missing_dependencies",
+      "schedule": "*/15 * * * *"
+    },
+    {
       "command": "bundle exec rake repositories:crawl",
       "schedule": "*/5 * * * *"
     },
