@@ -8,9 +8,11 @@ namespace :repositories do
 
   desc 'sync least recently synced github repos'
   task sync_least_recent_github: :environment do 
-    if Sidekiq::Queue.new('critical').size < 10_000
+    # currently running at 900,000 per hour
+    # TODO reduce this to 50,000 per hour once we've caught up
+    if Sidekiq::Queue.new('critical').size < 30_000
       host = Host.find_by_name('GitHub')
-      ids = host.repositories.where(fork: false).order('last_synced_at ASC').limit(1_000).pluck(:id).map{|id| [id]} 
+      ids = host.repositories.order('last_synced_at ASC').limit(15_000).pluck(:id).map{|id| [id]} 
       Sidekiq::Client.push_bulk('class' => UpdateRepositoryWorker, 'queue' => 'critical', 'args' => ids)
     end
   end
