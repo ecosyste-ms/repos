@@ -21,6 +21,10 @@
       "schedule": "*/15 * * * *"
     },
     {
+      "command": "bundle exec rake repositories:download_tags",
+      "schedule": "*/15 * * * *"
+    },
+    {
       "command": "bundle exec rake repositories:crawl",
       "schedule": "*/5 * * * *"
     },
