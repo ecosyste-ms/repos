@@ -2,7 +2,7 @@ namespace :repositories do
   desc 'sync least recently synced repos'
   task sync_least_recent: :environment do 
     if Sidekiq::Queue.new('default').size < 10_000
-      Repository.order('last_synced_at ASC').limit(5_000).select('id').each(&:sync_async)
+      Repository.order('last_synced_at ASC').limit(1_000).select('id').each(&:sync_async)
     end
   end
 
