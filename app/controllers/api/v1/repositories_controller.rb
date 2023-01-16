@@ -54,7 +54,7 @@ class Api::V1::RepositoriesController < Api::V1::ApplicationController
     path = parsed_url.path.delete_prefix('/').chomp('/')
     @repository = @host.repositories.find_by('lower(full_name) = ?', path.downcase)
     if @repository
-      @repository.sync_async unless @repository.last_synced_at.present? && @repository.last_synced_at > 1.day.ago
+      @repository.sync_async unless @repository.last_synced_at.present? && @repository.last_synced_at > 1.hour.ago
       render :show
     else
       @host.sync_repository_async(path) if path.present?
