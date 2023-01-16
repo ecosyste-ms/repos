@@ -35,6 +35,10 @@
     {
       "command": "bundle exec rake packages:sync_packages",
       "schedule": "*/30 * * * *"
+    },
+    {
+      "command": "bundle exec rake hosts:check_github_tokens",
+      "schedule": "0 0 * * *"
     }
   ]
 }
