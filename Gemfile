@@ -18,7 +18,7 @@ gem "faraday-follow_redirects"
 gem "nokogiri", '1.14.0'
 gem "oj"
 gem "hiredis"
-gem "redis", '<5', require: ["redis", "redis/connection/hiredis"]
+gem "redis", '<6', require: ["redis", "redis/connection/hiredis"]
 gem "sidekiq", '<7'
 gem "sidekiq-unique-jobs"
 gem "pagy"
