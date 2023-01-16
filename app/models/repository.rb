@@ -353,7 +353,7 @@ class Repository < ApplicationRecord
   end
 
   def ping_packages_async
-    # PingPackagesWorker.perform_async(self.id)
+    PingPackagesWorker.perform_async(self.id)
   end
 
   def ping_packages
