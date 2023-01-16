@@ -152,6 +152,8 @@ module Hosts
         
         repository.assign_attributes r
         if repository.changed?
+          repository.ping_packages_async
+
           repository.last_synced_at = Time.now
           if repository.pushed_at_changed?
             repository.files_changed = true

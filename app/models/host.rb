@@ -54,11 +54,13 @@ class Host < ApplicationRecord
         repo.full_name = repo_hash[:full_name] if repo.full_name.downcase != repo_hash[:full_name].downcase
 
         repo.assign_attributes(repo_hash)
+        repo_changed = repo.changed?
         repo.last_synced_at = Time.now
         if repo.pushed_at_changed?
           repo.files_changed = true
         end
         repo.save
+        repo.ping_packages_async if repo_changed && repo.persisted?
         repo
       end
     end

@@ -351,4 +351,25 @@ class Repository < ApplicationRecord
       end
     end.flatten.compact
   end
+
+  def ping_packages_async
+    PingPackagesWorker.perform_async(self.id)
+  end
+
+  def ping_packages
+    # TODO prefer package usages to save on expensive API call
+    url = "https://packages.ecosyste.ms/api/v1/packages/lookup?repository_url=#{html_url}"
+    response = Faraday.get(url)
+    return if response.status != 200
+    packages = Oj.load(response.body)
+    return if packages.blank?
+    packages.each do |package|
+      # ping package
+      url = "#{package['registry']['packages_url']}/#{package['name']}/ping"
+      connection = Faraday.new url do |builder|
+        builder.use Faraday::FollowRedirects::Middleware
+      end
+      resp = connection.get
+    end
+  end
 end
