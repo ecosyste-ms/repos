@@ -5,6 +5,10 @@
       "schedule": "*/5 * * * *"
     },
     {
+      "command": "bundle exec rake repositories:sync_extra_details",
+      "schedule": "*/5 * * * *"
+    },
+    {
       "command": "bundle exec rake repositories:sync_least_recent_github",
       "schedule": "*/1 * * * *"
     },

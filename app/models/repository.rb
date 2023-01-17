@@ -201,6 +201,10 @@ class Repository < ApplicationRecord
     manifests.where.not(id: manifests.latest.map(&:id)).each(&:destroy)
   end
 
+  def self.sync_extra_details_async
+    Repository.where(files_changed: true).limit(600).order('pushed_at asc').select('id').each(&:sync_extra_details_async)
+  end
+
   def sync_extra_details_async
     SyncExtraDetailsWorker.perform_async(self.id)
   end
