@@ -1,1 +1,1 @@
-json.extract! dependency, :package_name, :ecosystem, :requirements, :direct, :kind, :optional
+json.extract! dependency, :id, :package_name, :ecosystem, :requirements, :direct, :kind, :optional
