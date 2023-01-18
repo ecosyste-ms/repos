@@ -211,10 +211,12 @@ class Repository < ApplicationRecord
 
   def sync_extra_details
     return unless files_changed?
-    parse_dependencies
-    update_metadata_files
-    download_tags
-    parse_dependencies if dependency_job_id.present?
+    if pushed_at.present?
+      parse_dependencies unless dependencies_parsed_at.present? && dependencies_parsed_at > pushed_at
+      update_metadata_files
+      download_tags
+      parse_dependencies if dependency_job_id.present?
+    end
     update(files_changed: false)
   end
 
