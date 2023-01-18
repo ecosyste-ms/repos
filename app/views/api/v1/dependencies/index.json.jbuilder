@@ -1,5 +1,5 @@
 json.array! @dependencies do |dependency|
-  json.extract! dependency, :package_name, :ecosystem, :requirements, :direct, :kind, :optional
+  json.extract! dependency, :id, :package_name, :ecosystem, :requirements, :direct, :kind, :optional
   json.repository do
     json.partial! 'api/v1/repositories/repository', repository: dependency.repository
   end
