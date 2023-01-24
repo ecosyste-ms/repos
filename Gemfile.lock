@@ -86,7 +86,7 @@ GEM
       concurrent-ruby (~> 1.0)
     builder (3.2.4)
     chartkick (5.0.1)
-    concurrent-ruby (1.1.10)
+    concurrent-ruby (1.2.0)
     connection_pool (2.3.0)
     crack (0.4.5)
       rexml
