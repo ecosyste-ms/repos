@@ -117,7 +117,7 @@ GEM
     gitlab (4.19.0)
       httparty (~> 0.20)
       terminal-table (>= 1.5.1)
-    globalid (1.0.1)
+    globalid (1.1.0)
       activesupport (>= 5.0)
     google-protobuf (3.21.12)
     groupdate (6.1.0)
