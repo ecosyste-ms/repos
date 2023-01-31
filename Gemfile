@@ -15,7 +15,7 @@ gem "faraday"
 gem "faraday-retry"
 gem "faraday-gzip"
 gem "faraday-follow_redirects"
-gem "nokogiri", '1.14.0'
+gem "nokogiri", '1.14.1'
 gem "oj"
 gem "hiredis"
 gem "redis", '<5', require: ["redis", "redis/connection/hiredis"]
