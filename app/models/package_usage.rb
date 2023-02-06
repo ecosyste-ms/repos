@@ -169,4 +169,54 @@ class PackageUsage < ApplicationRecord
   def dependent_repos
     Repository.where(id: repo_ids).includes(:host)
   end
+
+  def funding_links
+    (package_funding_links + repo_funding_links + owner_funding_links).uniq
+  end
+
+  def package_metadata
+    package['metadata'] || {}
+  end
+
+  def package_funding_links
+    return [] if  package_metadata["funding"].blank?
+    funding_array = package_metadata["funding"].is_a?(Array) ? package_metadata["funding"] : [package_metadata["funding"]] 
+    funding_array.map{|f| f.is_a?(Hash) ? f['url'] : f }
+  end
+
+  def owner_funding_links
+    return [] if repo_metadata.blank? || repo_metadata['owner_record'].blank? ||  repo_metadata['owner_record']["metadata"].blank?
+    return [] unless repo_metadata['owner_record']["metadata"]['has_sponsors_listing']
+    ["https://github.com/sponsors/#{repo_metadata['owner_record']['login']}"]
+  end
+
+  def repo_funding_links
+    return [] if repo_metadata.blank? || repo_metadata['metadata'].blank? ||  repo_metadata['metadata']["funding"].blank?
+    return [] if repo_metadata['metadata']["funding"].is_a?(String)
+    repo_metadata['metadata']["funding"].map do |key,v|
+      next if v.blank?
+      case key
+      when "github"
+        Array(v).map{|username| "https://github.com/sponsors/#{username}" }
+      when "tidelift"
+        "https://tidelift.com/funding/github/#{v}"
+      when "community_bridge"
+        "https://funding.communitybridge.org/projects/#{v}"
+      when "issuehunt"
+        "https://issuehunt.io/r/#{v}"
+      when "open_collective"
+        "https://opencollective.com/#{v}"
+      when "ko_fi"
+        "https://ko-fi.com/#{v}"
+      when "liberapay"
+        "https://liberapay.com/#{v}"
+      when "custom"
+        v
+      when "otechie"
+        "https://otechie.com/#{v}"
+      when "patreon"
+        "https://patreon.com/#{v}"
+      end
+    end.flatten.compact
+  end
 end

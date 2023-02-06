@@ -11,4 +11,10 @@ class RepositoriesController < ApplicationController
       @sha = params[:sha] || @repository.default_branch
     end
   end
+
+  def funding
+    @host = Host.find_by_name!(params[:host_id])
+    @repository = @host.repositories.find_by('lower(full_name) = ?', params[:id].downcase)
+    @dependencies = @repository.dependencies.includes(:manifest).order('kind DESC')
+  end
 end

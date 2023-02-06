@@ -13,6 +13,14 @@ class Dependency < ApplicationRecord
 
   delegate :filepath, to: :manifest
 
+  def package_usage
+    @package_usage = PackageUsage.where(ecosystem: ecosystem, name: package_name).first
+  end
+
+  def has_funding_links?
+    package_usage.try(:funding_links).try(:any?) || false
+  end
+
   def package_name
     read_attribute(:package_name).try(:tr, " \n\t\r", '')
   end

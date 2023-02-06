@@ -1,0 +1,63 @@
+<div class='container-sm'>
+  <h1>Hack your stack: <%= @repository.full_name %></h1>
+
+  <h3>
+    Dependencies
+    <small class='text-muted'>
+      <%= @dependencies.length %>
+
+      (<%= @dependencies.select{|d| d.package_usage && d.package_usage.funding_links.any? }.length %> with funding links)
+    </small>  
+  </h3>
+
+  <div class='row'>
+    <div class='col-md-8'>
+      <ul class="list-group list-group-flush">
+        <% @dependencies.sort_by{|d| [(!d.has_funding_links?).to_s, d.ecosystem, d.package_name] }.group_by{|d| [d.ecosystem, d.package_name]}.each do |eco_name, dependencies| %>
+          <% dependency = dependencies.first %>
+          <li class='list-group-item'>
+            <strong><%= dependency.ecosystem %></strong>
+            <%= dependency.package_name%>
+            <small class='text-muted'>
+              <%= dependency.manifest.filepath %>
+            
+            <% if dependency.package_usage.present? %>
+              <% if dependency.package_usage.repo_metadata %>
+                <br>  
+                Repo: <%= link_to dependency.package_usage.repo_metadata['html_url'], dependency.package_usage.repo_metadata['html_url'] %>
+              <% end %>
+              <% if dependency.has_funding_links? %>
+                <br>
+                  Funding: <% dependency.package_usage.funding_links.each_with_index do |link, index| %><%= ',' unless index.zero? %> <%= link_to link, link %><% end %>
+              <% end %>
+            <% end %>
+            </small>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+    <div class='col-md-4'>
+
+      <% links = @dependencies.select{|d| d.package_usage && d.package_usage.funding_links.any? }.map{|d| d.package_usage.funding_links}.flatten %>
+
+      <% links.map!{|l| URI.parse(l).host }%>
+
+      <% links = links.group_by{|l| l}.map{|l, c| [l, c.length] }.sort_by{|l, c| c}.reverse %>
+
+      <h5>Funding Platforms</h5>
+
+       <ul class="list-group list-group-flush">
+         <% links.each do |link, count| %>   
+            <li class='list-group-item'>
+              <%= link %>
+              <small class='text-muted'>
+              <%= count %>
+             </small>
+            </li>
+         <% end %>
+       </ul>
+    </div>
+  </div>
+
+  
+</div>
