@@ -61,7 +61,7 @@
     </small></p>
   <% end %>
 
-  <% if false && @manifests.present? %>
+  <% if @manifests.present? %>
     <p><small class='text-muted'>
       <%= link_to "💰 Back this stack 💰", funding_host_repository_path(@host, @repository), class: 'btn btn-secondary' %>  
     </small></p>
