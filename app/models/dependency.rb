@@ -14,7 +14,7 @@ class Dependency < ApplicationRecord
   delegate :filepath, to: :manifest
 
   def package_usage
-    @package_usage = PackageUsage.where(ecosystem: ecosystem, name: package_name).first
+    @package_usage ||= PackageUsage.where(ecosystem: ecosystem, name: package_name).first
   end
 
   def has_funding_links?

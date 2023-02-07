@@ -15,6 +15,7 @@ class RepositoriesController < ApplicationController
   def funding
     @host = Host.find_by_name!(params[:host_id])
     @repository = @host.repositories.find_by('lower(full_name) = ?', params[:id].downcase)
-    @dependencies = @repository.dependencies.includes(:manifest).order('kind DESC')
+    @manifests = @repository.manifests.includes(:dependencies).order('kind DESC')
+    @dependencies = @manifests.map(&:dependencies).flatten
   end
 end
