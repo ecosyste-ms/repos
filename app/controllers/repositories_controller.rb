@@ -17,5 +17,6 @@ class RepositoriesController < ApplicationController
     @repository = @host.repositories.find_by('lower(full_name) = ?', params[:id].downcase)
     @manifests = @repository.manifests.includes(:dependencies).order('kind DESC')
     @dependencies = @manifests.map(&:dependencies).flatten
+    @dependencies.map(&:package_usage).compact.uniq.each{|pu| pu.sync_async }
   end
 end

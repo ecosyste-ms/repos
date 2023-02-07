@@ -134,6 +134,10 @@ class PackageUsage < ApplicationRecord
     update_columns(package_last_synced_at: Time.now) # swallow errors for now
   end
 
+  def sync_async
+    PackageUsageSyncWorker.perform_async(id)
+  end
+
   def self.sync_packages
     PackageUsage.order('package_last_synced_at desc nulls first').limit(500).each(&:sync)
   end
