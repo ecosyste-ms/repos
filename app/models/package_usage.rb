@@ -1,5 +1,8 @@
 class PackageUsage < ApplicationRecord
 
+  validates :ecosystem, presence: true
+  validates :name, presence: true, format: { with: /\w/ }
+
   scope :with_package_metadata, -> { where('length(package::text) > 2 ') }
   scope :with_repo_metadata, -> { with_package_metadata.where("length(package ->> 'repo_metadata') > 2") }
   scope :host, ->(host_name) { where("package -> 'repo_metadata' -> 'host' ->> 'name' = ?", host_name.to_s) }
