@@ -44,6 +44,7 @@
   <h3>Dependent Repos <small class='text-muted'><%= number_with_delimiter @package_usage.dependents_count %></small></h3>
   <% @repositories = @dependencies.group_by(&:repository) %>
   <% @repositories.each do |repository, dependencies| %>
+    <% next if repository.nil? %>
   
     <div class="card mb-3 repository d-flex" id="repository_<%= repository.id %>">
   <div class="card-body pb-1">

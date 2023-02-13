@@ -6,7 +6,7 @@ class UsageController < ApplicationController
   def ecosystem
     @ecosystem = params[:ecosystem]
     @scope = PackageUsage.where(ecosystem: @ecosystem).select('ecosystem,name,dependents_count,package').order('dependents_count DESC')
-    @pagy, @package_usages = pagy(@scope)
+    @pagy, @package_usages = pagy_countless(@scope)
   end
 
   def show
@@ -23,7 +23,7 @@ class UsageController < ApplicationController
         raise ActiveRecord::RecordNotFound
       end
     end
-    @scope = Dependency.where(ecosystem: @package_usage.ecosystem, package_name: @package_usage.name).includes(:repository, :manifest)
+    @scope = Dependency.where(ecosystem: @package_usage.ecosystem, package_name: @package_usage.name).includes(:manifest, {repository: :host})
     @pagy, @dependencies = pagy_countless(@scope)
   end
 end
