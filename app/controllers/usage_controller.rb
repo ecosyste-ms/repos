@@ -11,8 +11,19 @@ class UsageController < ApplicationController
 
   def show
     @package_usage = PackageUsage.find_by(ecosystem: params[:ecosystem], name: params[:name])
-    raise ActiveRecord::RecordNotFound unless @package_usage
-    @scope = @package_usage.dependent_repos
-    @pagy, @repositories = pagy(@scope)
+    if @package_usage.nil?
+      if Dependency.where(ecosystem: params[:ecosystem], package_name: params[:name]).any?
+        @package_usage = PackageUsage.create({
+          ecosystem: params[:ecosystem],
+          name: params[:name],
+          dependents_count: 1})
+        @package_usage.sync
+        @package_usage.sync_repository if @package_usage.package
+      else
+        raise ActiveRecord::RecordNotFound
+      end
+    end
+    @scope = Dependency.where(ecosystem: @package_usage.ecosystem, package_name: @package_usage.name).includes(:repository, :manifest)
+    @pagy, @dependencies = pagy_countless(@scope)
   end
 end

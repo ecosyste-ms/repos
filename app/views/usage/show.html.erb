@@ -41,24 +41,69 @@
     <% end%>
   <% end %>
 
-  <h3>Requirements</h3>
-  <% max_rows = 20 %>
-  <% rows = [@package_usage.requirements.length, max_rows].min %>
-  <%= bar_chart sort_by_semver_range(@package_usage.requirements, max_rows), height: "#{(rows*30)+50}px" %>
+  <h3>Dependent Repos <small class='text-muted'><%= number_with_delimiter @package_usage.dependents_count %></small></h3>
+  <% @repositories = @dependencies.group_by(&:repository) %>
+  <% @repositories.each do |repository, dependencies| %>
+  
+    <div class="card mb-3 repository d-flex" id="repository_<%= repository.id %>">
+  <div class="card-body pb-1">
+    <div class="d-flex">
+      
+      <div class="flex-grow-1 ms-3 text-break">
+        <h5 class='card-title'>
+          <%= link_to repository, host_repository_path(repository.host, repository) %>
+          <% if repository.fork && repository.source_name %>
+          <small class='text-muted'><i>
+            Fork of <%= link_to repository.source_name, host_repository_path(host_id: repository.host, id: repository.source_name) %>
+          </i></small>
+          <% end %>
+          <% if repository.archived %>
+            <span title='Archived'>📦</span>
+          <% end %>
+        </h5>
+      
+        <span class="card-subtitle mb-2 text-muted">
+          <%= repository.description %>
+        </span>
 
-  <div class='row my-3'>
-    <div class='col'>
-      <h3>Kind</h3>
-      <%= pie_chart @package_usage.kind, legend: "left", width: '50%'  %>
-    </div>
-    <div class='col'>
-      <h3>Direct</h3>
-      <%= pie_chart @package_usage.direct, legend: "left", width: '50%' %>
+        <ul class="list-group list-group-flush">
+          <% dependencies.each do |dependency| %>
+            <li class='list-group-item ps-0'>
+              <%= dependency.requirements %>
+              <small class='text-muted'>
+                <%= dependency.manifest.filepath %>
+              </small>
+            </li>
+          <% end %>
+        </ul>
+
+
+        <p class="card-subtitle mb-2 text-muted"><i><small>
+          <% if repository.size %>
+            Size: <%= number_to_human_size repository.size*1000 %> 
+          <% end %>
+          <% if repository.size && repository.last_synced_at %>
+            - 
+          <% end %>  
+          <% if repository.last_synced_at %>
+              Last synced: <%= distance_of_time_in_words_to_now repository.last_synced_at %> ago
+          <% end %>
+          <% if repository.pushed_at && repository.last_synced_at %>
+            - 
+          <% end %>  
+          <% if repository.pushed_at %>
+              Pushed: <%= distance_of_time_in_words_to_now repository.pushed_at %> ago
+          <% end %>
+        </small></i></p>
+      </div>
+      <div class="flex-shrink-0">
+        <img src="<%= repository.avatar_url(40) %>" class="rounded" height='40' width='40' onerror="this.style.display='none'">
+      </div>  
     </div>
   </div>
+</div>
 
-  <h3>Dependent Repos <small class='text-muted'><%= number_with_delimiter @package_usage.dependents_count %></small></h3>
-  <%= render @repositories %>
+  <% end %>
   <%== pagy_bootstrap_nav(@pagy) if @pagy.pages > 1 %>  
 </div>
 
