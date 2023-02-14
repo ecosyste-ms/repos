@@ -14,6 +14,9 @@ default_hosts = [
   {name: "gitlab.gentoo.org", url: "https://gitlab.gentoo.org", kind: "gitlab", org: 'gentoo'},
   {name: "gitlab.freedesktop.org", url: "https://gitlab.freedesktop.org", kind: "gitlab", org: 'freedesktop'},
   {name: "gitlab.arm.com", url: "https://gitlab.arm.com", kind: "gitlab", org: 'ARM-software'},
+  {name: "invent.kde.org", url: "https://invent.kde.org", kind: "gitlab", org: 'kde'},
+  {name: "gitlab.xfce.org", url: "https://gitlab.xfce.org", kind: "gitlab", org: 'xfce-mirror'},
+  {name: "gitlab.alpinelinux.org", url: "https://gitlab.alpinelinux.org", kind: "gitlab", org: 'alpinelinux'},
 ]
 
 default_hosts.each do |host|
