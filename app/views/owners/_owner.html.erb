@@ -4,7 +4,7 @@
       
       <div class="flex-grow-1 ms-3 text-break">
         <h5 class='card-title'>
-          <%= link_to owner.to_s, host_owner_path(@host, owner.login) %>
+          <%= link_to owner.login, host_owner_path(@host, owner.login) %>
           <i><small class="text-muted"><%= owner.kind %></small></i>
           <% if owner.funding_links.any? %>
             <small title='Accepts funding'>

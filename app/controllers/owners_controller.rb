@@ -1,7 +1,7 @@
 class OwnersController < ApplicationController
   def index
     @host = Host.find_by_name!(params[:host_id])
-    @pagy, @owners = pagy_countless(@host.owners.order('updated_at DESC'))
+    @pagy, @owners = pagy_countless(@host.owners.order('repositories_count DESC'))
   end
 
   def show

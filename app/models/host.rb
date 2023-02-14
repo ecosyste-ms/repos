@@ -9,8 +9,12 @@ class Host < ApplicationRecord
     Host.all.find { |host| host.domain == domain }
   end
   
-  def update_repository_counts
+  def update_repositories_count
     update_column(:repositories_count, repositories.count)
+  end
+
+  def update_owners_count
+    update_column(:owners_count, owners.count)
   end
 
   def to_s
@@ -93,7 +97,8 @@ class Host < ApplicationRecord
 
   def crawl_repositories
     host_instance.crawl_repositories
-    update_repository_counts
+    update_repositories_count
+    update_owners_count
   end
 
   def download_tags(repository)
@@ -214,5 +219,17 @@ class Host < ApplicationRecord
 
   def sync_owner_async(login)
     SyncOwnerWorker.perform_async(id, login)
+  end
+
+  def missing_owner_names
+    all_owner_names - existing_owner_names
+  end
+
+  def all_owner_names
+    repositories.pluck(:owner).uniq
+  end
+
+  def existing_owner_names
+    owners.pluck(:login)
   end
 end
