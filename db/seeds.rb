@@ -13,6 +13,7 @@ default_hosts = [
   {name: "framagit.org", url: "https://framagit.org", kind: "gitlab", org: 'framasoft'},
   {name: "gitlab.gentoo.org", url: "https://gitlab.gentoo.org", kind: "gitlab", org: 'gentoo'},
   {name: "gitlab.freedesktop.org", url: "https://gitlab.freedesktop.org", kind: "gitlab", org: 'freedesktop'},
+  {name: "gitlab.arm.com", url: "https://gitlab.arm.com", kind: "gitlab", org: 'ARM-software'},
 ]
 
 default_hosts.each do |host|
