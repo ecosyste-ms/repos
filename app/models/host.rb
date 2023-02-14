@@ -233,4 +233,16 @@ class Host < ApplicationRecord
   def existing_owner_names
     owners.pluck(:login)
   end
+
+  def sync_missing_owners(limit = 100)
+    missing_owner_names.first(limit).each do |login|
+      sync_owner(login)
+    end
+  end
+
+  def sync_missing_owners_async(limit = 100)
+    missing_owner_names.first(limit).each do |login|
+      sync_owner_async(login)
+    end
+  end
 end
