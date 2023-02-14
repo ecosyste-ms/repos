@@ -1,7 +1,26 @@
 <div class="container-sm">
     <h1 class='mb-4'>
-    <%= link_to @host, host_path(@host) %> / owners
+    <%= link_to @host, host_path(@host) %>
   </h1>
+
+  <ul class="nav nav-tabs my-3">
+    <li class="nav-item">
+      <a class="nav-link" href="<%= host_path(@host) %>">
+        Repositories
+        <span class="badge bg-secondary rounded-pill">
+          <%= number_with_delimiter @host.repositories_count %>
+        </span>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link active" aria-current="page">
+        Owners
+        <span class="badge bg-secondary rounded-pill">
+          <%= number_with_delimiter @host.owners.count %>
+        </span>
+      </a>
+    </li>
+  </ul>
 
   <%= render @owners %>
   <%== pagy_bootstrap_nav(@pagy) if @pagy.pages > 1 %>  
