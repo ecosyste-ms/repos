@@ -21,6 +21,10 @@
       "schedule": "*/15 * * * *"
     },
     {
+      "command": "bundle exec rake hosts:sync_owners",
+      "schedule": "*/5 * * * *"
+    },
+    {
       "command": "bundle exec rake repositories:parse_missing_dependencies",
       "schedule": "*/15 * * * *"
     },

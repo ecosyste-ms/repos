@@ -6,6 +6,10 @@ class Owner < ApplicationRecord
   scope :created_after, ->(date) { where('created_at > ?', date) }
   scope :updated_after, ->(date) { where('updated_at > ?', date) }
   
+  def self.sync_least_recently_synced
+    Owner.order('last_synced_at asc nulls first').limit(1000).each(&:sync_async)
+  end
+
   def to_s
     name.presence || login
   end
@@ -22,7 +26,7 @@ class Owner < ApplicationRecord
     host.sync_owner(login)
   end
 
-  def sync_async(login)
+  def sync_async
     SyncOwnerWorker.perform_async(host_id, login)
   end
 
