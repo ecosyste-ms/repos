@@ -65,6 +65,7 @@ class Host < ApplicationRecord
         end
         repo.save
         repo.ping_packages_async if repo_changed && repo.persisted?
+        repo.sync_owner
         repo
       end
     end
