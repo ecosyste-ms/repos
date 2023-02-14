@@ -33,7 +33,6 @@ gem "semantic"
 gem "semantic_range"
 gem "gitlab"
 gem "octokit"
-gem "bugsnag"
 gem "groupdate"
 gem 'jquery-rails'
 gem 'chartkick'
