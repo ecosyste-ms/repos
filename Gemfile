@@ -41,6 +41,7 @@ gem 'google-protobuf'
 gem "sanitize-url"
 gem 'faraday-typhoeus'
 gem 'appsignal'
+gem 'sitemap_generator'
 
 group :development, :test do
   gem "debug", platforms: %i[ mri mingw x64_mingw ]

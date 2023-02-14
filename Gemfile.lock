@@ -264,6 +264,8 @@ GEM
       concurrent-ruby (~> 1.0, >= 1.0.5)
       sidekiq (>= 7.0.0, < 8.0.0)
       thor (>= 1.0, < 3.0)
+    sitemap_generator (6.3.0)
+      builder (~> 3.0)
     sprockets (4.2.0)
       concurrent-ruby (~> 1.0)
       rack (>= 2.2.4, < 4)
@@ -345,6 +347,7 @@ DEPENDENCIES
   shoulda-matchers
   sidekiq
   sidekiq-unique-jobs
+  sitemap_generator
   sprockets-rails
   tzinfo-data
   web-console
