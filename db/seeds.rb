@@ -11,6 +11,8 @@ default_hosts = [
   {name: "salsa.debian.org", url: "https://salsa.debian.org", kind: "gitlab", org: 'debian'},
   {name: "gitlab.haskell.org", url: "https://gitlab.haskell.org", kind: "gitlab", org: 'haskell'},
   {name: "framagit.org", url: "https://framagit.org", kind: "gitlab", org: 'framasoft'},
+  {name: "gitlab.gentoo.org", url: "https://gitlab.gentoo.org", kind: "gitlab", org: 'gentoo'},
+  {name: "gitlab.freedesktop.org", url: "https://gitlab.freedesktop.org", kind: "gitlab", org: 'freedesktop'},
 ]
 
 default_hosts.each do |host|
