@@ -5,8 +5,8 @@ ruby "3.2.1"
 
 gem "rails", "~> 7.0.4"
 gem "sprockets-rails"
-gem "pg", "~> 1.4"
-gem "puma", "~> 6.0"
+gem "pg"
+gem "puma"
 gem "jbuilder"
 gem "tzinfo-data", platforms: %i[ mingw mswin x64_mingw jruby ]
 gem "bootsnap", require: false
@@ -15,11 +15,10 @@ gem "faraday"
 gem "faraday-retry"
 gem "faraday-gzip"
 gem "faraday-follow_redirects"
-gem "nokogiri", '1.14.2'
+gem "nokogiri"
 gem "oj"
-gem "hiredis"
-gem "redis", '<5', require: ["redis", "redis/connection/hiredis"]
-gem "sidekiq", '<7'
+gem "redis"
+gem "sidekiq"
 gem "sidekiq-unique-jobs"
 gem "pagy"
 gem "pghero"
@@ -52,7 +51,8 @@ group :development do
 end
 
 group :test do
-  gem "shoulda"
+  gem "shoulda-matchers"
+  gem "shoulda-context"
   gem "webmock"
   gem "mocha"
   gem "rails-controller-testing"
