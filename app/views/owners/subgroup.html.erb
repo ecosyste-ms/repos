@@ -11,10 +11,6 @@
         <%= group %>
       <% end %>
     <%end %>
-
-    <small class='text-muted'>
-      <%= pluralize number_with_delimiter(@pagy.count), 'repository' %>
-    </small>
   </h1>
 
   <%= render @repositories %>
