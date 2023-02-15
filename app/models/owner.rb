@@ -35,7 +35,7 @@ class Owner < ApplicationRecord
   end
 
   def html_url
-    "#{host.html_url}/#{login}"
+    "#{host.url}/#{login}"
   end
 
   def update_repositories_count
