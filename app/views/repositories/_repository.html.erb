@@ -40,8 +40,18 @@
           <% if repository.pushed_at %>
               Pushed: <%= distance_of_time_in_words_to_now repository.pushed_at %> ago
           <% end %>
-            - Stars: <%= number_with_delimiter repository.stargazers_count %>
-            - Forks: <%= number_with_delimiter repository.forks_count %>
+          <% if repository.stargazers_count || repository.forks_count %>
+            -
+          <% end %>
+          <% if repository.stargazers_count %>
+            Stars: <%= number_with_delimiter repository.stargazers_count %>
+          <% end %>
+          <% if repository.stargazers_count && repository.forks_count %>
+            -
+          <% end %>
+          <% if repository.forks_count %>
+            Forks: <%= number_with_delimiter repository.forks_count %>
+          <% end %>
         </small></i></p>
       </div>
       <div class="flex-shrink-0">
