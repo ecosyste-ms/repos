@@ -19,6 +19,12 @@
           <%= repository.description %>
         </p>
         <p class="card-subtitle mb-2 text-muted"><i><small>
+          <% if repository.language %>
+            Language: <%= repository.language %>
+          <% end %>
+          <% if repository.language && repository.size %>
+            -
+          <% end %>
           <% if repository.size %>
             Size: <%= number_to_human_size repository.size*1000 %> 
           <% end %>
