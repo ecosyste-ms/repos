@@ -111,14 +111,12 @@ class PackageUsage < ApplicationRecord
     })
   end
 
+  def fetch_dependents_count
+    @dependents_count ||= Dependency.where(ecosystem: ecosystem, package_name: name).distinct.count(:repository_id)
+  end
+
   def update_dependents_count
-    repo_ids = Set.new
-
-    Dependency.where(ecosystem: ecosystem, package_name: name).find_each(batch_size: 10_000) do |dependency|
-      repo_ids.add [dependency.repository_id]
-    end
-
-    update_columns({dependents_count: repo_ids.length})
+    update_columns({dependents_count: fetch_dependents_count})
   end
 
   def registry
