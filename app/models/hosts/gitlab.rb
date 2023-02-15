@@ -191,7 +191,7 @@ module Hosts
         user_hash = api_client.user(id).to_hash
 
         {
-          uuid: user_hash["id"],
+          uuid: "user-#{user_hash["id"]}",
           login: user_hash["username"],
           name: user_hash["name"],
           website: user_hash["website_url"],
@@ -203,7 +203,7 @@ module Hosts
       else
         group = api_client.group(login, with_projects: false)
         {
-          uuid: group["id"],
+          uuid: "organization-#{group["id"]}",
           login: group["path"],
           name: group["name"],
           description: group["description"],
