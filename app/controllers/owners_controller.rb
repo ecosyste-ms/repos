@@ -8,7 +8,16 @@ class OwnersController < ApplicationController
     @host = Host.find_by_name!(params[:host_id])
     @owner = params[:id]
     @owner_record = @host.owners.find_by('lower(login) = ?', @owner.downcase)
-    @pagy, @repositories = pagy_countless(@host.repositories.owner(@owner))
+
+    scope = @host.repositories.owner(@owner)
+    sort = params[:sort].presence || 'updated_at'
+    if params[:order] == 'asc'
+      scope = scope.order(Arel.sql(sort).asc.nulls_last)
+    else
+      scope = scope.order(Arel.sql(sort).desc.nulls_last)
+    end
+
+    @pagy, @repositories = pagy_countless(scope)
     raise ActiveRecord::RecordNotFound if @repositories.length.zero?
   end
 

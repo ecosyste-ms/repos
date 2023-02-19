@@ -22,6 +22,20 @@
     <% end %>
   <% end %>
 
+    <ul class="nav nav-tabs my-3">
+    <li class="nav-item">
+      <a class="nav-link active" aria-current="page">
+        Repositories
+        <% if @owner_record %>
+        <span class="badge bg-secondary rounded-pill">
+          <%= number_with_delimiter @owner_record.repositories_count %>
+        </span>
+        <% end %>
+      </a>
+    </li>
+    <%= render 'sort' %>
+  </ul>
+
   <%= render @repositories %>
   <%== pagy_bootstrap_nav(@pagy) if @pagy.pages > 1 %>  
 </div>
