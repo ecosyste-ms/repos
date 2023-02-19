@@ -56,7 +56,7 @@ module Hosts
     end
 
     def load_owner_repos_names(owner)
-      api_client.get("/2.0/repositories/#{owner_login}").body['values'].map{|repo| repo['full_name']}
+      api_client.get("/2.0/repositories/#{owner.login}").body['values'].map{|repo| repo['full_name']}
     rescue *IGNORABLE_EXCEPTIONS
       []
     end

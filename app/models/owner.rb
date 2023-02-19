@@ -43,6 +43,6 @@ class Owner < ApplicationRecord
   end
 
   def sync_repositories
-    host.sync_repositories(login)
+    host.sync_owner_repositories_async(self)
   end
 end
