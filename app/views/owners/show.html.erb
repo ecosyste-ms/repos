@@ -14,6 +14,12 @@
         <%= @owner_record.description %>
       </p>
     <% end %>
+
+    <% if @owner_record.funding_links.any? %>
+      <p><small class='text-muted'>
+      Funding links: <% @owner_record.funding_links.each_with_index do |url,i| %><%= ', ' if i > 0 %><%= link_to(url, sanitize_user_url(url), target: :_blank) %><% end %>
+      </small></p>
+    <% end %>
   <% end %>
 
   <%= render @repositories %>

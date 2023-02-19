@@ -21,7 +21,7 @@ class Owner < ApplicationRecord
   def repositories
     host.repositories.where(owner: login)
   end
-
+  
   def sync
     host.sync_owner(login)
   end
@@ -30,8 +30,52 @@ class Owner < ApplicationRecord
     SyncOwnerWorker.perform_async(host_id, login)
   end
 
+  def related_dot_github_repo
+    return unless host.kind == 'github'
+    @related_dot_github_repo ||= host.repositories.find_by('lower(full_name) = ?', "#{login}/.github")
+  end
+
   def funding_links
-    metadata['has_sponsors_listing'] ? ["https://github.com/sponsors/#{login}"] : []
+    if yaml_funding_links
+      yaml_funding_links
+    else
+      metadata['has_sponsors_listing'] ? ["https://github.com/sponsors/#{login}"] : []
+    end
+  end
+
+  def yaml_funding_links
+    return unless related_dot_github_repo.present? 
+    return unless related_dot_github_repo.metadata['funding'].present?
+    metadata['funding'] = related_dot_github_repo.metadata['funding']
+    return [] if metadata.blank? ||  metadata["funding"].blank?
+    return [] unless metadata["funding"].is_a?(Hash)
+    metadata["funding"].map do |key,v|
+      next if v.blank?
+      case key
+      when "github"
+        Array(v).map{|username| "https://github.com/sponsors/#{username}" }
+      when "tidelift"
+        "https://tidelift.com/funding/github/#{v}"
+      when "community_bridge"
+        "https://funding.communitybridge.org/projects/#{v}"
+      when "issuehunt"
+        "https://issuehunt.io/r/#{v}"
+      when "open_collective"
+        "https://opencollective.com/#{v}"
+      when "ko_fi"
+        "https://ko-fi.com/#{v}"
+      when "liberapay"
+        "https://liberapay.com/#{v}"
+      when "custom"
+        v
+      when "otechie"
+        "https://otechie.com/#{v}"
+      when "patreon"
+        "https://patreon.com/#{v}"
+      else
+        v
+      end
+    end.flatten.compact
   end
 
   def html_url
