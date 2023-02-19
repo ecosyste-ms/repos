@@ -156,6 +156,12 @@ module Hosts
       nil
     end
 
+    def load_owner_repos_names(owner)
+      api_client.org_repos(owner_login, type: 'all').map{|repo| repo[:full_name] }
+    rescue *IGNORABLE_EXCEPTIONS, Octokit::NotFound
+      []
+    end
+
     def fetch_tags(repository)
       query = <<-GRAPHQL
         {

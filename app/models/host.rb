@@ -92,6 +92,13 @@ class Host < ApplicationRecord
     end
   end 
 
+  def sync_owner_repositories_async(owner)
+    names = host_instance.load_owner_repos_names(owner)
+    names.each do |full_name|
+      sync_repository_async(full_name)
+    end
+  end
+
   def crawl_repositories_async
     host_instance.crawl_repositories_async
   end

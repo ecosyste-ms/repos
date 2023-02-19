@@ -41,4 +41,8 @@ class Owner < ApplicationRecord
   def update_repositories_count
     update_column(:repositories_count, repositories.count)
   end
+
+  def sync_repositories
+    host.sync_repositories(login)
+  end
 end

@@ -55,6 +55,12 @@ module Hosts
       nil
     end
 
+    def load_owner_repos_names(owner)
+      api_client.get("/2.0/repositories/#{owner_login}").body['values'].map{|repo| repo['full_name']}
+    rescue *IGNORABLE_EXCEPTIONS
+      []
+    end
+
     def download_readme(repository)
       files = api_client.get("/2.0/repositories/#{repository.owner}/#{repository.project_name}/src").body['values']
       paths =  files.files.map(&:path)

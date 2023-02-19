@@ -74,6 +74,12 @@ module Hosts
       nil
     end
 
+    def load_owner_repos_names(owner)
+      resp = api_client.get("/api/v1/users/#{owner_login}/repos")
+      return [] unless resp.success?
+      resp.body.map{|repo| repo["full_name"] }
+    end
+
     def load_repo_names(page, order)
       resp = api_client.get("/api/v1/repos/search?sort=#{order}&page=#{page}&limit=100")
       return [] unless resp.success?
