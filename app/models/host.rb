@@ -211,7 +211,10 @@ class Host < ApplicationRecord
 
   def sync_owner(login)
     owner_hash = host_instance.fetch_owner(login)
-    return nil if owner_hash.nil?
+    if owner_hash.nil?
+      owners.find_by(login: login).try(:check_status)
+      return nil 
+    end
     
     owner = owners.find_by(uuid: owner_hash[:uuid])
     owner = owners.find_by('lower(login) = ?', owner_hash[:login].downcase) if owner.nil?

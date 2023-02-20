@@ -23,8 +23,7 @@ class Owner < ApplicationRecord
   end
   
   def sync
-    res = host.sync_owner(login)
-    check_status if res.nil?
+    host.sync_owner(login)
   end
 
   def sync_async
