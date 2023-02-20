@@ -26,4 +26,12 @@ module ApplicationHelper
     return unless url =~ /\A#{URI::regexp}\z/
     sanitize_url(url, :schemes => ['http', 'https'])
   end
+
+  def meta_description
+    @meta_description || "An open API service providing repository metadata for many open source software ecosystems."
+  end
+
+  def meta_title
+    [@meta_title, "Ecosyste.ms: Repos"].compact.join(" | ")
+  end
 end
