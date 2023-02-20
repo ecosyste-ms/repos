@@ -23,7 +23,8 @@ class Owner < ApplicationRecord
   end
   
   def sync
-    host.sync_owner(login)
+    res = host.sync_owner(login)
+    check_status if res.nil?
   end
 
   def sync_async
@@ -88,5 +89,16 @@ class Owner < ApplicationRecord
 
   def sync_repositories
     host.sync_owner_repositories_async(self)
+  end
+
+  def check_status
+    status = Faraday.head(html_url).status
+    return if status == 200
+    if status == 404
+      repositories.each(&:sync_async)
+      destroy
+    elsif [301, 302].include?(status)
+      sync_async
+    end
   end
 end

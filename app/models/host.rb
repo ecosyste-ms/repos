@@ -228,6 +228,15 @@ class Host < ApplicationRecord
     sync_owner_async(login) if owner.try(:destroy)
   end
 
+  def check_owner_status(login)
+    owner_hash = host_instance.fetch_owner(login)
+    return nil if owner_hash.nil?
+  end
+
+  def check_owner_status_async(login)
+    CheckOwnerStatusWorker.perform_async(id, login)
+  end
+
   def sync_owner_async(login)
     SyncOwnerWorker.perform_async(id, login)
   end
