@@ -224,6 +224,8 @@ class Host < ApplicationRecord
     owner.save!
     owner.sync_repositories
     owner
+  rescue ActiveRecord::RecordNotUnique
+    sync_owner_async(login) if owner.try(:destroy)
   end
 
   def sync_owner_async(login)
