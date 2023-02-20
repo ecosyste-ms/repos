@@ -222,6 +222,7 @@ class Host < ApplicationRecord
     owner.last_synced_at = Time.now
     owner.repositories_count = repositories.where(owner: owner.login).count
     owner.save!
+    owner.sync_repositories
     owner
   end
 
