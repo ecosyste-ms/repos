@@ -75,7 +75,7 @@ module Hosts
     end
 
     def load_owner_repos_names(owner)
-      resp = api_client.get("/api/v1/users/#{owner_login}/repos")
+      resp = api_client.get("/api/v1/users/#{owner.login}/repos")
       return [] unless resp.success?
       resp.body.map{|repo| repo["full_name"] }
     end
