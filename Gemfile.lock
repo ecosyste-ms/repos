@@ -154,7 +154,7 @@ GEM
     minitest (5.17.0)
     mocha (2.0.2)
       ruby2_keywords (>= 0.0.5)
-    msgpack (1.6.0)
+    msgpack (1.6.1)
     multi_xml (0.6.0)
     net-imap (0.3.4)
       date
