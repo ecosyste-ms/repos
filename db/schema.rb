@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2023_02_14_163934) do
+ActiveRecord::Schema[7.0].define(version: 2023_03_07_164037) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -150,6 +150,7 @@ ActiveRecord::Schema[7.0].define(version: 2023_02_14_163934) do
     t.datetime "tags_last_synced_at"
     t.datetime "usage_updated_at"
     t.boolean "files_changed"
+    t.json "commit_stats"
     t.index "host_id, lower((full_name)::text)", name: "index_repositories_on_host_id_lower_full_name", unique: true
     t.index ["dependencies_parsed_at"], name: "index_repositories_on_dependencies_parsed_at"
     t.index ["host_id", "uuid"], name: "index_repositories_on_host_id_uuid", unique: true

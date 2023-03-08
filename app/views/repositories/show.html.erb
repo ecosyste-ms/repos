@@ -17,6 +17,10 @@
 
   <p><%= @repository.description %></p>
 
+  <p>
+    JSON API: <%= link_to api_v1_host_repository_url(@host, @repository), api_v1_host_repository_url(@host, @repository), target: :_blank %>
+  </p>
+
   <div class="row">
     <div class="col-md-4">
       <p><small class='text-muted'>
@@ -55,6 +59,19 @@
       </small></p>
     </div>
   </div>
+
+  <% if @repository.commit_stats %>
+    <h5>Commit Stats</h5>
+    <p>
+      <small class='text-muted'>
+        Commits: <%= @repository.commit_stats['total_commits'] %><br/>
+        Authors: <%= @repository.commit_stats['total_committers'] %><br/>
+        Mean commits per author: <%= @repository.commit_stats['mean_commits'].round(2) %><br/>
+        Development Distribution Score: <%= @repository.commit_stats['dds'].round(3) %><br/>
+        More commit stats: <%= link_to @repository.commits_url, @repository.commits_url, target: :_blank %>
+      </small>
+    </p>
+  <% end %>
 
   <% if @repository.funding_links.any? %>
     <p><small class='text-muted'>

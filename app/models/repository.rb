@@ -216,6 +216,7 @@ class Repository < ApplicationRecord
       update_metadata_files
       download_tags
       parse_dependencies if dependency_job_id.present?
+      sync_commit_stats
     end
     update(files_changed: false)
   end
@@ -377,5 +378,27 @@ class Repository < ApplicationRecord
       end
       resp = connection.get
     end
+  end
+
+  def commits_url
+  "https://commits.ecosyste.ms/hosts/#{host.name}/repositories/#{full_name}"
+  end
+
+  def commits_api_url
+    "https://commits.ecosyste.ms/api/v1/hosts/#{host.name}/repositories/#{full_name}"
+  end
+
+  def sync_commit_stats
+    response = Faraday.get(commits_api_url)
+    return if response.status != 200
+    stats = Oj.load(response.body)
+    return if stats.blank?
+    return if stats['total_commits'].nil?
+    self.commit_stats = stats.slice('total_commits', 'total_committers', 'mean_commits', 'dds', 'last_synced_commit')
+    save
+  end
+
+  def sync_commit_stats_async
+    SyncCommitStatsWorker.perform_async(self.id)
   end
 end
