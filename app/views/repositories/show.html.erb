@@ -66,8 +66,8 @@
       <small class='text-muted'>
         Commits: <%= @repository.commit_stats['total_commits'] %><br/>
         Authors: <%= @repository.commit_stats['total_committers'] %><br/>
-        Mean commits per author: <%= @repository.commit_stats['mean_commits'].round(2) %><br/>
-        Development Distribution Score: <%= @repository.commit_stats['dds'].round(3) %><br/>
+        Mean commits per author: <%= @repository.commit_stats['mean_commits'].to_f.round(2) %><br/>
+        Development Distribution Score: <%= @repository.commit_stats['dds'].to_f.round(3) %><br/>
         More commit stats: <%= link_to @repository.commits_url, @repository.commits_url, target: :_blank %>
       </small>
     </p>
