@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2023_03_10_152741) do
+ActiveRecord::Schema[7.0].define(version: 2023_03_10_153504) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -96,6 +96,7 @@ ActiveRecord::Schema[7.0].define(version: 2023_03_10_152741) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.index ["ecosystem", "name"], name: "index_package_usages_on_ecosystem_and_name"
+    t.index ["package_last_synced_at"], name: "index_package_usages_on_package_last_synced_at"
   end
 
   create_table "registries", force: :cascade do |t|
@@ -154,6 +155,7 @@ ActiveRecord::Schema[7.0].define(version: 2023_03_10_152741) do
     t.json "commit_stats"
     t.index "host_id, lower((full_name)::text)", name: "index_repositories_on_host_id_lower_full_name", unique: true
     t.index ["dependencies_parsed_at"], name: "index_repositories_on_dependencies_parsed_at"
+    t.index ["dependency_job_id"], name: "index_repositories_on_dependency_job_id"
     t.index ["host_id", "uuid"], name: "index_repositories_on_host_id_uuid", unique: true
     t.index ["last_synced_at"], name: "index_repositories_on_last_synced_at"
     t.index ["owner"], name: "index_repositories_on_owner"
