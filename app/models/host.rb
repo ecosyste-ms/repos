@@ -212,7 +212,7 @@ class Host < ApplicationRecord
   def sync_owner(login)
     owner_hash = host_instance.fetch_owner(login)
     if owner_hash.nil?
-      owners.find_by(login: login).try(:check_status)
+      owners.find_by('lower(login) = ?', login).try(:check_status)
       return nil 
     end
     
