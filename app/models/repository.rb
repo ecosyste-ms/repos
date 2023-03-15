@@ -41,13 +41,6 @@ class Repository < ApplicationRecord
               .each(&:download_tags_async)
   end
 
-  def self.update_package_usages_async
-    return if Sidekiq::Queue.new('usage').size > 2_000
-    Repository.where(fork: false, status: nil).order('usage_updated_at ASC nulls first').limit(2_000).select('id').each do |repo|
-      PackageUsageWorker.perform_async(repo.id)
-    end
-  end
-
   def self.update_metadata_files_async
     return if Sidekiq::Queue.new('default').size > 10_000
     Repository.where(status: nil, fork: false)

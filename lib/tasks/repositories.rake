@@ -50,11 +50,6 @@ namespace :repositories do
     end
   end
 
-  desc 'update package usages'
-  task update_package_usages: :environment do
-    # Repository.update_package_usages_async
-  end
-
   desc 'update metadata files'
   task update_metadata_files: :environment do
     Repository.update_metadata_files_async
