@@ -11,7 +11,7 @@ class Api::V1::RepositoriesController < Api::V1::ApplicationController
       sort_options = sort.split(',').zip(order.split(',')).to_h
       scope = scope.order(sort_options)
     else
-      scope = scope.order('last_synced_at DESC')
+      scope = scope#.order('last_synced_at DESC')
     end
 
     @pagy, @repositories = pagy_countless(scope)
@@ -29,7 +29,7 @@ class Api::V1::RepositoriesController < Api::V1::ApplicationController
       sort_options = sort.split(',').zip(order.split(',')).to_h
       scope = scope.order(sort_options)
     else
-      scope = scope.order('last_synced_at DESC')
+      scope = scope#.order('last_synced_at DESC')
     end
 
     @pagy, @repositories = pagy_countless(scope, max_items: 10000)
