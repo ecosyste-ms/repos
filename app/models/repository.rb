@@ -171,7 +171,7 @@ class Repository < ApplicationRecord
         next unless dep[:name].present?
         {
           manifest_id: manifest.id,
-          package_name: dep[:name].strip[0..255],
+          package_name: dep[:name].to_s.strip[0..255],
           ecosystem: ecosystem,
           requirements: dep[:requirement],
           kind: dep[:type],
