@@ -210,6 +210,8 @@ class Host < ApplicationRecord
   end
 
   def sync_owner(login)
+    existing_owner = owners.find_by('lower(login) = ?', login)
+    return existing_owner if existing_owner && existing_owner.last_synced_at && existing_owner.last_synced_at > 1.day.ago
     owner_hash = host_instance.fetch_owner(login)
     if owner_hash.nil?
       owners.find_by('lower(login) = ?', login).try(:check_status)
