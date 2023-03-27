@@ -19,6 +19,7 @@ Rails.application.routes.draw do
       get 'usage/:ecosystem', to: 'usage#ecosystem', as: :ecosystem_usage
       get 'usage/:ecosystem/:name/dependencies', to: 'dependencies#index', as: :usage_dependencies, constraints: { name: /.*/ }
       get 'usage/:ecosystem/:name', to: 'usage#show', as: :usage, constraints: { name: /.*/ }
+      get 'usage/:ecosystem/:name/ping', to: 'usage#ping', as: :ping_usage, constraints: { name: /.*/ }
       
 
       get 'repositories/lookup', to: 'repositories#lookup', as: :repositories_lookup
@@ -27,6 +28,9 @@ Rails.application.routes.draw do
         resources :repositories, constraints: { id: /.*/ }, only: [:index, :show] do
           resources :tags
           resources :manifests
+          member do
+            get :ping
+          end
         end
         
         member do

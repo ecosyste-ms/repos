@@ -61,4 +61,15 @@ class Api::V1::RepositoriesController < Api::V1::ApplicationController
       render json: { error: 'Repository not found' }, status: :not_found
     end
   end
+
+  def ping
+    @host = Host.find_by_name!(params[:host_id])
+    @repository = @host.repositories.find_by('lower(full_name) = ?', params[:id].downcase)
+    if @repository
+      @repository.sync_async
+    else
+      @host.sync_repository_async(params[:id])
+    end
+    render json: { message: 'pong' }
+  end
 end

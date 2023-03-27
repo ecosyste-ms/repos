@@ -38,6 +38,7 @@ class PackageUsage < ApplicationRecord
     else
       update_columns(package_last_synced_at: Time.now)  
     end
+    update_dependents_count
   rescue
     update_columns(package_last_synced_at: Time.now) # swallow errors for now
   end
