@@ -90,6 +90,10 @@ module Hosts
       nil
     end
 
+    def topic_url(topic)
+      nil
+    end
+
     def recently_changed_repo_names(since=10.minutes)
       []
     end

@@ -73,6 +73,18 @@
     </p>
   <% end %>
 
+  <% if @repository.topics.any? %>
+    <p><small class='text-muted'>
+    Topics: 
+    <% if @repository.host.host_instance.topic_url('test') %>
+      <% @repository.topics.reject(&:blank?).uniq.each_with_index do |k, i| %><%= ', ' if i > 0 %><%= link_to k, @repository.host.host_instance.topic_url(k), target: :_blank %><% end %>
+    <% else %>
+      <%= @repository.topics.join(', ') %>
+    <% end %>
+    </small></p>
+  <% end %>
+
+
   <% if @repository.funding_links.any? %>
     <p><small class='text-muted'>
     Funding links: <% @repository.funding_links.each_with_index do |url,i| %><%= ', ' if i > 0 %><%= link_to(url, sanitize_user_url(url), target: :_blank) %><% end %>
