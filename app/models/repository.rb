@@ -22,6 +22,8 @@ class Repository < ApplicationRecord
   scope :with_manifests, -> { joins(:manifests).group(:id) }
   scope :without_manifests, -> { includes(:manifests).where(manifests: {repository_id: nil}) }
 
+  scope :topic, ->(topic) { where("topics @> ARRAY[?]::varchar[]", topic) }
+
   def self.parse_dependencies_async
     Repository.where.not(dependency_job_id: nil).limit(2000).select('id, dependencies_parsed_at').each(&:parse_dependencies_async)
     return if Sidekiq::Queue.new('dependencies').size > 2_000

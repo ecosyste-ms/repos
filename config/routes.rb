@@ -65,6 +65,10 @@ Rails.application.routes.draw do
         get '*subgroup', to: 'owners#subgroup', as: :subgroup, constraints: { subgroup: /.*/ }, format: :html
       end
     end
+    member do
+      get :topics
+      get "topics/:topic", to: 'hosts#topic', as: :topic
+    end
   end
 
   resources :exports, only: [:index], path: 'open-data'

@@ -1,0 +1,46 @@
+<% @meta_title = @host.to_s %>
+
+<div class="container-sm">
+  <h1 class='mb-4'>
+    <%= link_to @host, @host.url, target: :_blank %> topics: <%= params[:topic] %>
+  </h1>
+
+  <ul class="nav nav-tabs my-3">
+    <li class="nav-item">
+      <a class="nav-link active" aria-current="page">
+        Repositories
+        <span class="badge bg-secondary rounded-pill">
+          <%= number_with_delimiter @pagy.count %>
+        </span>
+      </a>
+    </li>
+    <%= render 'sort' %>
+  </ul>
+
+
+
+    <div class='row'>
+    <div class='col-md-8'>
+      <%= render @repositories %>
+      <%== pagy_bootstrap_nav(@pagy) if @pagy.pages > 1 %>  
+    </div>  
+    <div class='col-md-4'>
+      <div class="card">
+        <div class="card-header">
+          Related Keywords
+        </div>
+        <div class="list-group list-group-flush">
+          <% @related_topics.each do |topic, count| %>
+            <% next if topic.blank? %>
+            <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" href="<%= topic_host_path(@host.name, topic) %>">
+              <%= topic %>
+              <span class="badge bg-primary rounded-pill"><%= number_with_delimiter count%></span>
+            </a>
+          <% end %>
+        </ul>
+      </div>
+
+
+    </div>
+  </div>
+</div>
