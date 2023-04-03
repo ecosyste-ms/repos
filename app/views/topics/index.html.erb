@@ -1,0 +1,27 @@
+<% @meta_title = "Topics" %>
+
+<div class="container-sm">
+  <h2>
+    Topics
+  </h2>
+
+
+  <div class="row">
+    <% @topics.each do |topic, count| %>
+      <% next if topic.blank? %>
+      <div class="col-md-4">
+        <div class="card mb-3">
+          <div class="card-body">
+            <h5 class="card-title">
+              <%= link_to topic, topic_path(topic) %>
+            </h5>
+            <p class="card-text">
+              <%= number_with_delimiter count %> packages
+            </p>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+  <%== pagy_bootstrap_nav(@pagy) if @pagy.pages > 1 %>  
+</div>

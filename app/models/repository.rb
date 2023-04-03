@@ -24,6 +24,10 @@ class Repository < ApplicationRecord
 
   scope :topic, ->(topic) { where("topics @> ARRAY[?]::varchar[]", topic) }
 
+  def self.topics
+    Repository.connection.select_rows("select topics, count (topics) as topics_count from (select id, unnest(topics) as topics from repositories) as foo group by topics order by topics_count desc, topics asc;")
+  end
+
   def self.parse_dependencies_async
     Repository.where.not(dependency_job_id: nil).limit(2000).select('id, dependencies_parsed_at').each(&:parse_dependencies_async)
     return if Sidekiq::Queue.new('dependencies').size > 2_000

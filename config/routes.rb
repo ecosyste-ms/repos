@@ -71,6 +71,8 @@ Rails.application.routes.draw do
     end
   end
 
+  resources :topics, only: [:index, :show], constraints: { id: /.*/ }
+
   resources :exports, only: [:index], path: 'open-data'
 
   get '/404', to: 'errors#not_found'
