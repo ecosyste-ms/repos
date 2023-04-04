@@ -630,6 +630,8 @@ components:
           updated_at:
             type: string
             format: date-time
+          repository_link:
+            type: string
           dependencies:
             type: array
             items:
