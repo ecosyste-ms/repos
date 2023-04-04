@@ -15,6 +15,8 @@ Rails.application.routes.draw do
   namespace :api, :defaults => {:format => :json} do
     namespace :v1 do
 
+      resources :topics, only: [:index, :show], constraints: { id: /.*/ }
+
       get 'usage', to: 'usage#index', as: :usage_index
       get 'usage/:ecosystem', to: 'usage#ecosystem', as: :ecosystem_usage
       get 'usage/:ecosystem/:name/dependencies', to: 'dependencies#index', as: :usage_dependencies, constraints: { name: /.*/ }

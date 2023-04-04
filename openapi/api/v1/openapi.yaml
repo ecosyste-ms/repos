@@ -16,6 +16,62 @@ externalDocs:
 servers:
 - url: https://repos.ecosyste.ms/api/v1
 paths:
+  /topics:
+    get:
+      summary: "Get topics"
+      operationId: "topics"
+      parameters:
+        - name: page
+          in: query
+          description: pagination page number 
+          required: false
+          schema:
+            type: integer
+        - name: per_page
+          in: query
+          description: Number of records to return 
+          required: false
+          schema:
+            type: integer
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Topic'
+  /topics/{topic}:
+    get:
+      summary: "Get topic"
+      operationId: "topic"
+      parameters:
+        - name: topic
+          in: path
+          description: "The topic to get"
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: query
+          description: pagination page number 
+          required: false
+          schema:
+            type: integer
+        - name: per_page
+          in: query
+          description: Number of records to return 
+          required: false
+          schema:
+            type: integer
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TopicWithRepositories'
   /repositories/lookup:
     get:
       summary: "Lookup repository metadata"
@@ -679,3 +735,29 @@ components:
           format: date-time
         owner_url:
           type: string
+    Topic:
+      type: object
+      properties:
+        name:
+          type: string
+        repositories_count:
+          type: integer
+        topic_url:
+          type: string
+    TopicWithRepositories:
+      type: object
+      properties:
+        name:
+          type: string
+        repositories_count:
+          type: integer
+        topic_url:
+          type: string
+        related_topics:
+          type: array
+          items:
+            $ref: '#/components/schemas/Topic'
+        repositories:
+          type: array
+          items:
+            $ref: '#/components/schemas/Repository'
