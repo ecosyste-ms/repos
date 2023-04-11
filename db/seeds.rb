@@ -17,6 +17,7 @@ default_hosts = [
   {name: "invent.kde.org", url: "https://invent.kde.org", kind: "gitlab", org: 'kde'},
   {name: "gitlab.xfce.org", url: "https://gitlab.xfce.org", kind: "gitlab", org: 'xfce-mirror'},
   {name: "gitlab.alpinelinux.org", url: "https://gitlab.alpinelinux.org", kind: "gitlab", org: 'alpinelinux'},
+  {name: "git.pleroma.social", url: "https://git.pleroma.social", kind: "gitlab", org: 'pleroma-social'},
 ]
 
 default_hosts.each do |host|
