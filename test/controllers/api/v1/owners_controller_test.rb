@@ -25,4 +25,14 @@ class ApiV1OwnersControllerTest < ActionDispatch::IntegrationTest
 
     assert_equal actual_response["login"], @owner.login
   end
+
+  test 'list repositories for a owner' do
+    get repositories_api_v1_host_owner_path(host_id: @host.name, id: @owner.login)
+    assert_response :success
+    assert_template 'repositories/index', file: 'repositories/index.json.jbuilder'
+    
+    actual_response = JSON.parse(@response.body)
+
+    assert_equal actual_response.length, 0
+  end
 end
