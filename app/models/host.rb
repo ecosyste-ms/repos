@@ -269,4 +269,8 @@ class Host < ApplicationRecord
       sync_owner_async(login)
     end
   end
+
+  def icon_url
+    "https://github.com/#{icon}.png"
+  end
 end

@@ -578,11 +578,17 @@ components:
           type: string
         repositories_count:
           type: integer
+        owners_count:
+          type: integer
+        icon_url:
+          type: string
         host_url:
           type: string
         repositoris_url:
           type: string
         repository_names_url:
+          type: string
+        owners_url:
           type: string
     Repository:
       type: object
