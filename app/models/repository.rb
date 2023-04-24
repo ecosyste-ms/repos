@@ -113,7 +113,7 @@ class Repository < ApplicationRecord
     host.download_url(self, branch, kind)
   end
 
-  def avatar_url(size)
+  def icon_url(size = nil)
     host.avatar_url(self, size)
   end
 

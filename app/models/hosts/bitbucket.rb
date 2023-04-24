@@ -14,7 +14,7 @@ module Hosts
     end
 
     def avatar_url(repository, size = 60)
-      "#{url(repository)}/#{repository.full_name}/avatar/#{size}"
+      "#{url(repository)}/avatar/#{size}"
     end
 
     def blob_url(repository, sha = nil)

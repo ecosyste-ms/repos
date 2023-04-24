@@ -61,7 +61,7 @@ module Hosts
     end
 
     def avatar_url(repository, size = 40)
-      "https://github.com/#{repository.owner}.png?size=#{size}"
+      "https://github.com/#{repository.owner}.png#{"?s=#{size}" if size}"
     end
 
     def download_url(repository, branch = nil, kind = 'branch')

@@ -653,7 +653,7 @@ components:
           type: string
         pull_requests_enabled:
           type: boolean
-        logo_url:
+        icon_url:
           type: string
         metadata:
           type: object
@@ -792,7 +792,7 @@ components:
           type: string
         metadata:
           type: object
-        avatar_url:
+        icon_url:
           type: string
         created_at:
           type: string

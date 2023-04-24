@@ -82,6 +82,10 @@ class Owner < ApplicationRecord
     "#{host.url}/#{login}"
   end
 
+  def icon_url
+    avatar_url
+  end
+
   def update_repositories_count
     update_column(:repositories_count, repositories.count)
   end
