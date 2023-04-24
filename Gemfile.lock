@@ -183,7 +183,7 @@ GEM
       sawyer (~> 0.9)
     oj (3.14.3)
     pagy (6.0.3)
-    pg (1.4.6)
+    pg (1.5.0)
     pg_query (4.2.0)
       google-protobuf (>= 3.19.2)
     pghero (3.3.3)
