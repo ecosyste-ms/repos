@@ -2,7 +2,7 @@
   "cron": [
     {
       "command": "bundle exec rake repositories:sync_least_recent",
-      "schedule": "*/5 * * * *"
+      "schedule": "*/10 * * * *"
     },
     {
       "command": "bundle exec rake repositories:sync_extra_details",
@@ -10,11 +10,11 @@
     },
     {
       "command": "bundle exec rake repositories:sync_least_recent_github",
-      "schedule": "*/5 * * * *"
+      "schedule": "*/15 * * * *"
     },
     {
       "command": "bundle exec rake repositories:sync_recently_active",
-      "schedule": "*/10 * * * *"
+      "schedule": "*/15 * * * *"
     },
     {
       "command": "bundle exec rake hosts:update_repository_counts",
