@@ -2,6 +2,7 @@
 :queues:
   - [critical, 6]
   - [default, 2]
+  - [ping, 1]
   - [dependencies, 1]
   - [tags, 1]
   - [usage, 1]
