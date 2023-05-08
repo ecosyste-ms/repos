@@ -182,7 +182,7 @@ GEM
       faraday (>= 1, < 3)
       sawyer (~> 0.9)
     oj (3.14.3)
-    pagy (6.0.3)
+    pagy (6.0.4)
     pg (1.5.3)
     pg_query (4.2.0)
       google-protobuf (>= 3.19.2)
