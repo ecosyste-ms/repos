@@ -24,7 +24,7 @@ namespace :repositories do
 
   desc 'sync extra details on repos that files have changed'
   task sync_extra_details: :environment do
-    Repository.sync_extra_details_async
+    # Repository.sync_extra_details_async
   end
 
   desc 'parse missing dependencies'

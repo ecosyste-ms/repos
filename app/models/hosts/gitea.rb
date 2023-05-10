@@ -56,7 +56,7 @@ module Hosts
 
       resp = api_client.get("/api/v1/repos/#{repository.full_name}/tags")
       return nil unless resp.success?
-
+      # TODO pagination
       remote_tags = resp.body
 
       remote_tags.each do |tag|
@@ -76,6 +76,7 @@ module Hosts
 
     def load_owner_repos_names(owner)
       resp = api_client.get("/api/v1/users/#{owner.login}/repos")
+      # TODO pagination
       return [] unless resp.success?
       resp.body.map{|repo| repo["full_name"] }
     end
