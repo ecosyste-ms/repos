@@ -285,6 +285,7 @@ class Repository < ApplicationRecord
       codeowners:       file_list.find{|file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?CODEOWNERS/i) },
       security:         file_list.find{|file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?SECURITY/i) },
       support:          file_list.find{|file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?SUPPORT$/i) },
+      governance:       file_list.find{|file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?GOVERNANCE$/i) },
     }
   end
 
