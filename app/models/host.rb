@@ -5,6 +5,12 @@ class Host < ApplicationRecord
   has_many :repositories
   has_many :owners
 
+  def find_repository(full_name)
+    repo = repositories.find_by('lower(full_name) = ?', full_name.downcase)
+    repo = repositories.where('previous_names @> ?', "{#{full_name.downcase}}").first if repo.nil?
+    repo
+  end
+
   def self.find_by_domain(domain)
     Host.all.find { |host| host.domain == domain }
   end

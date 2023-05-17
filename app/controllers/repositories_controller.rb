@@ -1,11 +1,15 @@
 class RepositoriesController < ApplicationController
   def show
     @host = Host.find_by_name!(params[:host_id])
-    @repository = @host.repositories.find_by('lower(full_name) = ?', params[:id].downcase)
+    @repository = @host.find_repository(params[:id].downcase)
     if @repository.nil?
       @host.sync_repository_async(params[:id])
       raise ActiveRecord::RecordNotFound
     else
+      if @repository.full_name != params[:id].downcase
+        redirect_to host_repository_path(@host, @repository.full_name), status: :moved_permanently
+        return
+      end
       @manifests = @repository.manifests.includes(:dependencies).order('kind DESC')
       @tags = @repository.tags.order('published_at DESC')
       @sha = params[:sha] || @repository.default_branch
@@ -14,9 +18,18 @@ class RepositoriesController < ApplicationController
 
   def funding
     @host = Host.find_by_name!(params[:host_id])
-    @repository = @host.repositories.find_by('lower(full_name) = ?', params[:id].downcase)
-    @manifests = @repository.manifests.includes(:dependencies).order('kind DESC')
-    @dependencies = @manifests.map(&:dependencies).flatten
-    @dependencies.map(&:package_usage).compact.uniq.each{|pu| pu.sync_async }
+    @repository = @host.find_repository(params[:id].downcase)
+    if @repository.nil?
+      @host.sync_repository_async(params[:id])
+      raise ActiveRecord::RecordNotFound
+    else
+      if @repository.full_name != params[:id].downcase
+        redirect_to funding_host_repository_path(@host, @repository.full_name), status: :moved_permanently
+        return
+      end
+      @manifests = @repository.manifests.includes(:dependencies).order('kind DESC')
+      @dependencies = @manifests.map(&:dependencies).flatten
+      @dependencies.map(&:package_usage).compact.uniq.each{|pu| pu.sync_async }
+    end
   end
 end

@@ -61,7 +61,7 @@ class PackageUsage < ApplicationRecord
 
   def repository
     return nil unless host
-    @repository ||= host.repositories.find_by('lower(full_name) = ?', repo_metadata['full_name'].downcase)
+    @repository ||= host.find_repository(repo_metadata['full_name'].downcase)
   end
 
   def sync_repository

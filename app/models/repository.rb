@@ -317,7 +317,7 @@ class Repository < ApplicationRecord
 
   def related_dot_github_repo
     return nil if project_name == '.github'
-    host.repositories.find_by('lower(full_name) = ?', "#{owner}/.github")
+    host.find_repository("#{owner}/.github")
   end
 
   def funding_links

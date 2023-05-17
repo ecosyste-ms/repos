@@ -32,7 +32,7 @@ class Owner < ApplicationRecord
 
   def related_dot_github_repo
     return unless host.kind == 'github'
-    @related_dot_github_repo ||= host.repositories.find_by('lower(full_name) = ?', "#{login}/.github")
+    @related_dot_github_repo ||= host.find_repository("#{login}/.github")
   end
 
   def funding_links

@@ -38,8 +38,12 @@ class Api::V1::RepositoriesController < Api::V1::ApplicationController
 
   def show
     @host = Host.find_by_name!(params[:host_id])
-    @repository = @host.repositories.find_by('lower(full_name) = ?', params[:id].downcase)
+    @repository = @host.find_repository(params[:id].downcase)
     if @repository
+      if @repository.full_name != params[:id].downcase
+        redirect_to api_v1_host_repository_path(@host, @repository.full_name), status: :moved_permanently
+        return
+      end
       render :show
     else
       render json: { error: 'Repository not found' }, status: :not_found
@@ -52,7 +56,7 @@ class Api::V1::RepositoriesController < Api::V1::ApplicationController
     @host = Host.find_by_domain(parsed_url.host)
     raise ActiveRecord::RecordNotFound unless @host
     path = parsed_url.path.delete_prefix('/').chomp('/')
-    @repository = @host.repositories.find_by('lower(full_name) = ?', path.downcase)
+    @repository = @host.find_repository(path.downcase)
     if @repository
       @repository.sync_async unless @repository.last_synced_at.present? && @repository.last_synced_at > 1.hour.ago
       render :show

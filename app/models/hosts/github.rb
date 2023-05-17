@@ -305,7 +305,7 @@ module Hosts
       names = data.map{|r| r['repository']}.uniq
       host = Host.find_by_name('GitHub')
       names.each do |name|
-        repository = host.repositories.find_by('lower(full_name) = ?', name.downcase)
+        repository = host.find_repository(name.downcase)
         if repository
           repository.download_tags_async
         else
