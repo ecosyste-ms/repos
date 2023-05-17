@@ -7,7 +7,7 @@ class Host < ApplicationRecord
 
   def find_repository(full_name)
     repo = repositories.find_by('lower(full_name) = ?', full_name.downcase)
-    # repo = repositories.where('previous_names @> ?', "{#{full_name.downcase}}").first if repo.nil?
+    repo = repositories.where('previous_names @> ?', "{#{full_name.downcase}}").to_a.first if repo.nil?
     repo
   end
 
