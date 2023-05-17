@@ -57,7 +57,7 @@ class Host < ApplicationRecord
         repo = repositories.new(uuid: repo_hash[:id], full_name: repo_hash[:full_name]) if repo.nil?
         repo.full_name = repo_hash[:full_name] if repo.full_name.downcase != repo_hash[:full_name].downcase
 
-        repo.previous_names = repo.previous_names + [full_name] if repo.full_name_changed? && repo.previous_names.exclude?(full_name)
+        repo.previous_names = (repo.previous_names + [full_name]).uniq if repo.full_name_changed? || repo.full_name != full_name
 
         repo.assign_attributes(repo_hash)
         repo_changed = repo.changed?
