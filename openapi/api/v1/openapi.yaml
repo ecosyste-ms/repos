@@ -670,6 +670,10 @@ components:
           type: string
         html_url:
           type: string
+        previous_names:
+          type: array
+          items:
+            type: string
         repository_url:
           type: string
         tags_url:
