@@ -56,7 +56,6 @@ module Hosts
       "#{@host.url}/explore/projects/topics/#{topic}"
     end
 
-
     def get_file_contents(repository, path)
       file = api_client.get_file(repository.full_name, path, repository.default_branch)
       {

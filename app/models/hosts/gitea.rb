@@ -51,6 +51,16 @@ module Hosts
       return names.uniq
     end
 
+    def topic_url(topic)
+      "#{@host.url}/explore/explore/repos?q=#{topic}&topic=1"
+    end
+
+    def fetch_topics(full_name)
+      resp = api_client.get("/api/v1/repos/#{full_name}/topics")
+      return [] unless resp.success?
+      resp.body['topics']
+    end
+
     def download_tags(repository)
       existing_tag_names = repository.tags.pluck(:name)
 
@@ -147,6 +157,7 @@ module Hosts
         scm: 'git',
         pull_requests_enabled: data['has_pull_requests'],
         logo_url: data['avatar_url'].presence || data['owner']['avatar_url'],
+        topics: fetch_topics(data['full_name']),
         created_at: data['created_at'],
         updated_at: data['updated_at']
       }
