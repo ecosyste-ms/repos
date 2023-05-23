@@ -4,11 +4,15 @@ class HostsController < ApplicationController
 
     scope = @host.repositories.where.not(last_synced_at:nil)
 
-    sort = params[:sort].presence || 'updated_at'
-    if params[:order] == 'asc'
-      scope = scope.order(Arel.sql(sort).asc.nulls_last)
+    if params[:sort].present? || params[:order].present?
+      sort = params[:sort].presence || 'updated_at'
+      if params[:order] == 'asc'
+        scope = scope.order(Arel.sql(sort).asc.nulls_last)
+      else
+        scope = scope.order(Arel.sql(sort).desc.nulls_last)
+      end
     else
-      scope = scope.order(Arel.sql(sort).desc.nulls_last)
+      scope = scope.order('updated_at desc')
     end
 
     @pagy, @repositories = pagy_countless(scope)
@@ -20,12 +24,16 @@ class HostsController < ApplicationController
     scope = @host.repositories.where.not(last_synced_at:nil)
 
     scope = scope.topic(params[:topic])
-
-    sort = params[:sort].presence || 'updated_at'
-    if params[:order] == 'asc'
-      scope = scope.order(Arel.sql(sort).asc.nulls_last)
+    
+    if params[:sort].present? || params[:order].present?
+      sort = params[:sort].presence || 'updated_at'
+      if params[:order] == 'asc'
+        scope = scope.order(Arel.sql(sort).asc.nulls_last)
+      else
+        scope = scope.order(Arel.sql(sort).desc.nulls_last)
+      end
     else
-      scope = scope.order(Arel.sql(sort).desc.nulls_last)
+      scope = scope.order('updated_at desc')
     end
 
     @related_topics = (scope.pluck(:topics).flatten - [@keyword]).inject(Hash.new(0)) { |h, e| h[e] += 1; h }.sort_by { |_, v| -v }.first(100)

@@ -10,11 +10,16 @@ class OwnersController < ApplicationController
     @owner_record = @host.owners.find_by('lower(login) = ?', @owner.downcase)
 
     scope = @host.repositories.owner(@owner)
-    sort = params[:sort].presence || 'updated_at'
-    if params[:order] == 'asc'
-      scope = scope.order(Arel.sql(sort).asc.nulls_last)
+    
+    if params[:sort].present? || params[:order].present?
+      sort = params[:sort].presence || 'updated_at'
+      if params[:order] == 'asc'
+        scope = scope.order(Arel.sql(sort).asc.nulls_last)
+      else
+        scope = scope.order(Arel.sql(sort).desc.nulls_last)
+      end
     else
-      scope = scope.order(Arel.sql(sort).desc.nulls_last)
+      scope = scope.order('updated_at desc')
     end
 
     @pagy, @repositories = pagy_countless(scope)
