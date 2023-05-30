@@ -406,4 +406,8 @@ class Repository < ApplicationRecord
   def update_tags_count
     update_column(:tags_count, tags.count)
   end
+
+  def tags_count
+    read_attribute(:tags_count) || tags.count
+  end
 end

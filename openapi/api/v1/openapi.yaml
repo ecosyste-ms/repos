@@ -674,6 +674,8 @@ components:
           type: array
           items:
             type: string
+        tags_count:
+          type: integer
         repository_url:
           type: string
         tags_url:
