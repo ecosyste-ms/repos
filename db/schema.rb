@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2023_05_30_094119) do
+ActiveRecord::Schema[7.0].define(version: 2023_05_30_102932) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -57,7 +57,9 @@ ActiveRecord::Schema[7.0].define(version: 2023_05_30_094119) do
     t.string "kind"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "tag_id"
     t.index ["repository_id"], name: "index_manifests_on_repository_id"
+    t.index ["tag_id"], name: "index_manifests_on_tag_id"
   end
 
   create_table "owners", force: :cascade do |t|
@@ -173,6 +175,8 @@ ActiveRecord::Schema[7.0].define(version: 2023_05_30_094119) do
     t.datetime "published_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.datetime "dependencies_parsed_at"
+    t.string "dependency_job_id"
     t.index ["repository_id"], name: "index_tags_on_repository_id"
   end
 

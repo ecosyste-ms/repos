@@ -32,7 +32,9 @@ Rails.application.routes.draw do
           end
         end
         resources :repositories, constraints: { id: /.*/ }, only: [:index, :show] do
-          resources :tags
+          resources :tags do
+            resources :manifests
+          end
           resources :manifests
           member do
             get :ping

@@ -565,6 +565,36 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Tag'
+  /hosts/{hostName}/repositories/{repositoryName}/tags/{tag}:
+    get:
+      summary: get a tag for a repository
+      operationId: getHostRepositoryTag
+      parameters:
+        - in: path
+          name: hostName
+          schema:
+            type: string
+          required: true
+          description: name of host
+        - in: path
+          name: repositoryName
+          schema:
+            type: string
+          required: true
+          description: name of repository
+        - in: path
+          name: tag
+          schema:
+            type: string
+          required: true
+          description: name of tag
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tag'
 components:
   schemas:
     Host:
@@ -744,6 +774,15 @@ components:
         download_url:
           type: string
         html_url:
+          type: string
+        dependencies_parsed_at:
+          type: string
+          format: date-time
+        dependency_job_id:
+          type: string
+        tag_url:
+          type: string
+        manifests_url:
           type: string
     Ecosystem:
       type: object

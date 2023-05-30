@@ -2,7 +2,6 @@ class Repository < ApplicationRecord
   belongs_to :host
 
   has_many :manifests, dependent: :destroy
-  has_many :dependencies
   has_many :tags
 
   scope :owner, ->(owner) { where(owner: owner) }
@@ -119,7 +118,7 @@ class Repository < ApplicationRecord
 
   def blob_url(sha = nil)
     sha ||= default_branch
-    host.blob_url(self, sha = nil)
+    host.blob_url(self, sha)
   end
 
   def parse_dependencies_async
