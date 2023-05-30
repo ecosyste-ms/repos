@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2023_05_17_145212) do
+ActiveRecord::Schema[7.0].define(version: 2023_05_30_094119) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -154,6 +154,7 @@ ActiveRecord::Schema[7.0].define(version: 2023_05_17_145212) do
     t.boolean "files_changed"
     t.json "commit_stats"
     t.string "previous_names", default: [], array: true
+    t.integer "tags_count"
     t.index "host_id, lower((full_name)::text)", name: "index_repositories_on_host_id_lower_full_name", unique: true
     t.index ["dependencies_parsed_at"], name: "index_repositories_on_dependencies_parsed_at"
     t.index ["dependency_job_id"], name: "index_repositories_on_dependency_job_id"

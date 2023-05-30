@@ -93,7 +93,7 @@ module Hosts
           published_at: tag['date'].presence || tag['target']['date']
         })
       end
-      repository.update_column(:tags_last_synced_at, Time.now)
+      repository.update_column(:tags_last_synced_at, Time.now) # TODO tags_count: repository.tags.count
     rescue *IGNORABLE_EXCEPTIONS
       nil
     end

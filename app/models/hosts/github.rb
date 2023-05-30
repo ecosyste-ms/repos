@@ -155,7 +155,7 @@ module Hosts
         next if existing_tag_names.include?(tag[:name])
         repository.tags.create(tag)
       end
-      repository.update_column(:tags_last_synced_at, Time.now)
+      repository.update_column(:tags_last_synced_at, Time.now) # TODO tags_count: repository.tags.count
     rescue *IGNORABLE_EXCEPTIONS, Octokit::NotFound
       nil
     end

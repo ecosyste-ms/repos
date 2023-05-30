@@ -402,4 +402,8 @@ class Repository < ApplicationRecord
   def sync_commit_stats_async
     SyncCommitStatsWorker.perform_async(self.id)
   end
+
+  def update_tags_count
+    update_column(:tags_count, tags.count)
+  end
 end
