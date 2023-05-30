@@ -595,6 +595,38 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Tag'
+  /hosts/{hostName}/repositories/{repositoryName}/tags/{tag}/manifests:
+    get:
+      summary: get dependency manifests for a tag
+      operationId: getHostRepositoryTagManifests
+      parameters:
+        - in: path
+          name: hostName
+          schema:
+            type: string
+          required: true
+          description: name of host
+        - in: path
+          name: repositoryName
+          schema:
+            type: string
+          required: true
+          description: name of repository
+        - in: path
+          name: tag
+          schema:
+            type: string
+          required: true
+          description: name of tag
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Manifest'
 components:
   schemas:
     Host:
