@@ -10,9 +10,15 @@ class RepositoriesController < ApplicationController
         redirect_to host_repository_path(@host, @repository.full_name), status: :moved_permanently
         return
       end
-      @manifests = @repository.manifests.includes(:dependencies).order('kind DESC')
+      
       @tags = @repository.tags.order('published_at DESC')
       @sha = params[:sha] || @repository.default_branch
+      if params[:sha] && @tags.map(&:name).include?(params[:sha])
+        @tag = @tags.find{|t| t.name == params[:sha] }
+        @manifests = @tag.manifests.includes(:dependencies).order('kind DESC')
+      else
+        @manifests = @repository.manifests.includes(:dependencies).order('kind DESC')
+      end
     end
   end
 
