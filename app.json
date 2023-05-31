@@ -51,6 +51,10 @@
     {
       "command": "bundle exec rake sitemap:refresh",
       "schedule": "30 * * * *"
+    },
+    {
+      "command": "bundle exec rake repositories:fetch_dependencies_for_github_actions_tags",
+      "schedule": "0 0 * * *"
     }
   ]
 }

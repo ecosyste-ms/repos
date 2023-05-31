@@ -403,10 +403,67 @@ class Repository < ApplicationRecord
   end
 
   def update_tags_count
-    update_column(:tags_count, tags.count)
+    count = tags.count
+    update_column(:tags_count, count)
+    count
   end
 
   def tags_count
-    read_attribute(:tags_count) || tags.count
+    read_attribute(:tags_count) || update_tags_count
+  end
+
+  def self.parse_dependencies_for_github_actions_tags
+    conn = Faraday.new('https://packages.ecosyste.ms') do |f|
+      f.request :json
+      f.request :retry
+      f.response :json
+    end
+
+    repo_names = Set.new
+
+    response = conn.get("/api/v1/registries/github%20actions/packages?sort=updated_at&order=desc")
+    return nil unless response.success?
+
+    links = parse_link_header(response.headers)
+
+    while links['next'].present?
+      json = response.body
+
+      json.each do |package|
+        repo_names << package['name']
+      end
+    
+      response = conn.get(links['next'])
+      return nil unless response.success?
+      links = parse_link_header(response.headers)
+    end
+
+    host = Host.find_by_name('GitHub')
+
+    repo_names.each do |repo_name|
+      puts repo_name
+      repo = host.find_repository(repo_name)
+      if repo.nil?
+        host.sync_repository_async(repo_name)
+        next 
+      end
+      repo.download_tags
+      repo.tags.each do |tag|
+        tag.parse_dependencies_async if tag.dependencies_parsed_at.nil?
+      end
+    end
+  end
+
+  def self.parse_link_header(headers)
+    return {} unless headers['Link'].present?
+
+    links = headers['Link'].split(',').map do |link|
+      url, rel = link.split(';')
+      url = url[/<(.*)>/, 1]
+      rel = rel[/rel="(.*)"/, 1]
+      [rel, url]
+    end
+
+    Hash[links]
   end
 end

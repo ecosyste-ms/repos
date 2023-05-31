@@ -54,4 +54,9 @@ namespace :repositories do
   task update_metadata_files: :environment do
     Repository.update_metadata_files_async
   end
+
+  desc 'fetch dependencies for github actions tags'
+  task fetch_dependencies_for_github_actions_tags: :environment do
+    Repository.parse_dependencies_for_github_actions_tags
+  end
 end
