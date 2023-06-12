@@ -147,6 +147,30 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PackageUsage'
+  /usage/{ecosystem}/{package}/dependencies:
+    get:
+      summary: "Get dependent repositories for a package"
+      operationId: "usagePackageDependencies"
+      parameters:
+        - name: ecosystem
+          in: path
+          description: "The ecosystem to get usage for"
+          required: true
+          schema:
+            type: string
+        - name: package
+          in: path
+          description: "The package to get usage for"
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DependencyWithRepository'
   /hosts:
     get:
       summary: list registies
@@ -791,6 +815,29 @@ components:
           type: boolean
         optional:
           type: boolean
+    DependencyWithRepository:
+      type: object
+      properties:
+        id:
+          type: integer
+        package_name:
+          type: string
+        ecosystem:
+          type: string
+        requirements:
+          type: string
+        kind:
+          type: string
+        direct:
+          type: boolean
+        optional:
+          type: boolean
+        repository:
+          type: object
+          $ref: '#/components/schemas/Repository'
+        manifest:
+          type: object
+          $ref: '#/components/schemas/Manifest'
     Tag:
       type: object
       properties:
