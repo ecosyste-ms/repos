@@ -2,7 +2,7 @@ class HostsController < ApplicationController
   def show
     @host = Host.find_by_name!(params[:id])
 
-    scope = @host.repositories.where.not(last_synced_at:nil)
+    scope = @host.repositories#.where.not(last_synced_at:nil)
 
     if params[:sort].present? || params[:order].present?
       sort = params[:sort].presence || 'updated_at'
@@ -12,7 +12,7 @@ class HostsController < ApplicationController
         scope = scope.order(Arel.sql(sort).desc.nulls_last)
       end
     else
-      scope = scope.order('updated_at desc')
+      #scope = scope.order('updated_at desc')
     end
 
     @pagy, @repositories = pagy_countless(scope)
