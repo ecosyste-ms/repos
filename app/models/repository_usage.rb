@@ -15,7 +15,7 @@ class RepositoryUsage < ApplicationRecord
   end
 
   def self.from_repository(repository)
-    next if repository.dependencies_parsed_at.nil?
+    return if repository.dependencies_parsed_at.nil?
     # TODO deleting everything for the repo may be wasteful
     RepositoryUsage.where(repository: repository).delete_all
 
