@@ -9,6 +9,8 @@ class RepositoryUsage < ApplicationRecord
     latest_id = REDIS.get('repository_usage_crawl_id').to_i
 
     Repository.where('id > ?', latest_id).find_each do |repository|
+      next if repository.dependencies_parsed_at.nil?
+      next if repository.usage_last_calculated.present?
       from_repository(repository) rescue nil
       REDIS.set('repository_usage_crawl_id', repository.id)
     end
@@ -41,6 +43,7 @@ class RepositoryUsage < ApplicationRecord
     end.compact
 
     RepositoryUsage.upsert_all(rus) if rus.any?
+    repository.update_columns(usage_last_calculated: Time.now)
   end
 
   def self.count_for_package_usage(package_usage)

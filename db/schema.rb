@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2023_06_28_113930) do
+ActiveRecord::Schema[7.0].define(version: 2023_06_28_152350) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -160,6 +160,7 @@ ActiveRecord::Schema[7.0].define(version: 2023_06_28_113930) do
     t.json "commit_stats"
     t.string "previous_names", default: [], array: true
     t.integer "tags_count"
+    t.datetime "usage_last_calculated"
     t.index "host_id, lower((full_name)::text)", name: "index_repositories_on_host_id_lower_full_name", unique: true
     t.index ["dependencies_parsed_at"], name: "index_repositories_on_dependencies_parsed_at"
     t.index ["dependency_job_id"], name: "index_repositories_on_dependency_job_id"
