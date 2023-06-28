@@ -4,6 +4,8 @@ class Repository < ApplicationRecord
   has_many :manifests, dependent: :destroy
   has_many :tags
 
+  has_many :repository_usages, dependent: :delete_all
+
   scope :owner, ->(owner) { where(owner: owner) }
   scope :subgroup, ->(owner, subgroup) { where(owner: owner).where('lower(full_name) ilike ?', "#{owner}/#{subgroup}/%") }
   scope :language, ->(language) { where(language: language) }

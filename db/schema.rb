@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2023_06_26_154243) do
+ActiveRecord::Schema[7.0].define(version: 2023_06_28_103619) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -166,6 +166,13 @@ ActiveRecord::Schema[7.0].define(version: 2023_06_26_154243) do
     t.index ["owner"], name: "index_repositories_on_owner"
     t.index ["previous_names"], name: "index_repositories_on_previous_names", using: :gin
     t.index ["topics"], name: "index_repositories_on_topics", using: :gin
+  end
+
+  create_table "repository_usages", force: :cascade do |t|
+    t.integer "repository_id"
+    t.integer "package_usage_id"
+    t.index ["package_usage_id"], name: "index_repository_usages_on_package_usage_id"
+    t.index ["repository_id"], name: "index_repository_usages_on_repository_id"
   end
 
   create_table "tags", force: :cascade do |t|
