@@ -9,7 +9,7 @@ class RepositoryUsage < ApplicationRecord
     latest_id = REDIS.get('repository_usage_crawl_id').to_i
 
     Repository.where('id > ?', latest_id).find_each do |repository|
-      from_repository(repository)
+      from_repository(repository) rescue nil
       REDIS.set('repository_usage_crawl_id', repository.id)
     end
   end
@@ -29,8 +29,12 @@ class RepositoryUsage < ApplicationRecord
     existing_package_usages = PackageUsage.where(key: unique_dependencies.map{|ecosystem, package_name| "#{ecosystem}:#{package_name}"})
 
     package_usages = unique_dependencies.map do |ecosystem, package_name|
-      existing_package_usages.find{|pu| pu.key == "#{ecosystem}:#{package_name}"} || PackageUsage.where(ecosystem: ecosystem, name: package_name, key: "#{ecosystem}:#{package_name}").first_or_create!
-    end
+      if package_name.match(/\w/)
+        existing_package_usages.find{|pu| pu.key == "#{ecosystem}:#{package_name}"} || PackageUsage.where(ecosystem: ecosystem, name: package_name, key: "#{ecosystem}:#{package_name}").first_or_create!
+      else
+        nil
+      end
+    end.compact
 
     rus = package_usages.map do |package_usage|
       {repository_id: repository.id, package_usage_id: package_usage.id}
