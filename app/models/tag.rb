@@ -167,7 +167,7 @@ class Tag < ApplicationRecord
         }
       end.compact
 
-      Dependency.insert_all(deps)
+      Dependency.insert_all(deps) if deps.any?
     end
   end
 
