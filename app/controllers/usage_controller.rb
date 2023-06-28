@@ -16,6 +16,7 @@ class UsageController < ApplicationController
         @package_usage = PackageUsage.create({
           ecosystem: params[:ecosystem],
           name: params[:name],
+          key: "#{params[:ecosystem]}:#{params[:name]}",
           dependents_count: 1})
         @package_usage.sync
         @package_usage.sync_repository if @package_usage.package

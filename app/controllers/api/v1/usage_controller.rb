@@ -16,6 +16,7 @@ class Api::V1::UsageController < Api::V1::ApplicationController
         @usage = PackageUsage.create({
           ecosystem: params[:ecosystem],
           name: params[:name],
+          key: "#{params[:ecosystem]}:#{params[:name]}",
           dependents_count: 1})
         @usage.sync
         @usage.sync_repository if @usage.package
@@ -34,6 +35,7 @@ class Api::V1::UsageController < Api::V1::ApplicationController
         @usage = PackageUsage.create({
           ecosystem: params[:ecosystem],
           name: params[:name],
+          key: "#{params[:ecosystem]}:#{params[:name]}",
           dependents_count: 1})
         @usage.sync_async
       end
