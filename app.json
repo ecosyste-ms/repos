@@ -50,11 +50,11 @@
     },
     {
       "command": "bundle exec rake sitemap:refresh",
-      "schedule": "30 * * * *"
+      "schedule": "0 6 * * *"
     },
     {
       "command": "bundle exec rake repositories:fetch_dependencies_for_github_actions_tags",
-      "schedule": "0 0 * * *"
+      "schedule": "0 4 * * *"
     }
   ]
 }
