@@ -25,8 +25,10 @@ class RepositoryUsage < ApplicationRecord
       end
     end
 
+    existing_package_usages = PackageUsage.where(key: unique_dependencies.map{|ecosystem, package_name| "#{ecosystem}:#{package_name}"})
+
     package_usages = unique_dependencies.map do |ecosystem, package_name|
-      PackageUsage.where(ecosystem: ecosystem, name: package_name).first_or_create!
+      existing_package_usages.find{|pu| pu.key == "#{ecosystem}:#{package_name}"} || PackageUsage.where(ecosystem: ecosystem, name: package_name, key: "#{ecosystem}:#{package_name}").first_or_create!
     end
 
     rus = package_usages.map do |package_usage|
