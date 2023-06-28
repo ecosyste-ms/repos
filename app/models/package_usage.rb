@@ -31,7 +31,10 @@ class PackageUsage < ApplicationRecord
   end
 
   def sync
-    return unless registry
+    if registry.nil?
+      update_columns(package_last_synced_at: Time.now)
+      return
+    end
     response = Faraday.get(packages_api_url)
     if response.success?
       update_columns(package: JSON.parse(response.body), package_last_synced_at: Time.now)
