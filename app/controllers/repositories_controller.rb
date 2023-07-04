@@ -6,7 +6,7 @@ class RepositoriesController < ApplicationController
       @host.sync_repository_async(params[:id])
       raise ActiveRecord::RecordNotFound
     else
-      if @repository.full_name != params[:id].downcase
+      if @repository.full_name.downcase != params[:id].downcase
         redirect_to host_repository_path(@host, @repository.full_name), status: :moved_permanently
         return
       end
@@ -29,7 +29,7 @@ class RepositoriesController < ApplicationController
       @host.sync_repository_async(params[:id])
       raise ActiveRecord::RecordNotFound
     else
-      if @repository.full_name != params[:id].downcase
+      if @repository.full_name.downcase != params[:id].downcase
         redirect_to funding_host_repository_path(@host, @repository.full_name), status: :moved_permanently
         return
       end

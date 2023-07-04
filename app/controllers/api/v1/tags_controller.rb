@@ -6,7 +6,7 @@ class Api::V1::TagsController < Api::V1::ApplicationController
       @host.sync_repository_async(params[:id])
       raise ActiveRecord::RecordNotFound
     else
-      if @repository.full_name != params[:repository_id].downcase
+      if @repository.full_name.downcase != params[:repository_id].downcase
         redirect_to api_v1_host_repository_tags_path(@host, @repository.full_name), status: :moved_permanently
         return
       end

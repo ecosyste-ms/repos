@@ -40,7 +40,7 @@ class Api::V1::RepositoriesController < Api::V1::ApplicationController
     @host = Host.find_by_name!(params[:host_id])
     @repository = @host.find_repository(params[:id].downcase)
     if @repository
-      if @repository.full_name != params[:id].downcase
+      if @repository.full_name.downcase != params[:id].downcase
         redirect_to api_v1_host_repository_path(@host, @repository.full_name), status: :moved_permanently
         return
       end
