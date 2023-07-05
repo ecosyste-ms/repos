@@ -41,6 +41,7 @@ class Host < ApplicationRecord
   end
 
   def sync_repository(full_name)
+    return if full_name.blank?
     puts "syncing #{full_name}"
     repo = repositories.find_by('lower(full_name) = ?', full_name.downcase)
 
