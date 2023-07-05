@@ -19,7 +19,7 @@ gem "nokogiri"
 gem "oj"
 gem "redis"
 gem "sidekiq"
-gem "sidekiq-unique-jobs"
+gem 'sidekiq-unique-jobs', git: 'https://github.com/mhenrixon/sidekiq-unique-jobs', ref: 'b31e80b'
 gem "pagy"
 gem "pghero"
 gem "pg_query"
