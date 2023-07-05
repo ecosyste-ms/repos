@@ -14,14 +14,6 @@ class Host < ApplicationRecord
   def self.find_by_domain(domain)
     Host.all.find { |host| host.domain == domain }
   end
-  
-  def update_repositories_count
-    update_column(:repositories_count, repositories.count)
-  end
-
-  def update_owners_count
-    update_column(:owners_count, owners.count)
-  end
 
   def to_s
     name
@@ -113,8 +105,6 @@ class Host < ApplicationRecord
 
   def crawl_repositories
     host_instance.crawl_repositories
-    update_repositories_count
-    update_owners_count
   end
 
   def download_tags(repository)

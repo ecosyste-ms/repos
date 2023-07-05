@@ -1,5 +1,6 @@
 class Owner < ApplicationRecord
   belongs_to :host
+  counter_culture :host
 
   validates :login, presence: true
 
