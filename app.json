@@ -9,10 +9,6 @@
       "schedule": "*/5 * * * *"
     },
     {
-      "command": "bundle exec rake repositories:sync_least_recent_github",
-      "schedule": "*/15 * * * *"
-    },
-    {
       "command": "bundle exec rake repositories:sync_recently_active",
       "schedule": "*/15 * * * *"
     },
@@ -22,7 +18,7 @@
     },
     {
       "command": "bundle exec rake hosts:sync_owners",
-      "schedule": "*/5 * * * *"
+      "schedule": "*/10 * * * *"
     },
     {
       "command": "bundle exec rake repositories:parse_missing_dependencies",
@@ -30,7 +26,7 @@
     },
     {
       "command": "bundle exec rake repositories:download_tags",
-      "schedule": "*/15 * * * *"
+      "schedule": "*/20 * * * *"
     },
     {
       "command": "bundle exec rake repositories:crawl",
@@ -42,7 +38,7 @@
     },
     {
       "command": "bundle exec rake packages:sync_packages",
-      "schedule": "*/30 * * * *"
+      "schedule": "0 9 * * *"
     },
     {
       "command": "bundle exec rake hosts:check_github_tokens",
