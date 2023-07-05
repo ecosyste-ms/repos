@@ -1,5 +1,7 @@
 class Tag < ApplicationRecord
   belongs_to :repository
+  counter_culture :repository, execute_after_commit: true
+
   validates_presence_of :name, :sha, :repository
   validates_uniqueness_of :name, scope: :repository_id
 

@@ -406,16 +406,6 @@ class Repository < ApplicationRecord
     SyncCommitStatsWorker.perform_async(self.id)
   end
 
-  def update_tags_count
-    count = tags.count
-    update_column(:tags_count, count)
-    count
-  end
-
-  def tags_count
-    read_attribute(:tags_count) || update_tags_count
-  end
-
   def self.parse_dependencies_for_github_actions_tags
     conn = Faraday.new('https://packages.ecosyste.ms') do |f|
       f.request :json
