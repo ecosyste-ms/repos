@@ -68,6 +68,9 @@ GEM
       tzinfo (~> 2.0)
     addressable (2.8.4)
       public_suffix (>= 2.0.2, < 6.0)
+    after_commit_action (1.1.0)
+      activerecord (>= 3.0.0)
+      activesupport (>= 3.0.0)
     appsignal (3.4.6)
       rack
     autoprefixer-rails (10.4.13.0)
@@ -320,6 +323,7 @@ PLATFORMS
   x86_64-linux
 
 DEPENDENCIES
+  after_commit_action
   appsignal
   bootsnap
   bootstrap
