@@ -155,6 +155,7 @@ module Hosts
         end
         
         repository.assign_attributes r
+        repository.tags_count = repository.tags.count if repository.tags_count.nil?
         if repository.changed?
           repository.ping_packages_async
 
