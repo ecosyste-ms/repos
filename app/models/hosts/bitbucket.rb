@@ -111,6 +111,7 @@ module Hosts
 
     def fetch_repository(full_name)
       user_name, repo_name = full_name.split('/')
+      return nil unless user_name.present? && repo_name.present?
       resp = api_client.get("/2.0/repositories/#{user_name}/#{repo_name.downcase}")
       return nil unless resp.success?
       project = resp.body
