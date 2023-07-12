@@ -169,6 +169,7 @@ class Repository < ApplicationRecord
       RepositoryUsage.from_repository(self)
     else
       update_column(:dependency_job_id, json["id"]) if dependency_job_id != json["id"]
+      ParseDependenciesWorker.perform_in(10.minutes, self.id)
     end
   end
 
