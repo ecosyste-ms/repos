@@ -100,6 +100,12 @@ class Repository < ApplicationRecord
   end
 
   def sync
+    if last_synced_at && last_synced_at > 1.day.ago
+      # if recently synced, schedule for syncing 1 day later
+      delay = (last_synced_at + 1.day) - Time.now
+      UpdateRepositoryWorker.perform_in(delay, self.id)
+      return
+    end
     host.host_instance.update_from_host(self)
   end
 
