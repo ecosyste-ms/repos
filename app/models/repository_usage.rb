@@ -51,6 +51,7 @@ class RepositoryUsage < ApplicationRecord
   end
 
   def self.from_package_usage(package_usage)
+    repo_ids = Set.new
     Dependency.where(ecosystem: package_usage.ecosystem, package_name: package_usage.name).includes(:repository).each_instance do |dependency|
       if dependency.repository.nil?
         puts "nil repo #{dependency.id}"
@@ -61,6 +62,8 @@ class RepositoryUsage < ApplicationRecord
         end
         next
       end
+      next if repo_ids.include?(dependency.repository_id)
+      repo_ids.add(dependency.repository_id)
       if dependency.repository.usage_last_calculated.present?
         puts "usage_last_calculated #{dependency.repository.full_name}"
         next
