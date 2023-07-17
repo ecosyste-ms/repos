@@ -70,7 +70,7 @@ class RepositoryUsage < ApplicationRecord
       end
 
       puts "from_package_usage #{dependency.repository.full_name}"
-      RepositoryUsage.from_repository(dependency.repository)
+      RepositoryUsageWorker.perform_async(dependency.repository_id)
     end
   end
 end
