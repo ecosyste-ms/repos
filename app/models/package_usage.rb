@@ -85,7 +85,7 @@ class PackageUsage < ApplicationRecord
   end
 
   def dependent_repos
-    Repository.where(id: repo_ids).includes(:host)
+    # TODO use repository usages table
   end
 
   def funding_links

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2023_06_28_152350) do
+ActiveRecord::Schema[7.0].define(version: 2023_07_17_112012) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -90,10 +90,6 @@ ActiveRecord::Schema[7.0].define(version: 2023_06_28_152350) do
     t.string "ecosystem"
     t.string "name"
     t.bigint "dependents_count", default: 0
-    t.integer "repo_ids", default: [], array: true
-    t.json "requirements", default: {}
-    t.json "kind", default: {}
-    t.json "direct", default: {}
     t.json "package", default: {}
     t.datetime "package_last_synced_at"
     t.datetime "created_at"
