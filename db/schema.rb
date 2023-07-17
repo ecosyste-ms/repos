@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2023_07_17_112012) do
+ActiveRecord::Schema[7.0].define(version: 2023_07_17_131431) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -95,6 +95,7 @@ ActiveRecord::Schema[7.0].define(version: 2023_07_17_112012) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.string "key"
+    t.integer "repository_usages_count"
     t.index ["ecosystem", "name"], name: "index_package_usages_on_ecosystem_and_name"
     t.index ["key"], name: "index_package_usages_on_key", unique: true
     t.index ["package_last_synced_at"], name: "index_package_usages_on_package_last_synced_at"
