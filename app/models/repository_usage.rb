@@ -49,4 +49,23 @@ class RepositoryUsage < ApplicationRecord
   def self.count_for_package_usage(package_usage)
     RepositoryUsage.where(package_usage_id: package_usage.id).count
   end
+
+  def self.from_package_usage(package_usage)
+    Dependency.where(ecosystem: package_usage.ecosystem, package_name: package_usage.name).includes(:repository).find_each do |dependency|
+      if dependency.repository.nil?
+        puts "nil repo #{dependency.id}"
+        next
+      end
+      if dependency.repository.usage_last_calculated.present?
+        puts "usage_last_calculated #{dependency.repository.full_name}"
+        next
+      end
+      if dependency.repository.dependencies_parsed_at.nil?
+        puts "dependencies_parsed_at nil #{dependency.repository.full_name}"
+      end
+
+      puts "from_package_usage #{dependency.repository.full_name}"
+      RepositoryUsage.from_repository(dependency.repository)
+    end
+  end
 end
