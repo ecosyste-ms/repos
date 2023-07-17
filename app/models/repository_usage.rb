@@ -28,7 +28,13 @@ class RepositoryUsage < ApplicationRecord
       end
     end
 
-    existing_package_usages = PackageUsage.where(key: unique_dependencies.map{|ecosystem, package_name| "#{ecosystem}:#{package_name}"})
+    keys = unique_dependencies.map{|ecosystem, package_name| "#{ecosystem}:#{package_name}"}.uniq
+
+    existing_package_usages = []
+    keys.each_slice(50) do |slice|
+      existing_package_usages << PackageUsage.where(key: slice).all
+    end
+    existing_package_usages.flatten!
 
     package_usages = unique_dependencies.map do |ecosystem, package_name|
       if package_name.match(/\w/)
