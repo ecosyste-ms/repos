@@ -54,6 +54,11 @@ class RepositoryUsage < ApplicationRecord
     Dependency.where(ecosystem: package_usage.ecosystem, package_name: package_usage.name).includes(:repository).find_each do |dependency|
       if dependency.repository.nil?
         puts "nil repo #{dependency.id}"
+        if dependency.manifest
+          dependency.manifest.destroy
+        else
+          dependency.destroy
+        end
         next
       end
       if dependency.repository.usage_last_calculated.present?
