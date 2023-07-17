@@ -51,7 +51,7 @@ class RepositoryUsage < ApplicationRecord
   end
 
   def self.from_package_usage(package_usage)
-    Dependency.where(ecosystem: package_usage.ecosystem, package_name: package_usage.name).includes(:repository).find_each do |dependency|
+    Dependency.where(ecosystem: package_usage.ecosystem, package_name: package_usage.name).includes(:repository).each_instance do |dependency|
       if dependency.repository.nil?
         puts "nil repo #{dependency.id}"
         if dependency.manifest
