@@ -17,6 +17,6 @@ class Api::V1::ReleasesController < Api::V1::ApplicationController
   def show
     @host = Host.find_by_name!(params[:host_id])
     @repository = @host.find_repository(params[:repository_id].downcase)
-    @release = @repository.releases.find_by_name!(params[:id])
+    @release = @repository.releases.find_by_tag_name!(params[:id])
   end
 end
