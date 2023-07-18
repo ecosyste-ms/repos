@@ -1057,4 +1057,5 @@ components:
         last_synced_at:
           type: string
           format: date-time
-
+        tag_url:
+          type: string
