@@ -186,6 +186,7 @@ module Hosts
           body: release.body,
           draft: release.draft,
           prerelease: release.prerelease,
+          created_at: release.created_at,
           published_at: release.published_at,
           author: release.author.try(:login),
           assets: release.assets.map{|a| a.to_hash.with_indifferent_access },
