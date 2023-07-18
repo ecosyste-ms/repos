@@ -651,6 +651,74 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Manifest'
+  /hosts/{hostName}/repositories/{repositoryName}/releases:
+    get:
+      summary: get a list of releases for a repository
+      operationId: getHostRepositoryTags
+      parameters:
+        - in: path
+          name: hostName
+          schema:
+            type: string
+          required: true
+          description: name of host
+        - in: path
+          name: repositoryName
+          schema:
+            type: string
+          required: true
+          description: name of repository
+        - name: page
+          in: query
+          description: pagination page number 
+          required: false
+          schema:
+            type: integer
+        - name: per_page
+          in: query
+          description: Number of records to return 
+          required: false
+          schema:
+            type: integer
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Tag'
+  /hosts/{hostName}/repositories/{repositoryName}/releases/{release}:
+    get:
+      summary: get a release for a repository
+      operationId: getHostRepositoryTag
+      parameters:
+        - in: path
+          name: hostName
+          schema:
+            type: string
+          required: true
+          description: name of host
+        - in: path
+          name: repositoryName
+          schema:
+            type: string
+          required: true
+          description: name of repository
+        - in: path
+          name: release
+          schema:
+            type: string
+          required: true
+          description: tag_name of release
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Release'
 components:
   schemas:
     Host:
@@ -765,6 +833,8 @@ components:
         repository_url:
           type: string
         tags_url:
+          type: string
+        releases_url:
           type: string
         manifests_url:
           type: string
@@ -955,3 +1025,36 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Repository'
+    Release:
+      type: object
+      properties:
+        name:
+          type: string
+        uuid:
+          type: string
+        tag_name:
+          type: string
+        target_commitish:
+          type: string
+        body:
+          type: string
+        draft:
+          type: boolean
+        prerelease:
+          type: boolean
+        published_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+        author:
+          type: string
+        assets:
+          type: array
+          items:
+            type: object
+        last_synced_at:
+          type: string
+          format: date-time
+

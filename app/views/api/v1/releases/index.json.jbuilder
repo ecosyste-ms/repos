@@ -1,0 +1,1 @@
+json.array! @releases, partial: 'api/v1/releases/release', as: :release

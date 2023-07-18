@@ -35,6 +35,7 @@ Rails.application.routes.draw do
           resources :tags do
             resources :manifests
           end
+          resources :releases
           resources :manifests
           member do
             get :ping
