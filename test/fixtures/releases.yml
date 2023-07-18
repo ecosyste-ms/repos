@@ -1,0 +1,29 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  repository_id: 1
+  uuid: MyString
+  tag_name: MyString
+  target_commitish: MyString
+  name: MyString
+  body: MyText
+  draft: false
+  prerelease: false
+  published_at: 2023-07-18 12:27:55
+  author: MyString
+  assets: 
+  last_synced_at: 2023-07-18 12:27:55
+
+two:
+  repository_id: 1
+  uuid: MyString
+  tag_name: MyString
+  target_commitish: MyString
+  name: MyString
+  body: MyText
+  draft: false
+  prerelease: false
+  published_at: 2023-07-18 12:27:55
+  author: MyString
+  assets: 
+  last_synced_at: 2023-07-18 12:27:55

@@ -194,6 +194,10 @@ module Hosts
       # to be implemented by subclasses
     end
 
+    def download_releases(repository)
+      # to be implemented by subclasses
+    end
+
     def blob_url(repository, sha = nil)
       # to be implemented by subclasses
     end

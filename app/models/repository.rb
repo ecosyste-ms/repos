@@ -4,6 +4,7 @@ class Repository < ApplicationRecord
 
   has_many :manifests, dependent: :destroy
   has_many :tags
+  has_many :releases
 
   has_many :repository_usages, dependent: :delete_all
 
@@ -241,6 +242,10 @@ class Repository < ApplicationRecord
 
   def download_tags
     host.download_tags(self)
+  end
+
+  def download_releases
+    host.download_releases(self)
   end
 
   def download_tags_async

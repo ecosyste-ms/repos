@@ -160,6 +160,40 @@ module Hosts
       nil
     end
 
+    def download_releases(repository)
+      existing_releases = repository.releases
+      releases = fetch_releases(repository)
+      releases.each do |release|
+        existing_release = existing_releases.find{|r| r.uuid == release[:uuid] }
+        if existing_release
+          existing_release.update_columns(release)
+        else
+          repository.releases.create(release)
+        end
+      end
+      # repository.update_columns(releases_last_synced_at: Time.now)
+    rescue *IGNORABLE_EXCEPTIONS, Octokit::NotFound
+      nil
+    end
+
+    def fetch_releases(repository)
+      api_client.releases(repository.full_name).map do |release|
+        {
+          uuid: release.id,
+          tag_name: release.tag_name,
+          target_commitish: release.target_commitish,
+          name: release.name,
+          body: release.body,
+          draft: release.draft,
+          prerelease: release.prerelease,
+          published_at: release.published_at,
+          author: release.author.try(:login),
+          assets: release.assets.map{|a| a.to_hash.with_indifferent_access },
+          last_synced_at: Time.now
+        }
+      end
+    end
+
     def load_owner_repos_names(owner)
       api_client.repos(owner.login, type: 'all').map{|repo| repo[:full_name] }
     rescue *IGNORABLE_EXCEPTIONS, Octokit::NotFound

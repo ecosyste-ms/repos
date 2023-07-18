@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2023_07_17_131431) do
+ActiveRecord::Schema[7.0].define(version: 2023_07_18_112755) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -111,6 +111,25 @@ ActiveRecord::Schema[7.0].define(version: 2023_07_17_131431) do
     t.json "metadata", default: {}
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "releases", force: :cascade do |t|
+    t.integer "repository_id", null: false
+    t.string "uuid"
+    t.string "tag_name"
+    t.string "target_commitish"
+    t.integer "tag_id"
+    t.string "name"
+    t.text "body"
+    t.boolean "draft"
+    t.boolean "prerelease"
+    t.datetime "published_at"
+    t.string "author"
+    t.json "assets", default: []
+    t.datetime "last_synced_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["repository_id"], name: "index_releases_on_repository_id"
   end
 
   create_table "repositories", force: :cascade do |t|

@@ -113,6 +113,10 @@ class Host < ApplicationRecord
     host_instance.download_tags(repository)
   end
 
+  def download_releases(repository)
+    host_instance.download_releases(repository)
+  end
+
   def get_file_contents(repository, path)
     host_instance.get_file_contents(repository, path)
   end
