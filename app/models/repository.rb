@@ -242,7 +242,7 @@ class Repository < ApplicationRecord
 
   def download_tags
     host.download_tags(self)
-    host.releases_tags(self) if tags_count && tags_count > 0
+    host.download_releases(self) if tags_count && tags_count > 0
   end
 
   def download_releases
