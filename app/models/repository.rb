@@ -178,8 +178,8 @@ class Repository < ApplicationRecord
     args = {ecosystem: (m[:platform] || m[:ecosystem]), kind: m[:kind], filepath: m[:path], sha: m[:sha]}
 
     unless manifests.find_by(args)
-      return unless m[:dependencies].present? && m[:dependencies].any?
       manifest = manifests.create(args)
+      return if m[:dependencies].nil?
       dependencies = m[:dependencies].map(&:with_indifferent_access).uniq{|dep| [dep[:name].try(:strip), dep[:requirement], dep[:type]]}
 
       deps = dependencies.map do |dep|
