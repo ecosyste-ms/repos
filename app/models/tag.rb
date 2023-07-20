@@ -141,6 +141,7 @@ class Tag < ApplicationRecord
       update_columns(dependencies_parsed_at: Time.now, dependency_job_id: nil)
     else
       update_column(:dependency_job_id, json["id"]) if dependency_job_id != json["id"]
+      ParseTagDependenciesWorker.perform_in(10.minutes, self.id)
     end
   end
 
