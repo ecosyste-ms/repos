@@ -164,7 +164,7 @@ module Hosts
       existing_releases = repository.releases
       releases = fetch_releases(repository)
       releases.each do |release|
-        existing_release = existing_releases.find{|r| r.uuid == release[:uuid] }
+        existing_release = existing_releases.find{|r| r.uuid == release[:id] }
         if existing_release
           existing_release.update_columns(release)
         else
