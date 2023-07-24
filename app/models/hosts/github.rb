@@ -193,6 +193,8 @@ module Hosts
           last_synced_at: Time.now
         }
       end
+    rescue *IGNORABLE_EXCEPTIONS, Octokit::NotFound, Octokit::UnprocessableEntity
+      []
     end
 
     def load_owner_repos_names(owner)
