@@ -33,7 +33,7 @@ class PackageUsage < ApplicationRecord
   def sync
     if registry.nil?
       update_columns(package_last_synced_at: Time.now)
-      #update_dependents_count
+      update_repository_usages_count
       return
     end
     response = Faraday.get(packages_api_url)
@@ -42,7 +42,7 @@ class PackageUsage < ApplicationRecord
     else
       update_columns(package_last_synced_at: Time.now)  
     end
-    #update_dependents_count
+    update_repository_usages_count
   rescue
     update_columns(package_last_synced_at: Time.now) # swallow errors for now
   end
@@ -139,6 +139,13 @@ class PackageUsage < ApplicationRecord
   end
 
   def update_repository_usages_count
-    update_columns(repository_usages_count: RepositoryUsage.count_for_package_usage(self))
+    ruc = RepositoryUsage.count_for_package_usage(self)
+    updates = {
+      repository_usages_count: ruc
+    }
+    if ruc > dependents_count
+      updates[:dependents_count] = ruc
+    end
+    update_columns(updates)
   end
 end
