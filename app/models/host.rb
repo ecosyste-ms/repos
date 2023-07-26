@@ -6,6 +6,7 @@ class Host < ApplicationRecord
   has_many :owners
 
   def find_repository(full_name)
+    return nil if full_name.blank?
     repo = repositories.find_by('lower(full_name) = ?', full_name.downcase)
     repo = repositories.where('previous_names @> ?', "{#{full_name.downcase}}").to_a.first if repo.nil?
     repo
