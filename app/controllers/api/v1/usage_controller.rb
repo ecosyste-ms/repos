@@ -19,7 +19,6 @@ class Api::V1::UsageController < Api::V1::ApplicationController
           key: "#{params[:ecosystem]}:#{params[:name]}",
           dependents_count: 1})
         @usage.sync
-        @usage.sync_repository if @usage.package
       else
         raise ActiveRecord::RecordNotFound
       end

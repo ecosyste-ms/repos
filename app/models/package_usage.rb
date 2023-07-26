@@ -42,6 +42,7 @@ class PackageUsage < ApplicationRecord
     else
       update_columns(package_last_synced_at: Time.now)  
     end
+    sync_repository if package
     update_repository_usages_count
   rescue
     update_columns(package_last_synced_at: Time.now) # swallow errors for now
