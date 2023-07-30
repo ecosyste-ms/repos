@@ -54,7 +54,7 @@ class PackageUsage < ApplicationRecord
   end
 
   def self.sync_packages
-    PackageUsage.order('package_last_synced_at desc nulls first').limit(500).each(&:sync)
+    PackageUsage.order('package_last_synced_at asc nulls first').limit(5000).each(&:sync)
   end
 
   # TODO usages need to be updated after dependency updates
