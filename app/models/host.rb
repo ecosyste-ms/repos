@@ -5,6 +5,18 @@ class Host < ApplicationRecord
   has_many :repositories
   has_many :owners
 
+  def self.find_by_name(name)
+    return nil if name.blank?
+    host = Host.find_by('lower(name) = ?', name.downcase)
+  end
+
+  def self.find_by_name!(name)
+    return nil if name.blank?
+    host = Host.find_by('lower(name) = ?', name.downcase)
+    raise ActiveRecord::RecordNotFound if host.nil?
+    host
+  end
+
   def find_repository(full_name)
     return nil if full_name.blank?
     repo = repositories.find_by('lower(full_name) = ?', full_name.downcase)
