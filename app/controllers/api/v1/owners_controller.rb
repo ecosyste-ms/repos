@@ -46,4 +46,19 @@ class Api::V1::OwnersController < Api::V1::ApplicationController
     PingOwnerWorker.perform_async(params[:host_id], params[:id])
     render json: { message: 'pong' }
   end
+
+  def lookup
+    @host = Host.find_by_name!(params[:host_id])
+    scope = @host.owners
+    
+    if params[:name].present?
+      scope = scope.where('lower(name) = ?', params[:name].downcase)
+    end
+
+    if params[:email].present?
+      scope = scope.where('lower(email) = ?', params[:email].downcase)
+    end
+
+    @pagy, @owners = pagy_countless(scope)
+  end
 end

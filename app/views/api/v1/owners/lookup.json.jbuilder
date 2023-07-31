@@ -1,0 +1,1 @@
+json.array! @owners, partial: 'api/v1/owners/owner', as: :owner
