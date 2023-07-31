@@ -285,6 +285,38 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Owner'
+  /hosts/{HostName}/owners/lookup:
+    get:
+      summary: lookup owner by name or email
+      operationId: lookupHostOwner
+      parameters:
+        - in: path
+          name: HostName
+          schema:
+            type: string
+          required: true
+          description: name of host
+        - name: name
+          in: query
+          description: name of owner
+          required: false
+          schema:
+            type: string
+        - name: email
+          in: query
+          description: email of owner
+          required: false
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Owner'
   /hosts/{hostName}/owners/{ownerLogin}:
     get:
       summary: get a owner by login
