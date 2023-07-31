@@ -41,4 +41,9 @@ class Api::V1::OwnersController < Api::V1::ApplicationController
     @pagy, @repositories = pagy_countless(scope)
     render 'api/v1/repositories/index'
   end
+
+  def ping
+    PingOwnerWorker.perform_async(params[:host_id], params[:id])
+    render json: { message: 'pong' }
+  end
 end
