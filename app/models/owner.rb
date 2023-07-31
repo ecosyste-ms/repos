@@ -8,7 +8,7 @@ class Owner < ApplicationRecord
   scope :updated_after, ->(date) { where('updated_at > ?', date) }
   
   def self.sync_least_recently_synced
-    Owner.order('last_synced_at asc nulls first').includes(:host).limit(1000).each(&:sync_async)
+    Owner.order('last_synced_at asc nulls first').includes(:host).limit(5000).each(&:sync_async)
   end
 
   def to_s
