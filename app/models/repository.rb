@@ -25,8 +25,6 @@ class Repository < ApplicationRecord
   scope :with_manifests, -> { joins(:manifests).group(:id) }
   scope :without_manifests, -> { includes(:manifests).where(manifests: {repository_id: nil}) }
 
-  scope :topic, ->(topic) { where("topics @> ARRAY[?]::varchar[]", topic) }
-
   def self.topics
     Repository.connection.select_rows("select topics, count (topics) as topics_count from (select id, unnest(topics) as topics from repositories) as foo group by topics order by topics_count desc, topics asc;")
   end
