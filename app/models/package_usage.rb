@@ -8,6 +8,9 @@ class PackageUsage < ApplicationRecord
   scope :host, ->(host_name) { where("package -> 'repo_metadata' -> 'host' ->> 'name' = ?", host_name.to_s) }
   scope :repo_uuid, ->(repo_uuid) { where("package -> 'repo_metadata' ->> 'uuid' = ?", repo_uuid.to_s) }
 
+  has_many :repository_usages, dependent: :destroy
+  has_many :repositories, through: :repository_usages
+
   def fetch_dependents_count
     @dependents_count ||= Dependency.where(ecosystem: ecosystem, package_name: name).distinct.count(:repository_id)
   end
@@ -83,10 +86,6 @@ class PackageUsage < ApplicationRecord
     return nil unless repo_metadata
     return nil unless repo_metadata['host'] && repo_metadata['host']['name']
     @host ||= Host.find_by_name(repo_metadata['host']['name'])
-  end
-
-  def dependent_repos
-    # TODO use repository usages table
   end
 
   def funding_links
