@@ -77,9 +77,11 @@ class RepositoryUsage < ApplicationRecord
       if dependency.repository.dependencies_parsed_at.nil?
         puts "dependencies_parsed_at nil #{dependency.repository.full_name}"
       end
-
-      puts "from_package_usage #{dependency.repository.full_name}"
-      RepositoryUsage.from_repository(dependency.repository) unless dependency.repository.fork?
+      
+      unless dependency.repository.fork?
+        puts "from_package_usage #{dependency.repository.full_name}"
+        RepositoryUsage.from_repository(dependency.repository)
+      end
     end
   end
 end
