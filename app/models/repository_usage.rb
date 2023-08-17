@@ -79,7 +79,7 @@ class RepositoryUsage < ApplicationRecord
       end
 
       puts "from_package_usage #{dependency.repository.full_name}"
-      RepositoryUsage.from_repository(dependency.repository)
+      RepositoryUsage.from_repository(dependency.repository) unless dependency.repository.fork?
     end
   end
 end

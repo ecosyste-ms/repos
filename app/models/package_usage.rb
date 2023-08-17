@@ -139,6 +139,10 @@ class PackageUsage < ApplicationRecord
     end.flatten.compact
   end
 
+  def update_repository_usages
+    RepositoryUsage.from_package_usage(self)
+  end
+
   def update_repository_usages_count
     ruc = RepositoryUsage.count_for_package_usage(self)
     updates = {
