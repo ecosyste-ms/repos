@@ -86,7 +86,7 @@ GEM
       concurrent-ruby (~> 1.0, >= 1.0.5)
       redis (>= 1.0, < 6)
     builder (3.2.4)
-    chartkick (5.0.3)
+    chartkick (5.0.4)
     concurrent-ruby (1.2.2)
     connection_pool (2.4.1)
     counter_culture (3.4.0)
