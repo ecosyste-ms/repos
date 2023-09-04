@@ -17,6 +17,7 @@ class Api::V1::TagsController < Api::V1::ApplicationController
   def show
     @host = Host.find_by_name!(params[:host_id])
     @repository = @host.find_repository(params[:repository_id].downcase)
+    raise ActiveRecord::RecordNotFound if @repository.nil?
     @tag = @repository.tags.find_by_name!(params[:id])
   end
 end

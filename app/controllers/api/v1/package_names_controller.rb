@@ -31,7 +31,7 @@ class Api::V1::PackageNamesController < Api::V1::ApplicationController
   end
 
   def carthage
-    names = # [] Manifest.where(ecosystem: 'carthage').joins(:dependencies).pluck('DISTINCT(dependencies.package_name)')
+    names = [] # Manifest.where(ecosystem: 'carthage').joins(:dependencies).pluck('DISTINCT(dependencies.package_name)')
     @unique_names = names.compact.reject do |n|
       n.match?(/^[\W\.]/) || n.split('/').length != 2 || n.match?(/:/)
     end.map{|n| n.split('@').last}.uniq.sort
