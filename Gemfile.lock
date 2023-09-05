@@ -121,7 +121,7 @@ GEM
     gitlab (4.19.0)
       httparty (~> 0.20)
       terminal-table (>= 1.5.1)
-    globalid (1.2.0)
+    globalid (1.2.1)
       activesupport (>= 6.1)
     google-protobuf (3.24.2)
     google-protobuf (3.24.2-aarch64-linux)
