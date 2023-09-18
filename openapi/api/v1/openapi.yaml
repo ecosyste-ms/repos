@@ -898,6 +898,8 @@ components:
           type: string
         owner_url:
           type: string
+        download_url:
+          type: string
         commit_stats:
           type: object
         host:

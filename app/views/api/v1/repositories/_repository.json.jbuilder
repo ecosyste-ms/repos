@@ -8,3 +8,4 @@ json.tags_url api_v1_host_repository_tags_url(repository.host, repository)
 json.releases_url api_v1_host_repository_releases_url(repository.host, repository)
 json.manifests_url api_v1_host_repository_manifests_url(repository.host, repository)
 json.owner_url api_v1_host_owner_url(repository.host, repository.owner)
+json.download_url repository.download_url
