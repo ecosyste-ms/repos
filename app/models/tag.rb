@@ -151,7 +151,7 @@ class Tag < ApplicationRecord
     unless manifests.find_by(args)
       manifest = manifests.create(args)
       return if m[:dependencies].nil?
-      dependencies = m[:dependencies].map(&:with_indifferent_access).uniq{|dep| [dep[:name].try(:strip), dep[:requirement], dep[:type]]}
+      dependencies = m[:dependencies].compact.map(&:with_indifferent_access).uniq{|dep| [dep[:name].try(:strip), dep[:requirement], dep[:type]]}
 
       deps = dependencies.map do |dep|
         ecosystem = manifest.ecosystem

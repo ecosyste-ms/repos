@@ -35,10 +35,10 @@ Rails.application.routes.draw do
         end
         resources :repositories, constraints: { id: /.*/ }, only: [:index, :show] do
           resources :tags do
-            resources :manifests
+            resources :manifests, only: [:index]
           end
           resources :releases
-          resources :manifests
+          resources :manifests, only: [:index]
           member do
             get :ping
           end

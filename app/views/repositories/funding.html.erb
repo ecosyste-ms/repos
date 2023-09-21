@@ -39,7 +39,7 @@
 
       <% links = @dependencies.select{|d| d.package_usage && d.package_usage.funding_links.any? }.map{|d| d.package_usage.funding_links}.flatten %>
 
-      <% links.map!{|l| URI.parse(l).host }%>
+      <% links.map!{|l| URI.parse(l).host rescue nil }.compact %>
 
       <% links = links.group_by{|l| l}.map{|l, c| [l, c.length] }.sort_by{|l, c| c}.reverse %>
 
