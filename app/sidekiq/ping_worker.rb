@@ -7,8 +7,15 @@ class PingWorker
     return unless host
     repository = host.find_repository(full_name.downcase)
     if repository
+      if repository.last_synced_at && repository.last_synced_at > 1.day.ago
+        # if recently synced, schedule for syncing 1 day later
+        delay = (repository.last_synced_at + 1.day) - Time.now
+        UpdateRepositoryWorker.perform_in(delay, repository.id)
+        return
+      end
+
       repository.sync_async
-      repository.sync_extra_details_async
+      repository.sync_extra_details_async if repository.files_changed?
     else
       host.sync_repository_async(full_name)
     end
