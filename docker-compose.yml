@@ -13,10 +13,30 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=development
       - POSTGRES_HOST=database.service.repos.internal
+      - REDIS_URL=redis://redis.service.repos.internal
     networks:
       - internal
     depends_on:
       - database.service.repos.internal
+
+  sidekiq:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: bin/docker-sidekiq
+    environment:
+      - PIDFILE=/usr/src/app/tmp/pids/server.pid
+      - RAILS_ENV=development
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=development
+      - POSTGRES_HOST=database.service.repos.internal
+      - REDIS_URL=redis://redis.service.repos.internal
+    networks:
+      - internal
+    depends_on:
+      - app
+      - database.service.repos.internal
+      - redis.service.repos.internal
 
   database.service.repos.internal:
     image: postgres:14.1-alpine
