@@ -161,17 +161,13 @@ module Hosts
     end
 
     def download_releases(repository)
-      existing_releases = repository.releases
+      existing_releases_uuids = repository.releases.pluck(:uuid)
       releases = fetch_releases(repository)
       releases.each do |release|
-        existing_release = existing_releases.find{|r| r.uuid == release[:id] }
-        if existing_release
-          existing_release.update_columns(release)
-        else
-          repository.releases.create(release)
-        end
+        next if existing_releases_uuids.include?(release[:uuid].to_s)
+        repository.releases.create(release)
       end
-      # repository.update_columns(releases_last_synced_at: Time.now)
+      nil
     rescue *IGNORABLE_EXCEPTIONS, Octokit::NotFound
       nil
     end
