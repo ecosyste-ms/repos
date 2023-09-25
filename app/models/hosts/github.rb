@@ -151,6 +151,7 @@ module Hosts
     def download_tags(repository)
       existing_tag_names = repository.tags.pluck(:name)
       tags = fetch_tags(repository)
+      # TODO upsert the whole array
       Array(tags).each do |tag|
         next if existing_tag_names.include?(tag[:name])
         repository.tags.create(tag)
@@ -163,6 +164,7 @@ module Hosts
     def download_releases(repository)
       existing_releases_uuids = repository.releases.pluck(:uuid)
       releases = fetch_releases(repository)
+      # TODO upsert the whole array
       releases.each do |release|
         next if existing_releases_uuids.include?(release[:uuid].to_s)
         repository.releases.create(release)
