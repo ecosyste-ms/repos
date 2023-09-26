@@ -170,7 +170,7 @@ class Host < ApplicationRecord
     return unless kind == 'github'
     id = REDIS.get('last_timeline_id') if id.nil?
   
-    url = "https://timeline.ecosyste.ms/api/v1/events?per_page=1000&event_type=PullRequestEvent"
+    url = "#{TIMELINE_DOMAIN}/api/v1/events?per_page=1000&event_type=PullRequestEvent"
     url = url + "&before=#{id}" if id
   
     begin

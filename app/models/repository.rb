@@ -134,7 +134,7 @@ class Repository < ApplicationRecord
   end
 
   def parse_dependencies
-    connection = Faraday.new(url: "https://parser.ecosyste.ms") do |faraday|
+    connection = Faraday.new(url: PARSER_DOMAIN) do |faraday|
       faraday.use Faraday::FollowRedirects::Middleware
     
       faraday.adapter Faraday.default_adapter
@@ -268,11 +268,11 @@ class Repository < ApplicationRecord
   end
 
   def archive_list_url
-    "https://archives.ecosyste.ms/api/v1/archives/list?url=#{CGI.escape(download_url)}"
+    "#{ARCHIVES_DOMAIN}/api/v1/archives/list?url=#{CGI.escape(download_url)}"
   end
 
   def archive_contents_url(path)
-    "https://archives.ecosyste.ms/api/v1/archives/contents?url=#{CGI.escape(download_url)}&path=#{path}"
+    "#{ARCHIVES_DOMAIN}/api/v1/archives/contents?url=#{CGI.escape(download_url)}&path=#{path}"
   end
 
   def archive_basename
@@ -379,15 +379,15 @@ class Repository < ApplicationRecord
   end
 
   def ping_packages
-    Faraday.get("https://packages.ecosyste.ms/api/v1/packages/ping?repository_url=#{html_url}")
+    Faraday.get("#{PACKAGES_DOMAIN}/api/v1/packages/ping?repository_url=#{html_url}")
   end
 
   def commits_url
-  "https://commits.ecosyste.ms/hosts/#{host.name}/repositories/#{full_name}"
+  "#{COMMITS_DOMAIN}/hosts/#{host.name}/repositories/#{full_name}"
   end
 
   def commits_api_url
-    "https://commits.ecosyste.ms/api/v1/hosts/#{host.name}/repositories/#{full_name}"
+    "#{COMMITS_DOMAIN}/api/v1/hosts/#{host.name}/repositories/#{full_name}"
   end
 
   def sync_commit_stats
@@ -405,7 +405,7 @@ class Repository < ApplicationRecord
   end
 
   def self.parse_dependencies_for_github_actions_tags
-    conn = Faraday.new('https://packages.ecosyste.ms') do |f|
+    conn = Faraday.new(PACKAGES_DOMAIN) do |f|
       f.request :json
       f.request :retry
       f.response :json

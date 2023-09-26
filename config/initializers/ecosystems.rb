@@ -1,0 +1,5 @@
+PARSER_DOMAIN = ENV['PARSER_DOMAIN'] || 'https://parser.ecosyste.ms'
+ARCHIVES_DOMAIN = ENV['ARCHIVES_DOMAIN'] || 'https://archives.ecosyste.ms'
+TIMELINE_DOMAIN = ENV['TIMELINE_DOMAIN'] || 'https://timeline.ecosyste.ms'
+COMMITS_DOMAIN = ENV['COMMITS_DOMAIN'] || 'https://commits.ecosyste.ms'
+PACKAGES_DOMAIN = ENV['PACKAGES_DOMAIN'] || 'https://packages.ecosyste.ms'

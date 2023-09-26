@@ -1,6 +1,6 @@
 class Registry < ApplicationRecord
   def self.sync_all
-    conn = Faraday.new('https://packages.ecosyste.ms') do |f|
+    conn = Faraday.new(PACKAGES_DOMAIN) do |f|
       f.request :json
       f.request :retry
       f.response :json

@@ -46,7 +46,7 @@ module Hosts
     end
 
     def get_file_list(repository)
-      files_and_folders = JSON.parse(Faraday.get("https://archives.ecosyste.ms/api/v1/archives/list?url=#{CGI.escape(download_url(repository))}").body)
+      files_and_folders = JSON.parse(Faraday.get("#{ARCHIVES_DOMAIN}/api/v1/archives/list?url=#{CGI.escape(download_url(repository))}").body)
       files_and_folders.reject{|f| files_and_folders.any?{|ff| ff.starts_with?(f+'/')}}
     rescue
       []
