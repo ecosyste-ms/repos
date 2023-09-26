@@ -76,3 +76,13 @@ TODO
 ## Deployment
 
 A container-based deployment is highly recommended, we use [dokku.com](https://dokku.com/).
+
+## Alternative service domains
+
+This service uses a number of other ecosyste.ms services, you can use alternative domains for these services by setting the following environment variables:
+
+- PARSER_DOMAIN (default: https://parser.ecosyste.ms)
+- ARCHIVES_DOMAIN (default: https://archives.ecosyste.ms)
+- TIMELINE_DOMAIN (default: https://timeline.ecosyste.ms)
+- COMMITS_DOMAIN (default: https://commits.ecosyste.ms)
+- PACKAGES_DOMAIN (default: https://packages.ecosyste.ms)
