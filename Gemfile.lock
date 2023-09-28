@@ -119,7 +119,7 @@ GEM
     faraday-typhoeus (1.0.0)
       faraday (~> 2.0)
       typhoeus (~> 1.4)
-    ffi (1.16.1)
+    ffi (1.16.2)
     gitlab (4.19.0)
       httparty (~> 0.20)
       terminal-table (>= 1.5.1)
