@@ -10,7 +10,19 @@ class Api::V1::ReleasesController < Api::V1::ApplicationController
         redirect_to api_v1_host_repository_releases_path(@host, @repository.full_name), status: :moved_permanently
         return
       end
-      @pagy, @releases = pagy(@repository.releases.order('published_at DESC'))
+
+      scope = @repository.releases
+
+      if params[:sort].present? || params[:order].present?
+        sort = params[:sort] || 'published_at'
+        order = params[:order] || 'desc'
+        sort_options = sort.split(',').zip(order.split(',')).to_h
+        scope = scope.order(sort_options)
+      else
+        scope = scope.order('published_at DESC')
+      end
+
+      @pagy, @releases = pagy(scope)
     end
   end
 

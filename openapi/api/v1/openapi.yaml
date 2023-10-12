@@ -638,6 +638,18 @@ paths:
           required: false
           schema:
             type: integer
+        - name: sort
+          in: query
+          description: field to order results by
+          required: false
+          schema:
+            type: string
+        - name: order
+          in: query
+          description: direction to order results by
+          required: false
+          schema:
+            type: string
       responses:
         200:
           description: OK
@@ -738,6 +750,18 @@ paths:
           required: false
           schema:
             type: integer
+        - name: sort
+          in: query
+          description: field to order results by
+          required: false
+          schema:
+            type: string
+        - name: order
+          in: query
+          description: direction to order results by
+          required: false
+          schema:
+            type: string
       responses:
         200:
           description: OK
