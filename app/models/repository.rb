@@ -241,6 +241,7 @@ class Repository < ApplicationRecord
   def download_tags
     host.download_tags(self)
     host.download_releases(self) if tags_count && tags_count > 0
+    cleanup_duplicate_releases
   end
 
   def download_releases
@@ -457,5 +458,12 @@ class Repository < ApplicationRecord
     end
 
     Hash[links]
+  end
+
+  def cleanup_duplicate_releases
+    releases.group(:uuid).having('count(*) > 1').count.each do |uuid,count|
+      puts "#{uuid} #{count}"
+      releases.where(uuid: uuid).order('created_at desc').offset(1).each(&:destroy)
+    end
   end
 end
