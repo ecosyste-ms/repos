@@ -319,7 +319,7 @@ GEM
     stringio (3.0.8)
     terminal-table (3.0.2)
       unicode-display_width (>= 1.1.1, < 3)
-    thor (1.2.2)
+    thor (1.3.0)
     tilt (2.3.0)
     timeout (0.4.0)
     typhoeus (1.4.0)
