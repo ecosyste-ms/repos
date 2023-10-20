@@ -1,31 +1,27 @@
 namespace :czi do
   task github: :environment do
-    csv = CSV.read('data/github_df.csv', headers: true)
-
     host = Host.find_by(name: 'GitHub')
 
     names = Set.new
-
-    csv.each do |row|
-      names << row['package_url'].gsub("https://github.com/",'').downcase
-    end
-
     owners = Set.new
 
-    names.each do |name|
+    CSV.foreach('data/github_df.csv', headers: true) do |row|
+      name = row['package_url'].gsub("https://github.com/",'').downcase
+      names << name
       owners << name.split('/')[0]
-    end
+    end;nil
 
     existing_names = Set.new
+    missing_names = Set.new
 
     names.each do |name|
       puts name
       if host.find_repository(name)
         existing_names << name 
       else
-        host.sync_repository_async(name)
+        missing_names << name
       end
-    end
+    end;nil
 
     puts "Found #{names.size} names"
     puts "Found #{owners.size} owners"
