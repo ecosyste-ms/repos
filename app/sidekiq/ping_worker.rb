@@ -15,7 +15,7 @@ class PingWorker
       end
 
       repository.sync_async
-      repository.sync_extra_details_async if repository.files_changed?
+      repository.sync_extra_details_async if !repository.fork? && repository.files_changed?
     else
       host.sync_repository_async(full_name)
     end

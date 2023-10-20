@@ -79,7 +79,7 @@ class Host < ApplicationRecord
         end
         repo.save
         repo.ping_packages_async if repo_changed && repo.persisted?
-        repo.sync_extra_details_async if repo_changed && repo.persisted? && repo.files_changed?
+        repo.sync_extra_details_async if !repo.fork? && repo_changed && repo.persisted? && repo.files_changed?
         repo.sync_owner
         repo
       end

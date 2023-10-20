@@ -211,7 +211,7 @@ class Repository < ApplicationRecord
   end
 
   def self.sync_extra_details_async
-    Repository.where(files_changed: true).limit(600).order('pushed_at asc').select('id').each(&:sync_extra_details_async)
+    Repository.where(files_changed: true, fork: false).limit(600).order('pushed_at asc').select('id').each(&:sync_extra_details_async)
   end
 
   def sync_extra_details_async
@@ -219,6 +219,7 @@ class Repository < ApplicationRecord
   end
 
   def sync_extra_details
+    return if fork?
     return unless files_changed?
     if pushed_at.present?
       parse_dependencies unless dependencies_parsed_at.present? && dependencies_parsed_at > pushed_at
