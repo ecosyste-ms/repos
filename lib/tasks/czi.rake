@@ -14,17 +14,40 @@ namespace :czi do
     existing_names = Set.new
     missing_names = Set.new
 
-    names.each do |name|
+    names.to_a.sort.each do |name|
       puts name
-      if host.find_repository(name)
+      repo = host.find_repository(name)
+      if repo
         existing_names << name 
+        if repo.last_synced_at.nil? || repo.last_synced_at < 1.month.ago
+          puts "  Syncing #{name} #{repo.last_synced_at}"
+          host.sync_repository_async(name) 
+        end
+        next if repo.fork?
+        if repo.dependency_job_id.present? || repo.dependencies_parsed_at.nil? || repo.files_changed?
+          "  Parsing extra details #{name}"
+          repo.sync_extra_details_async
+        end
       else
+        puts "  Missing #{name}"
         missing_names << name
+        host.sync_repository_async(name)
       end
     end;nil
 
     puts "Found #{names.size} names"
     puts "Found #{owners.size} owners"
     puts "Found #{existing_names.size} existing names"
+
+    file = File.open('data/github.ndjson', 'a')
+
+    existing_names.each do |name|
+      puts name
+      repo = host.find_repository(name)
+      
+      obj = repo.as_json(include: [manifests: {include: :dependencies}]).to_json
+
+      file.puts JSON.generate(obj)
+    end
   end
 end
