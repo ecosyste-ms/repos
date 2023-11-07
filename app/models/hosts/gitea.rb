@@ -79,7 +79,7 @@ module Hosts
           published_at: tag['commit']['created']
         })
       end
-      repository.update_columns(tags_last_synced_at: Time.now)
+      repository.update_columns(tags_last_synced_at: Time.now, tags_count: repository.tags.count)
     rescue *IGNORABLE_EXCEPTIONS
       nil
     end
