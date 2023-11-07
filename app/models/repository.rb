@@ -463,7 +463,6 @@ class Repository < ApplicationRecord
 
   def cleanup_duplicate_releases
     releases.group(:uuid).having('count(*) > 1').count.each do |uuid,count|
-      puts "#{uuid} #{count}"
       releases.where(uuid: uuid).order('created_at desc').offset(1).each(&:destroy)
     end
   end
