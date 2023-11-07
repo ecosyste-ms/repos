@@ -202,14 +202,32 @@ module Hosts
     end
 
     def fetch_tags(repository)
+      tags = []
+      fetch_tags_graphql(repository).tap do |res|
+        tags += map_tags(res)
+        while res[:data][:repository][:refs][:pageInfo][:hasNextPage]
+          res = fetch_tags_graphql(repository, res[:data][:repository][:refs][:pageInfo][:endCursor])
+          tags += map_tags(res)
+        end
+      end
+      tags
+    end
+
+    def fetch_tags_graphql(repository, cursor = nil)
       query = <<-GRAPHQL
         {
           repository(owner: "#{repository.owner}", name: "#{repository.project_name}") {
             refs(
               refPrefix: "refs/tags/"
               orderBy: {field: TAG_COMMIT_DATE, direction: DESC}
-              last: 100
+              first: 100
+              #{", after: \"#{cursor}\"" if cursor.present?}
             ) {
+              pageInfo{
+                startCursor
+                hasNextPage
+                endCursor
+              }
               nodes {
                 name
                 target {
@@ -241,8 +259,11 @@ module Hosts
         }
       GRAPHQL
       res = api_client.post('/graphql', { query: query }.to_json).to_h
-      return [] unless res && res[:data] && res[:data][:repository].present? && res[:data][:repository][:refs].present? && res[:data][:repository][:refs][:nodes].present?
-      res[:data][:repository][:refs][:nodes].map do |tag|
+    end
+
+    def map_tags(tags)
+      return [] unless tags && tags[:data] && tags[:data][:repository] && tags[:data][:repository][:refs]
+      tags[:data][:repository][:refs][:nodes].map do |tag|
         if tag[:target][:__typename] == 'Tag'
           {
             name: tag[:name],
