@@ -157,7 +157,7 @@ module Hosts
         repository.tags.create(tag)
       end
       repository.update_columns(tags_last_synced_at: Time.now, tags_count: repository.tags.count)
-    rescue *IGNORABLE_EXCEPTIONS, Octokit::NotFound
+    rescue *IGNORABLE_EXCEPTIONS, Octokit::NotFound, Octokit::RepositoryUnavailable, Octokit::UnavailableForLegalReasons
       nil
     end
 
@@ -170,7 +170,7 @@ module Hosts
         repository.releases.create(release)
       end
       nil
-    rescue *IGNORABLE_EXCEPTIONS, Octokit::NotFound
+    rescue *IGNORABLE_EXCEPTIONS, Octokit::NotFound, Octokit::RepositoryUnavailable, Octokit::UnavailableForLegalReasons
       nil
     end
 
@@ -191,7 +191,7 @@ module Hosts
           last_synced_at: Time.now
         }
       end
-    rescue *IGNORABLE_EXCEPTIONS, Octokit::NotFound, Octokit::UnprocessableEntity
+    rescue *IGNORABLE_EXCEPTIONS, Octokit::NotFound, Octokit::UnprocessableEntity, Octokit::RepositoryUnavailable, Octokit::UnavailableForLegalReasons
       []
     end
 
