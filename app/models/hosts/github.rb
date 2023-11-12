@@ -167,6 +167,7 @@ module Hosts
       # TODO upsert the whole array
       releases.each do |release|
         next if existing_releases_uuids.include?(release[:uuid].to_s)
+        puts release[:tag_name]
         repository.releases.create(release)
       end
       nil
@@ -181,7 +182,7 @@ module Hosts
           tag_name: release.tag_name,
           target_commitish: release.target_commitish,
           name: release.name,
-          body: release.body,
+          body: release.body.try(:delete, "\u0000"),
           draft: release.draft,
           prerelease: release.prerelease,
           created_at: release.created_at,
