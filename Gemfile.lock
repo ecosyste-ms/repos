@@ -80,7 +80,7 @@ GEM
     after_commit_action (1.1.0)
       activerecord (>= 3.0.0)
       activesupport (>= 3.0.0)
-    appsignal (3.4.14)
+    appsignal (3.4.15)
       rack
     autoprefixer-rails (10.4.15.0)
       execjs (~> 2)
