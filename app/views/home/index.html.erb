@@ -1,5 +1,19 @@
 <div class="container-sm">
-  <h4 class='mb-3'>Total repositories indexed: <%= number_with_delimiter @hosts.sum(&:repositories_count) %></h4>
+  <div class="card mb-3">
+    <div class="card-header">
+      Statistics
+    </div>
+    <div class="card-body">
+      <div class="d-flex">
+        Hosts: <%= number_with_delimiter @hosts.length %><br/>
+        Repositories: <%= number_with_delimiter @hosts.sum(&:repositories_count) %><br/>
+        Owners: <%= number_with_delimiter @hosts.sum(&:owners_count) %><br/>
+        Tags: <%= number_with_delimiter Tag.fast_total %><br/>
+        Manifests: <%= number_with_delimiter Manifest.fast_total %><br/>
+        Dependencies: <%= number_with_delimiter Dependency.fast_total %><br/>
+      </div>
+    </div>
+  </div>
 
   <%= render @hosts %>
 </div>
