@@ -19,7 +19,8 @@
           <% if host.repositories_count.zero? %>
             <i>Coming soon</i>
           <% else %>
-            <%= number_with_delimiter host.repositories_count %> repositories
+            <%= number_with_delimiter host.repositories_count %> repositories<br/>
+            <%= number_with_delimiter host.owners_count %> owners
           <% end %>
         </p>
       </div>
