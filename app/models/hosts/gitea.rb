@@ -56,7 +56,7 @@ module Hosts
     end
 
     def fetch_topics(full_name)
-      resp = api_client.get("/api/v1/repos/#{full_name}/topics")
+      resp = api_client.get("api/v1/repos/#{full_name}/topics")
       return [] unless resp.success?
       resp.body['topics']
     end
@@ -64,7 +64,7 @@ module Hosts
     def download_tags(repository)
       existing_tag_names = repository.tags.pluck(:name)
 
-      resp = api_client.get("/api/v1/repos/#{repository.full_name}/tags")
+      resp = api_client.get("api/v1/repos/#{repository.full_name}/tags")
       return nil unless resp.success?
       # TODO pagination
       remote_tags = resp.body
@@ -85,14 +85,14 @@ module Hosts
     end
 
     def load_owner_repos_names(owner)
-      resp = api_client.get("/api/v1/users/#{owner.login}/repos")
+      resp = api_client.get("api/v1/users/#{owner.login}/repos")
       # TODO pagination
       return [] unless resp.success?
       resp.body.map{|repo| repo["full_name"] }
     end
 
     def load_repo_names(page, order)
-      resp = api_client.get("/api/v1/repos/search?sort=#{order}&page=#{page}&limit=100")
+      resp = api_client.get("api/v1/repos/search?sort=#{order}&page=#{page}&limit=100")
       return [] unless resp.success?
       resp.body['data']
     end
@@ -100,7 +100,7 @@ module Hosts
     def crawl_repositories_async
       page = (REDIS.get("gitea_last_page:#{@host.id}") || 0).to_i
       page += 1
-      resp = api_client.get("/api/v1/repos/search?sort=id&page=#{page}&limit=100")
+      resp = api_client.get("api/v1/repos/search?sort=id&page=#{page}&limit=100")
       return unless resp.success?
       repos = resp.body['data']
       if repos.present?
@@ -112,7 +112,7 @@ module Hosts
     def crawl_repositories
       page = (REDIS.get("gitea_last_page:#{@host.id}") || 0).to_i
       page += 1
-      resp = api_client.get("/api/v1/repos/search?sort=id&page=#{page}&limit=100")
+      resp = api_client.get("api/v1/repos/search?sort=id&page=#{page}&limit=100")
       return unless resp.success?
       repos = resp.body['data']
       if repos.present?
@@ -125,9 +125,9 @@ module Hosts
       id_or_name = id_or_name.to_i if id_or_name.match(/\A\d+\Z/)
 
       if id_or_name.is_a? Integer
-        url = "/api/v1/repositories/#{id_or_name}"
+        url = "api/v1/repositories/#{id_or_name}"
       else
-        url = "/api/v1/repos/#{id_or_name}"
+        url = "api/v1/repos/#{id_or_name}"
       end
       resp = api_client.get(url)
       return nil unless resp.success?
@@ -171,12 +171,12 @@ module Hosts
     end
 
     def fetch_owner(login)
-      url = "/api/v1/users/#{login}"
+      url = "api/v1/users/#{login}"
       resp = api_client.get(url)
       return nil unless resp.success?
       owner = resp.body
 
-      resp = api_client.get("/api/v1/orgs/#{login}")
+      resp = api_client.get("api/v1/orgs/#{login}")
       is_org = resp.success?
       {
         uuid: owner['id'],
