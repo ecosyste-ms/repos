@@ -826,6 +826,14 @@ components:
           type: string
         owners_url:
           type: string
+        version:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
     Repository:
       type: object
       properties:

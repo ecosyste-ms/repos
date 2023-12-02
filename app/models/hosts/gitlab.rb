@@ -228,5 +228,11 @@ module Hosts
     rescue *IGNORABLE_EXCEPTIONS
       nil
     end
+
+    def host_version
+      api_client.version.version
+    rescue
+      nil
+    end
   end
 end

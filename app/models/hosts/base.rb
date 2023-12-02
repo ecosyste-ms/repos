@@ -49,6 +49,10 @@ module Hosts
       @host.kind
     end
 
+    def host_version
+      nil
+    end
+
     def url(repository)
       "#{@host.url}/#{repository.full_name}"
     end

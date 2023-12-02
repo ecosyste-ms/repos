@@ -190,5 +190,14 @@ module Hosts
         kind: is_org ? 'organization' : 'user'
       }
     end
+
+    def host_version
+      url = "#{@host.url}/swagger.v1.json"
+      resp = Faraday.get(url)
+      json = JSON.parse(resp.body)
+      json['info']['version']
+    rescue
+      nil
+    end
   end
 end
