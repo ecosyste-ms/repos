@@ -2,7 +2,7 @@ module Hosts
   class Forgejo < Gitea
     
     def icon
-      'go-forgejo'
+      'forgejo'
     end
     
     def api_client
