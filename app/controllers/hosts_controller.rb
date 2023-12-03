@@ -18,6 +18,13 @@ class HostsController < ApplicationController
     @pagy, @repositories = pagy_countless(scope)
   end
 
+  def kind
+    @kind = params[:id]
+    @hosts = Host.where(kind: @kind).order('repositories_count DESC')
+    @pagy, @hosts = pagy(@hosts)
+    raise ActiveRecord::RecordNotFound if @hosts.empty?
+  end
+
   def topic
     @host = Host.find_by_name!(params[:id])
 

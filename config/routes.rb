@@ -80,6 +80,10 @@ Rails.application.routes.draw do
       get :topics
       get "topics/:topic", to: 'hosts#topic', as: :topic
     end
+
+    collection do
+      get 'kinds/:id', to: 'hosts#kind', as: :kind
+    end
   end
 
   resources :topics, only: [:index, :show], constraints: { id: /.*/ }
