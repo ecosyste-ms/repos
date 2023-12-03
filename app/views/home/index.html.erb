@@ -15,5 +15,25 @@
     </div>
   </div>
 
-  <%= render @hosts %>
+  <% @hosts.select{|h| h.repositories_count > 0 }.group_by(&:kind).each do |kind, hosts| %>
+    <div class="card mb-3">
+      <div class="card-header">
+        <img src="<%= hosts.first.kind_icon_url %>" class="me-1 pull-left" height='20' width='20' onerror="this.style.display='none'">
+        <%= link_to kind, kind_hosts_path(kind), class: 'text-decoration-none' %>
+        <span class="text-black-50">
+          <%= pluralize hosts.length, 'instance' %>
+        </span>
+      </div>
+       <ul class="list-group list-group-flush">
+        <% hosts.each do |host| %>
+          <li class="list-group-item">
+            <%= link_to host.name.downcase, host %>
+            <span class="text-black-50">
+              <%= host.repositories_count %> repositories
+            </span>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
 </div>

@@ -291,6 +291,10 @@ class Host < ApplicationRecord
     "https://github.com/#{icon}.png"
   end
 
+  def kind_icon_url
+    "https://github.com/#{host_instance.icon}.png"
+  end
+
   def update_version
     version = host_instance.host_version
     update_columns(version: version) if version.present? 
