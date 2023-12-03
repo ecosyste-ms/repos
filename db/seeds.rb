@@ -115,6 +115,12 @@ default_hosts = [
   {name: 'git.mills.io', url: 'https://git.mills.io', kind: 'gitea'},
   {name: 'forgejo.sny.sh', url: 'https://forgejo.sny.sh', kind: 'forgejo'},
   {name: 'forgejo.vanten-s.com', url: 'https://forgejo.vanten-s.com', kind: 'forgejo'},
+
+  {name: 'git.digisthesia.com', url: 'https://git.digisthesia.com', kind: 'gitea'},
+  {name: 'git.panekj.dev', url: 'https://git.panekj.dev', kind: 'gitea'},
+  {name: 'dev.cvsck.ru', url: 'https://dev.cvsck.ru', kind: 'gitea'},
+  {name: 'git.netflux.io', url: 'https://git.netflux.io', kind: 'gitea'},
+  {name: 'code.lag.net', url: 'https://code.lag.net', kind: 'gitea'},
 ]
 
 default_hosts.each do |host|
