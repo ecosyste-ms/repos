@@ -2,4 +2,5 @@
   <h2><%= @kind %> hosts</h2>
 
   <%= render @hosts %>
+  <%== pagy_bootstrap_nav(@pagy) if @pagy.pages > 1 %>  
 </div>
