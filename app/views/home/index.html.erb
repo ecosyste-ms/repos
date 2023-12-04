@@ -26,7 +26,7 @@
         </span>
       </div>
        <ul class="list-group list-group-flush">
-        <% hosts.each do |host| %>
+        <% hosts.first(20).each do |host| %>
           <li class="list-group-item">
             <%= link_to host.name.downcase, host %>
             <span class="text-black-50">
@@ -35,6 +35,11 @@
           </li>
         <% end %>
       </ul>
+      <% if hosts.length > 20 %>
+          <div class="card-footer">
+            <%= link_to "and #{hosts.length - 20} more...", kind_hosts_path(kind) %>
+          </div>
+        <% end %>
     </div>
   <% end %>
 </div>
