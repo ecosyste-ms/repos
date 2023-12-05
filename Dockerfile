@@ -14,6 +14,7 @@ RUN apk add --update \
     postgresql-dev \
     tzdata \
     curl-dev \
+    bash \
     libc6-compat \
  && rm -rf /var/cache/apk/* 
 
