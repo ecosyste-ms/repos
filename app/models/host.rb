@@ -5,6 +5,8 @@ class Host < ApplicationRecord
   has_many :repositories
   has_many :owners
 
+  scope :kind, ->(kind) { where(kind: kind) }
+
   def self.find_by_name(name)
     return nil if name.blank?
     host = Host.find_by('lower(name) = ?', name.downcase)
