@@ -68,13 +68,15 @@ function renderReadme(data){
 
 $( document ).ready(function() {
 
+  var archives_service = $("meta[name='archives_service']").attr('content') || 'https://archives.ecosyste.ms'
+
   if ($('#files').length > 0) {
     var download_url = $('#files').data('url');
     var basename = $('#files').data('basename');
     var path = $('#files').data('path');
     
-    var list_url = "https://archives.ecosyste.ms/api/v1/archives/list?url=" + download_url
-    var contents_url = "https://archives.ecosyste.ms/api/v1/archives/contents?url=" + download_url + "&path=" + path
+    var list_url = archives_service + "/api/v1/archives/list?url=" + download_url
+    var contents_url = archives_service + "/api/v1/archives/contents?url=" + download_url + "&path=" + path
 
     if(path.length > 0){
       var url = contents_url
@@ -99,7 +101,7 @@ $( document ).ready(function() {
 
   if ($('#readme').length > 0) {
     var download_url = $('#files').data('url');
-    var readme_url = "https://archives.ecosyste.ms/api/v1/archives/readme?url=" + download_url
+    var readme_url = archives_service + "/api/v1/archives/readme?url=" + download_url
 
     $.getJSON(readme_url, function( data ) {
         renderReadme(data)

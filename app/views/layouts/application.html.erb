@@ -8,6 +8,7 @@
       <%= meta_title %>
     </title>
     <meta name="description" content="<%= meta_description %>">
+    <meta name='archives_service' content="<%= ARCHIVES_DOMAIN %>">
     <%= csrf_meta_tags %>
     <%= stylesheet_link_tag "application", :media => "all" %>
     <%= javascript_include_tag "application" %>
@@ -30,7 +31,7 @@
       <%= yield %>
     </div>
 
-        <footer class="py-5 container-sm text-muted text-center">
+    <footer class="py-5 container-sm text-muted text-center">
       <%= link_to 'About', 'https://ecosyste.ms', class: 'link-dark', target: :_blank  %> — 
       <%= link_to 'Blog', "https://blog.ecosyste.ms", class: 'link-dark', target: :_blank  %> — 
       <%= link_to 'API', rswag_ui_path, class: 'link-dark', target: :_blank  %> — 
