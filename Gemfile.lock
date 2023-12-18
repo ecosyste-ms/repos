@@ -143,13 +143,13 @@ GEM
     google-protobuf (3.25.1-x86_64-linux)
     groupdate (6.4.0)
       activesupport (>= 6.1)
-    hashdiff (1.0.1)
+    hashdiff (1.1.0)
     httparty (0.21.0)
       mini_mime (>= 1.0.0)
       multi_xml (>= 0.5.2)
     i18n (1.14.1)
       concurrent-ruby (~> 1.0)
-    io-console (0.7.0)
+    io-console (0.7.1)
     irb (1.10.1)
       rdoc
       reline (>= 0.3.8)
@@ -266,7 +266,7 @@ GEM
       thor (~> 1.0, >= 1.2.2)
       zeitwerk (~> 2.6)
     rake (13.1.0)
-    rdoc (6.6.1)
+    rdoc (6.6.2)
       psych (>= 4.0.0)
     redis (5.0.8)
       redis-client (>= 0.17.0)
@@ -406,4 +406,4 @@ RUBY VERSION
    ruby 3.2.2p53
 
 BUNDLED WITH
-   2.4.22
+   2.5.1
