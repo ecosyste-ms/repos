@@ -920,6 +920,11 @@ components:
             type: string
         tags_count:
           type: integer
+        latest_tag_name:
+          type: string
+        latest_tag_published_at:
+          type: string
+          format: date-time
         repository_url:
           type: string
         tags_url:

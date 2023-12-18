@@ -126,6 +126,9 @@ class Host < ApplicationRecord
 
   def download_tags(repository)
     host_instance.download_tags(repository)
+    repository.set_latest_tag_published_at
+    repository.set_latest_tag_name
+    repository.save if repository.changed?
   end
 
   def download_releases(repository)

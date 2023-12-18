@@ -210,6 +210,18 @@ class Repository < ApplicationRecord
     manifests.where.not(id: manifests.latest.map(&:id)).each(&:destroy)
   end
 
+  def latest_tag
+    @latest_tag ||= tags.order('published_at desc nulls last').first
+  end
+
+  def set_latest_tag_published_at
+    self.latest_tag_published_at = (latest_tag.try(:published_at).presence || updated_at)
+  end
+
+  def set_latest_tag_name
+    self.latest_tag_name = latest_tag.try(:name)
+  end
+
   def self.sync_extra_details_async
     Repository.where(files_changed: true, fork: false).limit(600).order('pushed_at asc').select('id').each(&:sync_extra_details_async)
   end
