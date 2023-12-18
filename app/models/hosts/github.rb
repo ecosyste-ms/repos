@@ -207,7 +207,7 @@ module Hosts
       fetch_tags_graphql(repository).tap do |res|
         return if res[:data].nil? || res[:data][:repository].nil? || res[:data][:repository][:refs].nil?
         tags += map_tags(res)
-        while res[:data][:repository][:refs][:pageInfo][:hasNextPage]
+        while res.dig(:data, :repository, :refs, :pageInfo, :hasNextPage)
           res = fetch_tags_graphql(repository, res[:data][:repository][:refs][:pageInfo][:endCursor])
           tags += map_tags(res)
         end
