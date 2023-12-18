@@ -145,7 +145,7 @@
                 <%= link_to pluralize(manifest.dependencies.length, 'dependencies'), manifest.repository_link, target: :_blank %>
               </li>
             <% else %>
-              <% manifest.dependencies.sort_by{|d| [d.kind, d.package_name]}.each do |dependency| %>
+              <% manifest.dependencies.sort_by{|d| [d.kind.to_s, d.package_name]}.each do |dependency| %>
                 <li class="list-group-item">
                   <%= link_to dependency.package_name, usage_path(dependency.ecosystem, dependency.package_name) %>
                   <i><%= dependency.requirements %></i>
