@@ -106,7 +106,7 @@ GEM
       rexml
     crass (1.0.6)
     date (3.3.4)
-    debug (1.9.0)
+    debug (1.9.1)
       irb (~> 1.10)
       reline (>= 0.3.8)
     drb (2.2.0)
@@ -406,4 +406,4 @@ RUBY VERSION
    ruby 3.2.2p53
 
 BUNDLED WITH
-   2.5.1
+   2.5.2
