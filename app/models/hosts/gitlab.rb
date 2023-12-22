@@ -141,7 +141,7 @@ module Hosts
     end
 
     def fetch_repository(full_name)
-      project = api_client.project(full_name)
+      project = api_client.project(full_name, license: true)
       repo_hash = project.to_hash.with_indifferent_access.slice(:id, :description, :created_at, :name, :open_issues_count, :forks_count, :default_branch, :archived, :topics)
 
       repo_hash.merge!({
@@ -161,6 +161,9 @@ module Hosts
           full_name: project.try(:forked_from_project).try(:path_with_namespace)
         }
       })
+
+      repo_hash[:license] = project.license.try(:key)
+
       return repo_hash.slice(*repository_columns)
     end
 
