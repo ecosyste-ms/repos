@@ -31,6 +31,7 @@ Rails.application.routes.draw do
           end
           member do
             get :repositories
+            get :ping
           end
         end
         resources :repositories, constraints: { id: /.*/ }, only: [:index, :show] do
