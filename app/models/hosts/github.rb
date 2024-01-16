@@ -119,6 +119,8 @@ module Hosts
       hash[:license] = hash[:license][:key] if hash[:license]
       hash[:owner] = hash[:owner][:login]
       hash[:pull_requests_enabled] = true
+      hash[:template]= hash[:is_template]
+      hash[:template_full_name] = hash[:template_repository][:full_name] if hash[:template_repository]
 
       if hash[:fork] && hash[:parent]
         hash[:source_name] = hash[:parent][:full_name]

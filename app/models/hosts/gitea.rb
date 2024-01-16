@@ -159,7 +159,8 @@ module Hosts
         logo_url: data['avatar_url'].presence || data['owner']['avatar_url'],
         topics: fetch_topics(data['full_name']),
         created_at: data['created_at'],
-        updated_at: data['updated_at']
+        updated_at: data['updated_at'],
+        template: data['template'],
       }
     end
 

@@ -30,6 +30,8 @@ module Hosts
         :scm,
         :status,
         :source_name,
+        :template,
+        :template_full_name
         # :allow_forking,
         # :has_projects,
         # :has_downloads,

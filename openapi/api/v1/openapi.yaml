@@ -920,6 +920,10 @@ components:
             type: string
         tags_count:
           type: integer
+        template:
+          type: boolean
+        template_full_name:
+          type: string
         latest_tag_name:
           type: string
         latest_tag_published_at:
