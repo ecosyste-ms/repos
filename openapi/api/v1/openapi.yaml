@@ -7,9 +7,9 @@ info:
     email: support@ecosyste.ms
     url: https://ecosyste.ms 
   version: 1.0.0
-license:
-    name: CC-BY-SA-4.0
-    url: https://creativecommons.org/licenses/by-sa/4.0/
+  license:
+      name: CC-BY-SA-4.0
+      url: https://creativecommons.org/licenses/by-sa/4.0/
 externalDocs:
   description: GitHub Repository
   url: https://github.com/ecosyste-ms/repos
@@ -79,6 +79,18 @@ paths:
           schema:
             type: string
             format: date-time
+        - name: fork
+          in: query
+          description: filter by fork
+          required: false
+          schema:
+            type: boolean
+        - name: archived
+          in: query
+          description: filter by archived
+          required: false
+          schema:
+            type: boolean
         - name: sort
           in: query
           description: field to order results by
@@ -410,6 +422,18 @@ paths:
           schema:
             type: string
             format: date-time
+        - name: fork
+          in: query
+          description: filter by fork
+          required: false
+          schema:
+            type: boolean
+        - name: archived
+          in: query
+          description: filter by archived
+          required: false
+          schema:
+            type: boolean
         - name: sort
           in: query
           description: field to order results by
@@ -468,6 +492,18 @@ paths:
           schema:
             type: string
             format: date-time
+        - name: fork
+          in: query
+          description: filter by fork
+          required: false
+          schema:
+            type: boolean
+        - name: archived
+          in: query
+          description: filter by archived
+          required: false
+          schema:
+            type: boolean
         - name: sort
           in: query
           description: field to order results by
@@ -526,6 +562,18 @@ paths:
           schema:
             type: string
             format: date-time
+        - name: fork
+          in: query
+          description: filter by fork
+          required: false
+          schema:
+            type: boolean
+        - name: archived
+          in: query
+          description: filter by archived
+          required: false
+          schema:
+            type: boolean
         - name: sort
           in: query
           description: field to order results by
@@ -724,7 +772,7 @@ paths:
   /hosts/{hostName}/repositories/{repositoryName}/releases:
     get:
       summary: get a list of releases for a repository
-      operationId: getHostRepositoryTags
+      operationId: getHostRepositoryReleases
       parameters:
         - in: path
           name: hostName
@@ -774,7 +822,7 @@ paths:
   /hosts/{hostName}/repositories/{repositoryName}/releases/{release}:
     get:
       summary: get a release for a repository
-      operationId: getHostRepositoryTag
+      operationId: getHostRepositoryRelease
       parameters:
         - in: path
           name: hostName
