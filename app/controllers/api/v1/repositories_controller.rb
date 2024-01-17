@@ -4,6 +4,8 @@ class Api::V1::RepositoriesController < Api::V1::ApplicationController
     scope = @host.repositories
     scope = scope.created_after(params[:created_after]) if params[:created_after].present?
     scope = scope.updated_after(params[:updated_after]) if params[:updated_after].present?
+    scope = scope.forked(params[:fork]) if params[:fork].present?
+    scope = scope.archived(params[:archived]) if params[:archived].present?
 
     if params[:sort].present? || params[:order].present?
       sort = params[:sort] || 'last_synced_at'
@@ -11,7 +13,7 @@ class Api::V1::RepositoriesController < Api::V1::ApplicationController
       sort_options = sort.split(',').zip(order.split(',')).to_h
       scope = scope.order(sort_options)
     else
-      scope = scope#.order('last_synced_at DESC')
+      scope = scope
     end
 
     @pagy, @repositories = pagy_countless(scope)
@@ -22,6 +24,8 @@ class Api::V1::RepositoriesController < Api::V1::ApplicationController
     scope = @host.repositories
     scope = scope.created_after(params[:created_after]) if params[:created_after].present?
     scope = scope.updated_after(params[:updated_after]) if params[:updated_after].present?
+    scope = scope.forked(params[:fork]) if params[:fork].present?
+    scope = scope.archived(params[:archived]) if params[:archived].present?
 
     if params[:sort].present? || params[:order].present?
       sort = params[:sort] || 'last_synced_at'

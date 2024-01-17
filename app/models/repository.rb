@@ -11,7 +11,7 @@ class Repository < ApplicationRecord
   scope :owner, ->(owner) { where(owner: owner) }
   scope :subgroup, ->(owner, subgroup) { where(owner: owner).where('lower(full_name) ilike ?', "#{owner}/#{subgroup}/%") }
   scope :language, ->(language) { where(language: language) }
-  scope :fork, ->(fork) { where(fork: fork) }
+  scope :forked, ->(fork) { where(fork: fork) }
   scope :archived, ->(archived) { where(archived: archived) }
   scope :active, -> { archived(false) }
   scope :source, -> { fork(false) }
