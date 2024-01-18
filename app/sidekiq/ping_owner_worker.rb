@@ -5,7 +5,7 @@ class PingOwnerWorker
   def perform(host_name, full_name)
     host = Host.find_by_name(host_name)
     return unless host
-    owner = host.owners.find_by!('lower(login) = ?', full_name.downcase)
+    owner = host.owners.find_by('lower(login) = ?', full_name.downcase)
     if owner
       owner.sync_async
     else
