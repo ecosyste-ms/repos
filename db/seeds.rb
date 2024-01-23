@@ -809,6 +809,7 @@ default_hosts = [
   {name: 'novit.tech', url: 'https://novit.tech', kind: 'gitea'},
   {name: 'gitoa.ru', url: 'https://gitoa.ru', kind: 'gitea'},
   {name: 'git.slc.ar', url: 'https://git.slc.ar', kind: 'forgejo'},
+  {name: 'git.drupalcode.org', url: 'https://git.drupalcode.org', kind: 'gitlab'},
 ]
 
 default_hosts.each do |host|
