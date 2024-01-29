@@ -316,6 +316,7 @@ class Repository < ApplicationRecord
       governance:       file_list.find{|file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?GOVERNANCE/i) },
       roadmap:          file_list.find{|file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?ROADMAP/i) },
       authors:          file_list.find{|file| file.match(/^AUTHORS/i) },
+      dei:              file_list.find{|file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?DEI/i) },
     }
   end
 
