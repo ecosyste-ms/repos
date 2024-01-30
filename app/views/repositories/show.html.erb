@@ -91,12 +91,6 @@
     </small></p>
   <% end %>
 
-  <% if @manifests.present? %>
-    <p><small class='text-muted'>
-      <%= link_to "💰 Back this stack 💰", funding_host_repository_path(@host, @repository), class: 'btn btn-secondary' %>  
-    </small></p>
-  <% end %>
-
   <% if @tags.any? %>
     <div class="dropdown">
       <button class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">

@@ -1,62 +1,7 @@
-<% @meta_title = "Funding dependencies for #{@repository.full_name}" %>
+<% @meta_title = "Funding dependencies" %>
 <div class='container-sm'>
-  <h1>Hack your stack: <%= link_to @repository.full_name, host_repository_path(@host, @repository) %></h1>
+  <h1>Hack your stack</h1>
 
-  <h3>
-    Dependencies
-    <small class='text-muted'>
-      <%= @dependencies.length %>
+  <p>This funding experiment has ended, if you'd like to see it return please open an issue: <%= link_to 'https://github.com/ecosyste-ms/repos/issues/new', 'https://github.com/ecosyste-ms/repos/issues/new' %></p>
 
-      (<%= @dependencies.select{|d| d.package_usage && d.package_usage.funding_links.any? }.length %> with funding links)
-    </small>  
-  </h3>
-
-  <div class='row'>
-    <div class='col-md-8'>
-      <ul class="list-group list-group-flush">
-        <% @dependencies.sort_by{|d| [(!d.has_funding_links?).to_s, d.ecosystem, d.package_name] }.group_by{|d| [d.ecosystem, d.package_name]}.each do |eco_name, dependencies| %>
-          <% dependency = dependencies.first %>
-          <li class='list-group-item'>
-            <strong><%= dependency.ecosystem %></strong>
-            <%= dependency.package_name%>
-            <small class='text-muted'>
-              <% if dependency.package_usage.present? %>
-                <% if dependency.package_usage.repo_metadata && dependency.package_usage.repo_metadata['html_url'] %>
-                  <br>  
-                  Repo: <%= link_to dependency.package_usage.repo_metadata['html_url'], dependency.package_usage.repo_metadata['html_url'] %>
-                <% end %>
-                <% if dependency.has_funding_links? %>
-                  <br>
-                    Funding: <% dependency.package_usage.funding_links.each_with_index do |link, index| %><%= ',' unless index.zero? %> <%= link_to link, link %><% end %>
-                <% end %>
-              <% end %>
-            </small>
-          </li>
-        <% end %>
-      </ul>
-    </div>
-    <div class='col-md-4'>
-
-      <% links = @dependencies.select{|d| d.package_usage && d.package_usage.funding_links.any? }.map{|d| d.package_usage.funding_links}.flatten %>
-
-      <% links.map!{|l| URI.parse(l).host rescue nil }.compact %>
-
-      <% links = links.group_by{|l| l}.map{|l, c| [l, c.length] }.sort_by{|l, c| c}.reverse %>
-
-      <h5>Funding Platforms</h5>
-
-       <ul class="list-group list-group-flush">
-         <% links.each do |link, count| %>   
-            <li class='list-group-item'>
-              <%= link %>
-              <small class='text-muted'>
-              <%= count %>
-             </small>
-            </li>
-         <% end %>
-       </ul>
-    </div>
-  </div>
-
-  
 </div>

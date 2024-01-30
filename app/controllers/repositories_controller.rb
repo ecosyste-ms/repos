@@ -23,19 +23,6 @@ class RepositoriesController < ApplicationController
   end
 
   def funding
-    @host = Host.find_by_name!(params[:host_id])
-    @repository = @host.find_repository(params[:id].downcase)
-    if @repository.nil?
-      @host.sync_repository_async(params[:id])
-      raise ActiveRecord::RecordNotFound
-    else
-      if @repository.full_name.downcase != params[:id].downcase
-        redirect_to funding_host_repository_path(@host, @repository.full_name), status: :moved_permanently
-        return
-      end
-      @manifests = @repository.manifests.includes(:dependencies).order('kind DESC')
-      @dependencies = @manifests.map(&:dependencies).flatten
-      @dependencies.map(&:package_usage).compact.uniq.each{|pu| pu.sync_async }
-    end
+    # disabled
   end
 end
