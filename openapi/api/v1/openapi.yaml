@@ -112,13 +112,19 @@ paths:
                 $ref: '#/components/schemas/TopicWithRepositories'
   /repositories/lookup:
     get:
-      summary: "Lookup repository metadata"
+      summary: "Lookup repository metadata by url or purl"
       operationId: "repositoriesLookup"
       parameters:
         - name: url
           in: query
           description: "The URL of the repository to lookup"
-          required: true
+          required: false
+          schema:
+            type: string
+        - name: purl
+          in: query
+          description: package URL
+          required: false
           schema:
             type: string
       responses:
