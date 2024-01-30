@@ -44,6 +44,7 @@ gem 'sitemap_generator'
 gem 'counter_culture'
 gem 'after_commit_action'
 gem 'postgresql_cursor'
+gem 'packageurl-ruby', require: 'package_url'
 
 group :development, :test do
   gem "debug", platforms: %i[ mri mingw x64_mingw ]

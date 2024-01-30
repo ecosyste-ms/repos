@@ -198,6 +198,7 @@ GEM
       sawyer (~> 0.9)
     oj (3.16.3)
       bigdecimal (>= 3.0)
+    packageurl-ruby (0.1.0)
     pagy (6.4.3)
     pg (1.5.4)
     pg_query (5.1.0)
@@ -369,6 +370,7 @@ DEPENDENCIES
   nokogiri
   octokit
   oj
+  packageurl-ruby
   pagy
   pg
   pg_query

@@ -35,4 +35,14 @@ class ApiV1RepositoriesControllerTest < ActionDispatch::IntegrationTest
 
     assert_equal actual_response["full_name"], @repository.full_name
   end
+
+  test 'get a repository by purl' do
+    get api_v1_repositories_lookup_path(purl: 'pkg:github/ecosyste-ms/repos')
+    assert_response :success
+    assert_template 'repositories/show', file: 'repositories/show.json.jbuilder'
+    
+    actual_response = JSON.parse(@response.body)
+
+    assert_equal actual_response["full_name"], @repository.full_name
+  end
 end

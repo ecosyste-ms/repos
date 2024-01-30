@@ -55,12 +55,24 @@ class Api::V1::RepositoriesController < Api::V1::ApplicationController
   end
 
   def lookup
-    url = params[:url]
-    parsed_url = Addressable::URI.parse(url)
-    @host = Host.find_by_domain(parsed_url.host)
-    raise ActiveRecord::RecordNotFound unless @host
-    path = parsed_url.path.delete_prefix('/').chomp('/')
-    @repository = @host.find_repository(path.downcase)
+    if params[:url].present?
+      url = params[:url]
+      parsed_url = Addressable::URI.parse(url)
+      @host = Host.find_by_domain(parsed_url.host)
+      raise ActiveRecord::RecordNotFound unless @host
+      path = parsed_url.path.delete_prefix('/').chomp('/')
+      @repository = @host.find_repository(path.downcase)
+    elsif params[:purl].present?
+      purl = PackageURL.parse(params[:purl])
+      if purl.qualifiers.present? && purl.qualifiers['repository_url'].present?
+        @host = Host.find_by_url(purl.qualifiers['repository_url'])
+      else
+        @host = Host.kind(purl.type).first # TODO gitlab and codeberg defaults 
+      end
+      raise ActiveRecord::RecordNotFound unless @host
+      path = purl.namespace + '/' + purl.name
+      @repository = @host.find_repository(path.downcase)
+    end
     if @repository
       @repository.sync_async unless @repository.last_synced_at.present? && @repository.last_synced_at > 1.hour.ago
       render :show
