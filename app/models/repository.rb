@@ -385,6 +385,8 @@ class Repository < ApplicationRecord
         "https://otechie.com/#{v}"
       when "patreon"
         "https://patreon.com/#{v}"
+      when "polar"
+        "https://polar.sh/#{v}"
       else
         v
       end
