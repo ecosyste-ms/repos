@@ -200,7 +200,7 @@ GEM
     oj (3.16.3)
       bigdecimal (>= 3.0)
     packageurl-ruby (0.1.0)
-    pagy (6.4.4)
+    pagy (7.0.0)
     pg (1.5.4)
     pg_query (5.1.0)
       google-protobuf (>= 3.22.3)
