@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2024_01_16_161040) do
+ActiveRecord::Schema[7.1].define(version: 2024_03_01_130407) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -82,6 +82,7 @@ ActiveRecord::Schema[7.1].define(version: 2024_01_16_161040) do
     t.json "metadata", default: {}
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "total_stars"
     t.index "host_id, lower((login)::text)", name: "index_owners_on_host_id_lower_login", unique: true
     t.index ["host_id", "uuid"], name: "index_owners_on_host_id_uuid", unique: true
     t.index ["last_synced_at"], name: "index_owners_on_last_synced_at"
