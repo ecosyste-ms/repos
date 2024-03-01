@@ -248,6 +248,7 @@ class Host < ApplicationRecord
     owner.assign_attributes(owner_hash)
     owner.last_synced_at = Time.now
     owner.repositories_count = repositories.where(owner: owner.login).count
+    owner.total_stars = repositories.where(owner: owner.login).sum(:stargazers_count)
     owner.save!
     owner.sync_repositories
     owner
