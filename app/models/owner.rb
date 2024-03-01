@@ -93,6 +93,10 @@ class Owner < ApplicationRecord
     update_column(:repositories_count, repositories.count)
   end
 
+  def update_total_stars
+    update_column(:total_stars, repositories.sum(:stargazers_count))
+  end
+
   def sync_repositories
     host.sync_owner_repositories_async(self)
   end
