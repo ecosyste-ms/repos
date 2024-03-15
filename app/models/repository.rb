@@ -387,6 +387,8 @@ class Repository < ApplicationRecord
         "https://patreon.com/#{v}"
       when "polar"
         "https://polar.sh/#{v}"
+      when 'buy_me_a_coffee'
+        "https://buymeacoffee.com/#{v}"
       else
         v
       end
