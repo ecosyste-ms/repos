@@ -1154,6 +1154,12 @@ components:
           type: string
         html_url:
           type: string
+        funding_links:
+          type: array
+          items:
+            type: string
+        total_stars:
+          type: integer
     Topic:
       type: object
       properties:
