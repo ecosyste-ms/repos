@@ -146,7 +146,7 @@ module Hosts
       repository.id_or_name
     end
 
-    def update_from_host(repository, token = nil)
+    def update_from_host(repository, token = nil, retrying_clash = nil)
       puts "updating #{repository.full_name} (uuid: #{repository.uuid})"
       begin
         r = self.fetch_repository(repository_id_or_name(repository))
@@ -154,7 +154,7 @@ module Hosts
         repository.uuid = r[:id] unless repository.uuid.to_s == r[:id].to_s
         if repository.full_name.downcase != r[:full_name].downcase
           clash = repository.host.repositories.find_by('lower(full_name) = ?', r[:full_name].downcase)
-          if clash && (!clash.host.host_instance.update_from_host(clash) || clash.status == "Removed")
+          if clash && (!retrying_clash && !clash.host.host_instance.update_from_host(clash, nil, true) || clash.status == "Removed")
             clash.destroy
           end
           repository.full_name = r[:full_name]
