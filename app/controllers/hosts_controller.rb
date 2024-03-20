@@ -1,4 +1,8 @@
 class HostsController < ApplicationController
+  def index
+    redirect_to root_path
+  end
+  
   def show
     @host = Host.find_by_name!(params[:id])
 
