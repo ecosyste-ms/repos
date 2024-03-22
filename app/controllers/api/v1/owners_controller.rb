@@ -43,7 +43,7 @@ class Api::V1::OwnersController < Api::V1::ApplicationController
     end
 
     @pagy, @repositories = pagy_countless(scope)
-    if state?(@repositories, public: true)
+    if stale?(@repositories, public: true)
       render 'api/v1/repositories/index'
     end
   end
