@@ -10,5 +10,7 @@ class Api::V1::ManifestsController < Api::V1::ApplicationController
     else
       @pagy, @manifests = pagy(@repository.manifests.includes(:dependencies))
     end
+
+    fresh_when(@manifests, public: true)
   end
 end

@@ -23,6 +23,7 @@ class Api::V1::TagsController < Api::V1::ApplicationController
       end
 
       @pagy, @tags = pagy(scope)
+      fresh_when @tags, public: true
     end
   end
 

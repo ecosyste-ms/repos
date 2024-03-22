@@ -17,6 +17,7 @@ class Api::V1::RepositoriesController < Api::V1::ApplicationController
     end
 
     @pagy, @repositories = pagy_countless(scope)
+    fresh_when @repositories, public: true
   end
 
   def names
@@ -37,7 +38,9 @@ class Api::V1::RepositoriesController < Api::V1::ApplicationController
     end
 
     @pagy, @repositories = pagy_countless(scope, max_items: 10000)
-    render json: @repositories.pluck(:full_name)
+    if state?(@repositories, public: true)
+      render json: @repositories.pluck(:full_name)
+    end
   end
 
   def show
@@ -77,7 +80,7 @@ class Api::V1::RepositoriesController < Api::V1::ApplicationController
     end
     if @repository
       @repository.sync_async unless @repository.last_synced_at.present? && @repository.last_synced_at > 1.hour.ago
-      render :show
+      render :show if state?(@repository, public: true)
     else
       @host.sync_repository_async(path) if path.present?
       render json: { error: 'Repository not found' }, status: :not_found

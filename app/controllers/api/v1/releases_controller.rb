@@ -23,6 +23,7 @@ class Api::V1::ReleasesController < Api::V1::ApplicationController
       end
 
       @pagy, @releases = pagy(scope)
+      fresh_when @releases, public: true
     end
   end
 

@@ -3,6 +3,7 @@ class Api::V1::TopicsController < Api::V1::ApplicationController
     topics = Repository.topics
 
     @pagy, @topics = pagy_array(topics)
+    fresh_when @topics, public: true
   end
 
   def show
@@ -25,5 +26,6 @@ class Api::V1::TopicsController < Api::V1::ApplicationController
     end
 
     @pagy, @repositories = pagy(scope)
+    fresh_when @repositories, public: true
   end
 end

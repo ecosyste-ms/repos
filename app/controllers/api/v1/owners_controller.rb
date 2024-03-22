@@ -15,6 +15,7 @@ class Api::V1::OwnersController < Api::V1::ApplicationController
     end
 
     @pagy, @owners = pagy_countless(scope)
+    fresh_when @owners, public: true
   end
 
   def show
@@ -42,7 +43,9 @@ class Api::V1::OwnersController < Api::V1::ApplicationController
     end
 
     @pagy, @repositories = pagy_countless(scope)
-    render 'api/v1/repositories/index'
+    if state?(@repositories, public: true)
+      render 'api/v1/repositories/index'
+    end
   end
 
   def ping
@@ -63,5 +66,6 @@ class Api::V1::OwnersController < Api::V1::ApplicationController
     end
 
     @pagy, @owners = pagy_countless(scope)
+    fresh_when @owners, public: true
   end
 end
