@@ -20,6 +20,7 @@ class Api::V1::OwnersController < Api::V1::ApplicationController
   def show
     @host = Host.find_by_name!(params[:host_id])
     @owner = @host.owners.find_by!('lower(login) = ?', params[:id].downcase)
+    fresh_when @owner, public: true
   end
 
   def repositories

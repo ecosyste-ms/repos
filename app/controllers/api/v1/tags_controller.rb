@@ -31,5 +31,6 @@ class Api::V1::TagsController < Api::V1::ApplicationController
     @repository = @host.find_repository(params[:repository_id].downcase)
     raise ActiveRecord::RecordNotFound if @repository.nil?
     @tag = @repository.tags.find_by_name!(params[:id])
+    fresh_when @tag, public: true
   end
 end

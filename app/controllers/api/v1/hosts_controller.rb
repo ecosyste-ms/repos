@@ -5,5 +5,6 @@ class Api::V1::HostsController < Api::V1::ApplicationController
 
   def show
     @host = Host.find_by_name!(params[:id])
+    fresh_when @host, public: true
   end
 end

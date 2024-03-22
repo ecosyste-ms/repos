@@ -31,5 +31,6 @@ class Api::V1::ReleasesController < Api::V1::ApplicationController
     @repository = @host.find_repository(params[:repository_id].downcase)
     raise ActiveRecord::RecordNotFound if @repository.nil?
     @release = @repository.releases.find_by_tag_name!(params[:id])
+    fresh_when @release, public: true
   end
 end

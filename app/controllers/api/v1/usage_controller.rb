@@ -11,6 +11,7 @@ class Api::V1::UsageController < Api::V1::ApplicationController
 
   def show
     @usage = PackageUsage.find_by(ecosystem: params[:ecosystem], name: params[:name])
+    fresh_when @usage, public: true
     if @usage.nil?
       if Dependency.where(ecosystem: params[:ecosystem], package_name: params[:name]).any?
         @usage = PackageUsage.create({
