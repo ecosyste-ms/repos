@@ -2,13 +2,14 @@ class OwnersController < ApplicationController
   def index
     @host = Host.find_by_name!(params[:host_id])
     @pagy, @owners = pagy_countless(@host.owners.order('repositories_count DESC'))
+    expires_in 1.day, public: true
   end
 
   def show
     @host = Host.find_by_name!(params[:host_id])
     @owner = params[:id]
     @owner_record = @host.owners.find_by('lower(login) = ?', @owner.downcase)
-
+    fresh_when(@owner_record, public: true)
     scope = @host.repositories.owner(@owner)
     
     if params[:sort].present? || params[:order].present?

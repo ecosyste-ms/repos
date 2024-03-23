@@ -2,6 +2,7 @@ class RepositoriesController < ApplicationController
   def show
     @host = Host.find_by_name!(params[:host_id])
     @repository = @host.find_repository(params[:id].downcase)
+    fresh_when(@repository, public: true)
     if @repository.nil?
       @host.sync_repository_async(params[:id])
       raise ActiveRecord::RecordNotFound
