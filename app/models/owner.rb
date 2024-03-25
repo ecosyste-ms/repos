@@ -92,11 +92,27 @@ class Owner < ApplicationRecord
   end
 
   def update_repositories_count
-    update_column(:repositories_count, repositories.count)
+    update_column(:repositories_count, fetch_repositories_count)
   end
 
   def update_total_stars
-    update_column(:total_stars, repositories.sum(:stargazers_count))
+    update_column(:total_stars, fetch_total_stars)
+  end
+
+  def fetch_repositories_count
+    repos = 0
+    repositories.each_instance do |repo|
+      repos += 1
+    end
+    repos
+  end
+
+  def fetch_total_stars
+    stars = 0
+    repositories.each_instance do |repo|
+      stars += repo.stargazers_count
+    end
+    stars
   end
 
   def sync_repositories
