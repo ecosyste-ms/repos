@@ -303,6 +303,12 @@ module Hosts
               twitterUsername
               avatarUrl
               company
+              followers {
+                totalCount
+              }
+              following {
+                totalCount
+              } 
             }
             ... on Organization{
               hasSponsorsListing
@@ -320,7 +326,8 @@ module Hosts
       GRAPHQL
       res = api_client.post('/graphql', { query: query }.to_json).to_h
       return nil unless res && res[:data] && res[:data][:repositoryOwner].present?
-      {
+      
+      hash = {
         login: res[:data][:repositoryOwner][:login],
         name: res[:data][:repositoryOwner][:name],
         uuid: res[:data][:repositoryOwner][:databaseId],
@@ -332,10 +339,22 @@ module Hosts
         company: res[:data][:repositoryOwner][:company],
         kind: res[:data][:repositoryOwner][:__typename].downcase,
         avatar_url: res[:data][:repositoryOwner][:avatarUrl],
+        followers: res.dig(:data, :repositoryOwner, :followers, :totalCount),
+        following: res.dig(:data, :repositoryOwner, :following, :totalCount),
         metadata: {
           has_sponsors_listing: res[:data][:repositoryOwner][:hasSponsorsListing]
         }
       }
+      if res[:data][:repositoryOwner][:__typename].downcase == 'organization'
+        begin
+          rest_res = api_client.organization(login)
+          hash[:followers] = rest_res[:followers]
+          hash[:following] = rest_res[:following]
+        rescue
+          nil
+        end
+      end
+      hash
     end
 
     def recently_changed_repo_names(since = 1.hour)

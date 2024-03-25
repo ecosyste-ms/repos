@@ -1160,6 +1160,10 @@ components:
             type: string
         total_stars:
           type: integer
+        followers:
+          type: integer
+        following:
+          type: integer
     Topic:
       type: object
       properties:
