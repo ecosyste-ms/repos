@@ -100,19 +100,11 @@ class Owner < ApplicationRecord
   end
 
   def fetch_repositories_count
-    repos = 0
-    repositories.each_instance do |repo|
-      repos += 1
-    end
-    repos
+    repositories.each_instance.inject(0) { |repos, _| repos + 1 }
   end
 
   def fetch_total_stars
-    stars = 0
-    repositories.each_instance do |repo|
-      stars += repo.stargazers_count
-    end
-    stars
+    repositories.each_instance.sum(&:stargazers_count)
   end
 
   def sync_repositories
