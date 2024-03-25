@@ -8,11 +8,12 @@ class UsageController < ApplicationController
     @ecosystem = params[:ecosystem]
     @scope = PackageUsage.where(ecosystem: @ecosystem).select('ecosystem,name,dependents_count,package').order('dependents_count DESC')
     @pagy, @package_usages = pagy_countless(@scope)
-    fresh_when @package_usages, public: true
+    expires_in 1.day, public: true
   end
 
   def show
     @package_usage = PackageUsage.find_by(ecosystem: params[:ecosystem], name: params[:name])
+    fresh_when @package_usage, public: true
     if @package_usage.nil?
       if Dependency.where(ecosystem: params[:ecosystem], package_name: params[:name]).any?
         @package_usage = PackageUsage.create({
@@ -25,7 +26,6 @@ class UsageController < ApplicationController
         raise ActiveRecord::RecordNotFound
       end
     end
-    fresh_when @package_usage, public: true
     @scope = Dependency.where(ecosystem: @package_usage.ecosystem, package_name: @package_usage.name).includes(:manifest, {repository: :host})
     @pagy, @dependencies = pagy_countless(@scope)
   end
