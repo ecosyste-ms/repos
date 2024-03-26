@@ -80,7 +80,7 @@ GEM
     after_commit_action (1.1.0)
       activerecord (>= 3.0.0)
       activesupport (>= 3.0.0)
-    appsignal (3.6.3)
+    appsignal (3.6.4)
       rack
     autoprefixer-rails (10.4.16.0)
       execjs (~> 2)
@@ -277,7 +277,7 @@ GEM
       redis-client (>= 0.17.0)
     redis-client (0.21.1)
       connection_pool
-    reline (0.4.3)
+    reline (0.5.0)
       io-console (~> 0.5)
     rexml (3.2.6)
     rswag-api (2.13.0)
