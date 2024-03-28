@@ -20,6 +20,7 @@ Rails.application.routes.draw do
       get 'usage', to: 'usage#index', as: :usage_index
       get 'usage/:ecosystem', to: 'usage#ecosystem', as: :ecosystem_usage
       get 'usage/:ecosystem/:name/dependencies', to: 'dependencies#index', as: :usage_dependencies, constraints: { name: /.*/ }
+      get 'usage/:ecosystem/:name/dependent_repositories', to: 'usage#dependent_repositories', as: :usage_dependent_repositories, constraints: { name: /.*/ }
       get 'usage/:ecosystem/:name/ping', to: 'usage#ping', as: :ping_usage, constraints: { name: /.*/ }
       get 'usage/:ecosystem/:name', to: 'usage#show', as: :usage, constraints: { name: /.*/ }
 

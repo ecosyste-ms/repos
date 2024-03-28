@@ -28,6 +28,12 @@ class Api::V1::UsageController < Api::V1::ApplicationController
     end
   end
 
+  def dependent_repositories
+    @usage = PackageUsage.find_by(ecosystem: params[:ecosystem], name: params[:name])
+    @pagy, @repositories = pagy_countless(@usage.repositories.includes(:host))
+    fresh_when @repositories, public: true
+  end
+
   def ping
     @usage = PackageUsage.find_by(ecosystem: params[:ecosystem], name: params[:name])
     if @usage
