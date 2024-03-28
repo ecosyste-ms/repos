@@ -25,7 +25,7 @@ class Api::V1::TopicsController < Api::V1::ApplicationController
       scope = scope.order(sort_options)
     end
 
-    @pagy, @repositories = pagy(scope)
+    @pagy, @repositories = pagy_countless(scope)
     fresh_when @repositories, public: true
   end
 end

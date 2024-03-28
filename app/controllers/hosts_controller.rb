@@ -50,7 +50,7 @@ class HostsController < ApplicationController
 
     @related_topics = (scope.pluck(:topics).flatten - [@keyword]).inject(Hash.new(0)) { |h, e| h[e] += 1; h }.sort_by { |_, v| -v }.first(100)
 
-    @pagy, @repositories = pagy(scope)
+    @pagy, @repositories = pagy_countless(scope)
     expires_in 1.day, public: true
   end
 end

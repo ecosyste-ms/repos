@@ -22,7 +22,7 @@ class Api::V1::TagsController < Api::V1::ApplicationController
         scope = scope.order('published_at DESC')
       end
 
-      @pagy, @tags = pagy(scope)
+      @pagy, @tags = pagy_countless(scope)
       fresh_when @tags, public: true
     end
   end

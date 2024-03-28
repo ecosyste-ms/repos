@@ -7,7 +7,7 @@ class Api::V1::UsageController < Api::V1::ApplicationController
   def ecosystem
     @ecosystem = params[:ecosystem]
     @scope = PackageUsage.where(ecosystem: @ecosystem).order('dependents_count DESC')
-    @pagy, @package_usages = pagy(@scope)
+    @pagy, @package_usages = pagy_countless(@scope)
     fresh_when @package_usages, public: true
   end
 

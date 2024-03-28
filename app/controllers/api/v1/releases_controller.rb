@@ -22,7 +22,7 @@ class Api::V1::ReleasesController < Api::V1::ApplicationController
         scope = scope.order('published_at DESC')
       end
 
-      @pagy, @releases = pagy(scope)
+      @pagy, @releases = pagy_countless(scope)
       fresh_when @releases, public: true
     end
   end
