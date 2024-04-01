@@ -8,7 +8,6 @@ gem "sprockets-rails"
 gem "pg"
 gem "puma"
 gem "jbuilder"
-gem "tzinfo-data", platforms: %i[ mingw mswin x64_mingw jruby ]
 gem "bootsnap", require: false
 gem "sassc-rails"
 gem "faraday"
@@ -45,10 +44,6 @@ gem 'counter_culture'
 gem 'after_commit_action'
 gem 'postgresql_cursor'
 gem 'packageurl-ruby', require: 'package_url'
-
-group :development, :test do
-  gem "debug", platforms: %i[ mri mingw x64_mingw ]
-end
 
 group :development do
   gem "web-console"
