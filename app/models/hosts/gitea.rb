@@ -131,6 +131,7 @@ module Hosts
       end
       resp = api_client.get(url)
       return nil unless resp.success? && resp.body.present?
+      return nil if resp.body['private']
       map_repository_data(resp.body)
     end
 

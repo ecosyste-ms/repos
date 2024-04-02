@@ -142,6 +142,8 @@ module Hosts
 
     def fetch_repository(full_name)
       project = api_client.project(full_name, license: true)
+      return nil if project.visibility != "public"
+
       repo_hash = project.to_hash.with_indifferent_access.slice(:id, :description, :created_at, :name, :open_issues_count, :forks_count, :default_branch, :archived, :topics)
 
       repo_hash.merge!({

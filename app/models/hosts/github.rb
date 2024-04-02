@@ -110,6 +110,7 @@ module Hosts
     def fetch_repository(id_or_name)
       id_or_name = id_or_name.to_i if id_or_name.match(/\A\d+\Z/)
       hash = api_client.repo(id_or_name, accept: 'application/vnd.github.drax-preview+json,application/vnd.github.mercy-preview+json').to_hash.with_indifferent_access
+      return nil if hash[:private]
       map_repository_data(hash)
     end
 
