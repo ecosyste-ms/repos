@@ -9,17 +9,12 @@
     <li class="nav-item">
       <a class="nav-link active" aria-current="page">
         Repositories
-        <span class="badge bg-secondary rounded-pill">
-          <%= number_with_delimiter @pagy.count %>
-        </span>
       </a>
     </li>
     <%= render 'sort' %>
   </ul>
 
-
-
-    <div class='row'>
+  <div class='row'>
     <div class='col-md-8'>
       <%= render @repositories %>
       <%== pagy_bootstrap_nav(@pagy) if @pagy.pages > 1 %>  
