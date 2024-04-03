@@ -20,12 +20,12 @@ Rails.application.routes.draw do
       get 'usage', to: 'usage#index', as: :usage_index
       get 'usage/:ecosystem', to: 'usage#ecosystem', as: :ecosystem_usage
       get 'usage/:ecosystem/:name/dependencies', to: 'dependencies#index', as: :usage_dependencies, constraints: { name: /.*/ }
-      get 'usage/:ecosystem/:name/dependent_repositories', to: 'usage#dependent_repositories', as: :usage_dependent_repositories, constraints: { name: /.*/ }
-      get 'usage/:ecosystem/:name/ping', to: 'usage#ping', as: :ping_usage, constraints: { name: /.*/ }
-      get 'usage/:ecosystem/:name', to: 'usage#show', as: :usage, constraints: { name: /.*/ }
+      get 'usage/:ecosystem/:name/dependent_repositories', to: 'usage#dependent_repositories', as: :usage_dependent_repositories, constraints: { name: /.*/ }, defaults: { format: :json }
+      get 'usage/:ecosystem/:name/ping', to: 'usage#ping', as: :ping_usage, constraints: { name: /.*/ }, defaults: { format: :json }
+      get 'usage/:ecosystem/:name', to: 'usage#show', as: :usage, constraints: { name: /.*/ }, defaults: { format: :json }
 
       get 'repositories/lookup', to: 'repositories#lookup', as: :repositories_lookup
-      resources :hosts, constraints: { id: /.*/ }, only: [:index, :show] do
+      resources :hosts, constraints: { id: /.*/ }, defaults: { format: :json }, only: [:index, :show] do
         resources :owners, only:[:index, :show] do
           collection do
             get :lookup
@@ -35,7 +35,7 @@ Rails.application.routes.draw do
             get :ping
           end
         end
-        resources :repositories, constraints: { id: /.*/ }, only: [:index, :show] do
+        resources :repositories, constraints: { id: /.*/ }, defaults: { format: :json }, only: [:index, :show] do
           resources :tags do
             resources :manifests, only: [:index]
           end
@@ -65,7 +65,7 @@ Rails.application.routes.draw do
 
   get '/usage', to: 'usage#index', as: :usage_index
   get 'usage/:ecosystem', to: 'usage#ecosystem', as: :ecosystem_usage
-  get 'usage/:ecosystem/:name', to: 'usage#show', as: :usage, constraints: { name: /.*/ }
+  get 'usage/:ecosystem/:name', to: 'usage#show', as: :usage, constraints: { name: /.*/ }, defaults: { format: :html }
 
   resources :hosts, constraints: { id: /.*/ }, only: [:index, :show], :defaults => {:format => :html} do
     resources :repositories, constraints: { id: /.*/ }, only: [:index, :show] do
@@ -88,7 +88,7 @@ Rails.application.routes.draw do
     end
   end
 
-  resources :topics, only: [:index, :show], constraints: { id: /.*/ }
+  resources :topics, only: [:index, :show], constraints: { id: /.*/ }, defaults: { format: :html }
 
   resources :exports, only: [:index], path: 'open-data'
 
