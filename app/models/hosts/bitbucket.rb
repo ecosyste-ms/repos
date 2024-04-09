@@ -115,6 +115,7 @@ module Hosts
       resp = api_client.get("/2.0/repositories/#{user_name}/#{repo_name.downcase}")
       return nil unless resp.success?
       project = resp.body
+      return nil if project['is_private']
       repo_hash = project.to_hash.with_indifferent_access.slice(:description, :uuid, :language, :full_name, :has_wiki, :has_issues, :scm)
 
       repo_hash.merge!({
