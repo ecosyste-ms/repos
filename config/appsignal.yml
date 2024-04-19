@@ -6,3 +6,5 @@ production:
     - Rack::Timeout::RequestTimeoutException
     - Octokit::ServerError
     - Faraday::ConnectionFailed 
+    - Faraday::TimeoutError
+    - Addressable::URI::InvalidURIError

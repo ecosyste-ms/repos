@@ -169,7 +169,11 @@ module Hosts
           if repository.pushed_at_changed?
             repository.files_changed = true
           end
-          repository.save! 
+          begin
+            repository.save! 
+          rescue ActiveRecord::RecordNotUnique
+            # duplicate repository
+          end
           # repository.download_tags_async
         else
           repository.update_column(:last_synced_at, Time.now)
