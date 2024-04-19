@@ -38,7 +38,11 @@ class RepositoryUsage < ApplicationRecord
 
     package_usages = unique_dependencies.map do |ecosystem, package_name|
       if package_name.match(/\w/)
-        existing_package_usages.find{|pu| pu.key == "#{ecosystem}:#{package_name}"} || PackageUsage.where(ecosystem: ecosystem, name: package_name, key: "#{ecosystem}:#{package_name}").first_or_create!
+        begin
+          existing_package_usages.find{|pu| pu.key == "#{ecosystem}:#{package_name}"} || PackageUsage.where(ecosystem: ecosystem, name: package_name, key: "#{ecosystem}:#{package_name}").first_or_create!
+        rescue PG::UniqueViolation
+          # duplicate key
+        end
       else
         nil
       end
