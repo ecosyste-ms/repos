@@ -317,6 +317,8 @@ class Repository < ApplicationRecord
       roadmap:          file_list.find{|file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?ROADMAP/i) },
       authors:          file_list.find{|file| file.match(/^AUTHORS/i) },
       dei:              file_list.find{|file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?DEI/i) },
+      publiccode:       file_list.find{|file| file.match(/^publiccode.yml/i) },
+      codemeta:         file_list.find{|file| file.match(/^codemeta.json/i) },
     }
   end
 
