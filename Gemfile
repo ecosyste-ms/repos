@@ -56,6 +56,7 @@ gem 'enum_help'
 
 group :development do
   gem "web-console"
+  gem "pry"
 end
 
 group :test do

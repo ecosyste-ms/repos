@@ -113,6 +113,7 @@ GEM
     crass (1.0.6)
     csv (3.3.0)
     date (3.3.4)
+    domain_name (0.6.20240107)
     drb (2.2.1)
     enum_help (0.0.19)
       activesupport (>= 3.0.0)
@@ -195,6 +196,10 @@ GEM
       net-pop
       net-smtp
     marcel (1.0.4)
+    method_source (1.1.0)
+    mime-types (3.5.2)
+      mime-types-data (~> 3.2015)
+    mime-types-data (3.2024.0305)
     mini_mime (1.1.5)
     mini_portile2 (2.8.7)
     minitest (5.24.0)
@@ -243,6 +248,9 @@ GEM
     popper_js (2.11.8)
     postgresql_cursor (0.6.9)
       activerecord (>= 6.0)
+    pry (0.14.2)
+      coderay (~> 1.1)
+      method_source (~> 1.0)
     psych (5.1.2)
       stringio
     public_suffix (6.0.0)
@@ -419,6 +427,7 @@ DEPENDENCIES
   pg_query
   pghero
   postgresql_cursor
+  pry
   puma
   rack-attack
   rack-attack-rate-limit
@@ -427,6 +436,7 @@ DEPENDENCIES
   rails-controller-testing
   rails-i18n
   redis
+  rest-client
   rswag-api
   rswag-ui
   sanitize-url

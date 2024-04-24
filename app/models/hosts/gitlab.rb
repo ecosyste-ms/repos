@@ -1,3 +1,6 @@
+require 'nokogiri'
+require 'rest-client'
+
 module Hosts
   class Gitlab < Base
     IGNORABLE_EXCEPTIONS = [::Gitlab::Error::NotFound,
@@ -139,15 +142,25 @@ module Hosts
       end
     end
 
+    def api_token
+      @api_token ||= REDIS.get("gitlab_token:#{@host.id}")
+    end
+
     def api_client
-      ::Gitlab.client(endpoint: "#{@host.url}/api/v4", private_token:  REDIS.get("gitlab_token:#{@host.id}"))
+      ::Gitlab.client(endpoint: "#{@host.url}/api/v4", private_token: api_token)
     end
 
     def fetch_repository(full_name)
-      project = api_client.project(full_name, license: true)
+      project = 
+        if api_token.present?
+          api_client.project(full_name, license: true)
+        else
+          anon_crawl_project_by_id(anon_fetch_repository_id(full_name))
+        end
+
       return nil if project.visibility != "public"
 
-      repo_hash = project.to_hash.with_indifferent_access.slice(:id, :description, :created_at, :name, :open_issues_count, :forks_count, :default_branch, :archived, :topics)
+      repo_hash = project.to_h.with_indifferent_access.slice(:id, :description, :created_at, :name, :open_issues_count, :forks_count, :default_branch, :archived, :topics)
 
       repo_hash.merge!({
         uuid: project.id,
@@ -170,6 +183,33 @@ module Hosts
       repo_hash[:license] = project.license.try(:key)
 
       return repo_hash.slice(*repository_columns)
+    end
+
+    def anon_fetch_repository_id(full_name)
+      repo_url = "#{@host.url}/#{full_name}"
+      body =  RestClient.get(repo_url).body
+      doc = Nokogiri::HTML(body)
+      id = doc.css("[data-testid=project-id-content]")&.first&.children&.text&.split(":")&.second&.strip
+    end
+
+    def anon_crawl_project_by_id(id)
+      Rails.logger.debug("Gitlab: Fetching project with ID: #{id}")
+      # We get random 500 errors from GitLab, so we retry a few times
+      try = 0
+      begin
+        try += 1
+        page = RestClient.get("#{@host.url}/api/v4/projects/#{id}/")
+      rescue RestClient::InternalServerError => e
+        Rails.logger.error("Gitlab: Error fetching project with ID: #{id}: #{e.message}")
+        sleep 0.5 * try
+        retry if try < 3
+      end
+      project = JSON.parse(
+          page,
+          object_class: OpenStruct
+      )
+      project.visibility = "public" # We get it from a nonauthenticated public endpoint
+      project
     end
 
     def crawl_repositories_async
