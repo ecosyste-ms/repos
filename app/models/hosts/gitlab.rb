@@ -1,4 +1,3 @@
-require 'nokogiri'
 require 'rest-client'
 
 module Hosts
