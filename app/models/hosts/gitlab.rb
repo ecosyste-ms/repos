@@ -196,7 +196,6 @@ module Hosts
 
     def fetch_repository(full_name)
       project = api_client.project(full_name, license: true)
-
       return nil if project.visibility != "public"
 
       repo_hash = project.to_h.with_indifferent_access.slice(:id, :description, :created_at, :name, :open_issues_count, :forks_count, :default_branch, :archived, :topics)
@@ -258,7 +257,6 @@ module Hosts
 
     def fetch_owner(login)
       search = api_client.get "/users?username=#{login}"
-
       if search.present?
         user = search.first.to_hash
         id = user["id"]
