@@ -155,7 +155,11 @@ module Hosts
         if api_token.present?
           api_client.project(full_name, license: true)
         else
-          anon_crawl_project_by_id(anon_fetch_repository_id(full_name))
+          if full_name.to_i.to_s == full_name
+            anon_crawl_project_by_id(full_name)
+          else
+            anon_crawl_project_by_id(anon_fetch_repository_id(full_name))
+          end
         end
 
       return nil if project.visibility != "public"
@@ -187,6 +191,7 @@ module Hosts
 
     def anon_fetch_repository_id(full_name)
       repo_url = "#{@host.url}/#{full_name}"
+      Rails.logger.debug("Gitlab: Fetching project ID from URL: #{repo_url}")
       body =  RestClient.get(repo_url).body
       doc = Nokogiri::HTML(body)
       id = doc.css("[data-testid=project-id-content]")&.first&.children&.text&.split(":")&.second&.strip
