@@ -1,5 +1,3 @@
-require 'rest-client'
-
 module Hosts
   class Gitlab < Base
     class GitlabAnonClient
