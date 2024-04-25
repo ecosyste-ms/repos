@@ -3,6 +3,49 @@ require 'rest-client'
 
 module Hosts
   class Gitlab < Base
+    class GitlabAnonClient
+      def initialize(endpoint:)
+        Rails.logger.info("Gitlab: Using anonymous client for endpoint #{endpoint}")
+        @endpoint = endpoint
+        @gitlab_client = ::Gitlab.client(endpoint: endpoint)
+      end
+
+      def tags(id_or_full_name, &block)
+        # return an iterator if no block is given
+        return enum_for(__callee__, id_or_full_name) unless block_given?
+
+        per_page = 100
+        page = 1
+        loop do
+          url = "#{@endpoint}/projects/#{CGI.escape(id_or_full_name)}/repository/tags?search=&per_page=#{per_page}&page=#{page}"
+          Rails.logger.debug("Gitlab: Fetching tags from URL: #{url}")
+          response = RestClient.get(url)
+          tags = JSON.parse(response.body, object_class: OpenStruct)
+          Rails.logger.debug("Gitlab: Fetched #{tags.count} tags")
+          tags.each do |tag|
+            yield tag
+          end
+          return if tags.count < per_page
+          page += 1
+        end
+      end
+
+      def project(id_or_full_name, license: false)
+        url = "#{@endpoint}/projects/#{CGI.escape(id_or_full_name)}?license=#{license}"
+        Rails.logger.debug("Gitlab: Fetching project from URL: #{url}")
+
+        response = RestClient.get(url)
+        project = JSON.parse(response.body, object_class: OpenStruct)
+        project.visibility = "public" # We get it from a nonauthenticated public endpoint
+        project
+      end
+
+      def method_missing(method, *args, &block)
+        Rails.logger.warn("Gitlab: delegating unauthenticated, non implemented method #{method} to Gitlab client, it should fail.")
+        @gitlab_client.send(method, *args, &block)
+      end
+    end
+
     IGNORABLE_EXCEPTIONS = [::Gitlab::Error::NotFound,
                             ::Gitlab::Error::Forbidden,
                             ::Gitlab::Error::Unauthorized,
@@ -147,20 +190,15 @@ module Hosts
     end
 
     def api_client
-      ::Gitlab.client(endpoint: "#{@host.url}/api/v4", private_token: api_token)
+      if api_token.present?
+        ::Gitlab.client(endpoint: "#{@host.url}/api/v4", private_token: api_token)
+      else
+        GitlabAnonClient.new(endpoint: "#{@host.url}/api/v4")
+      end
     end
 
     def fetch_repository(full_name)
-      project = 
-        if api_token.present?
-          api_client.project(full_name, license: true)
-        else
-          if full_name.to_i.to_s == full_name
-            anon_crawl_project_by_id(full_name)
-          else
-            anon_crawl_project_by_id(anon_fetch_repository_id(full_name))
-          end
-        end
+      project = api_client.project(full_name, license: true)
 
       return nil if project.visibility != "public"
 
@@ -187,35 +225,6 @@ module Hosts
       repo_hash[:license] = project.license.try(:key)
 
       return repo_hash.slice(*repository_columns)
-    end
-
-    def anon_fetch_repository_id(full_name)
-      repo_url = "#{@host.url}/#{full_name}"
-      Rails.logger.debug("Gitlab: Fetching project ID from URL: #{repo_url}")
-      body =  RestClient.get(repo_url).body
-      doc = Nokogiri::HTML(body)
-      id = doc.css("[data-testid=project-id-content]")&.first&.children&.text&.split(":")&.second&.strip
-    end
-
-    def anon_crawl_project_by_id(id)
-      raise "No ID provided" if id.nil?
-      Rails.logger.debug("Gitlab: Fetching project with ID: #{id}")
-      # We get random 500 errors from GitLab, so we retry a few times
-      try = 0
-      begin
-        try += 1
-        page = RestClient.get("#{@host.url}/api/v4/projects/#{id}/")
-      rescue RestClient::InternalServerError => e
-        Rails.logger.error("Gitlab: Error fetching project with ID: #{id}: #{e.message}")
-        sleep 0.5 * try
-        retry if try < 3
-      end
-      project = JSON.parse(
-          page,
-          object_class: OpenStruct
-      )
-      project.visibility = "public" # We get it from a nonauthenticated public endpoint
-      project
     end
 
     def crawl_repositories_async
@@ -252,7 +261,7 @@ module Hosts
 
     def fetch_owner(login)
       search = api_client.get "/users?username=#{login}"
-      
+
       if search.present?
         user = search.first.to_hash
         id = user["id"]
