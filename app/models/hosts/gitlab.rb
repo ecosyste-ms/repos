@@ -193,6 +193,7 @@ module Hosts
     end
 
     def anon_crawl_project_by_id(id)
+      raise "No ID provided" if id.nil?
       Rails.logger.debug("Gitlab: Fetching project with ID: #{id}")
       # We get random 500 errors from GitLab, so we retry a few times
       try = 0
