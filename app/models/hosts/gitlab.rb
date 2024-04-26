@@ -14,7 +14,7 @@ module Hosts
         per_page = 100
         page = 1
         loop do
-          url = "#{@endpoint}/projects/#{CGI.escape(id_or_full_name)}/repository/tags?search=&per_page=#{per_page}&page=#{page}"
+          url = "#{@endpoint}/projects/#{CGI.escape(id_or_full_name.to_s)}/repository/tags?search=&per_page=#{per_page}&page=#{page}"
           Rails.logger.debug("Gitlab: Fetching tags from URL: #{url}")
           response = RestClient.get(url)
           tags = JSON.parse(response.body, object_class: OpenStruct)
@@ -28,13 +28,54 @@ module Hosts
       end
 
       def project(id_or_full_name, license: false)
-        url = "#{@endpoint}/projects/#{CGI.escape(id_or_full_name)}?license=#{license}"
-        Rails.logger.debug("Gitlab: Fetching project from URL: #{url}")
+        url = "#{@endpoint}/projects/#{CGI.escape(id_or_full_name.to_s)}?license=#{license}"
+        Rails.logger.debug("Gitlab[projec]: Fetching project from URL: #{url}")
 
         response = RestClient.get(url)
         project = JSON.parse(response.body, object_class: OpenStruct)
         project.visibility = "public" # We get it from a nonauthenticated public endpoint
         project
+      end
+
+      def projects(per_page:, archived:, id_before:, simple:)
+        url = "#{@endpoint}/projects?per_page=#{per_page}&archived=#{archived}&id_before=#{id_before}&simple=#{simple}"
+        Rails.logger.debug("Gitlab[projects]: Fetching projects from URL: #{url}")
+
+        response = RestClient.get(url)
+        JSON.parse(response.body, object_class: OpenStruct)
+      end
+
+      def user(username)
+        # 403 forbidden
+        url = "#{@endpoint}/users/#{CGI.escape(username.to_s)}"
+        Rails.logger.debug("Gitlab[user]: Fetching user from URL: #{url}")
+
+        response = RestClient.get(url)
+        JSON.parse(response.body)
+      end
+
+      def group(username, with_projects:)
+        url = "#{@endpoint}/groups/#{CGI.escape(username)}?with_projects=#{with_projects}"
+        Rails.logger.debug("Gitlab[group]: Fetching group from URL: #{url}")
+
+        response = RestClient.get(url)
+        JSON.parse(response.body)
+      end
+
+      def group_projects(username, per_page:, archived:, simple:)
+        url = "#{@endpoint}/groups/#{CGI.escape(username)}/projects?per_page=#{per_page}&archived=#{archived}&simple=#{simple}"
+        Rails.logger.debug("Gitlab[group_projects]: Fetching group projects from URL: #{url}")
+
+        response = RestClient.get(url)
+        JSON.parse(response.body, object_class: OpenStruct)
+      end
+
+      def get(path, options = {})
+        url = "#{@endpoint}/#{path}"
+        Rails.logger.debug("Gitlab[get]: Fetching from URL: #{url}")
+
+        response = RestClient.get(url)
+        JSON.parse(response.body)
       end
 
       def method_missing(method, *args, &block)
@@ -45,6 +86,7 @@ module Hosts
 
     IGNORABLE_EXCEPTIONS = [::Gitlab::Error::NotFound,
                             ::Gitlab::Error::Forbidden,
+                            RestClient::Forbidden,
                             ::Gitlab::Error::Unauthorized,
                             ::Gitlab::Error::InternalServerError,
                             ::Gitlab::Error::Parsing,
