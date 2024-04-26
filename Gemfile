@@ -17,7 +17,7 @@ gem "faraday-follow_redirects"
 gem "nokogiri"
 gem "oj"
 gem "redis"
-gem "sidekiq", "7.2.2"
+gem "sidekiq", "7.2.3"
 gem 'sidekiq-unique-jobs'
 gem "pagy"
 gem "pghero"
