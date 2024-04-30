@@ -363,6 +363,7 @@ DEPENDENCIES
   bootstrap
   chartkick
   counter_culture
+  csv
   faraday
   faraday-follow_redirects
   faraday-gzip
@@ -406,7 +407,7 @@ DEPENDENCIES
   webmock
 
 RUBY VERSION
-   ruby 3.3.0p53
+   ruby 3.3.1p53
 
 BUNDLED WITH
    2.5.9

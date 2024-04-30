@@ -1,7 +1,7 @@
 source "https://rubygems.org"
 git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
-ruby "3.3.0"
+ruby "3.3.1"
 
 gem "rails", "~> 7.1.3"
 gem "sprockets-rails"
@@ -44,6 +44,7 @@ gem 'counter_culture'
 gem 'after_commit_action'
 gem 'postgresql_cursor'
 gem 'packageurl-ruby', require: 'package_url'
+gem 'csv'
 
 group :development do
   gem "web-console"
