@@ -31,6 +31,21 @@ class Api::V1::UsageController < Api::V1::ApplicationController
   def dependent_repositories
     @usage = PackageUsage.find_by(ecosystem: params[:ecosystem], name: params[:name])
 
+    scope = @usage.repositories.includes(:host)
+
+    if params[:sort].present? || params[:order].present?
+      sort = params[:sort] || 'id'
+      order = params[:order] || 'asc'
+      sort_options = sort.split(',').zip(order.split(',')).to_h
+      scope = scope.order(sort_options)
+    else
+      scope = scope#.order('last_synced_at DESC')
+    end
+
+    if params[:after_id].present?
+      scope = scope.where('repositories.id > ?', params[:after_id])
+    end
+
     if @usage.nil?
       if Dependency.where(ecosystem: params[:ecosystem], package_name: params[:name]).any?
         @usage = PackageUsage.create({
@@ -44,7 +59,7 @@ class Api::V1::UsageController < Api::V1::ApplicationController
       end
     end
 
-    @pagy, @repositories = pagy_countless(@usage.repositories.includes(:host))
+    @pagy, @repositories = pagy_countless(scope)
     fresh_when @repositories, public: true
   end
 
