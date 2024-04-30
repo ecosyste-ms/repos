@@ -891,6 +891,8 @@ components:
     Repository:
       type: object
       properties:
+        id:
+          type: integer
         uuid:
           type: string
         full_name:
