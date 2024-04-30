@@ -46,6 +46,10 @@ class Api::V1::UsageController < Api::V1::ApplicationController
       scope = scope.where('repositories.id > ?', params[:after_id])
     end
 
+    scope = scope.forked(params[:fork]) if params[:fork].present?
+    scope = scope.archived(params[:archived]) if params[:archived].present?
+    scope = scope.starred if params[:starred].present?
+
     if @usage.nil?
       if Dependency.where(ecosystem: params[:ecosystem], package_name: params[:name]).any?
         @usage = PackageUsage.create({
