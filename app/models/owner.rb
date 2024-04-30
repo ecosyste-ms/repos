@@ -6,6 +6,10 @@ class Owner < ApplicationRecord
 
   scope :created_after, ->(date) { where('created_at > ?', date) }
   scope :updated_after, ->(date) { where('updated_at > ?', date) }
+
+  scope :kind, ->(kind) { where(kind: kind) }
+
+  scope :has_sponsors_listing, -> { where("metadata->>'has_sponsors_listing' = 'true'") }
   
   def self.sync_least_recently_synced
     Owner.order('last_synced_at asc nulls first').includes(:host).limit(2500).each(&:sync_async)
