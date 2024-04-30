@@ -80,7 +80,7 @@ GEM
     after_commit_action (1.1.0)
       activerecord (>= 3.0.0)
       activesupport (>= 3.0.0)
-    appsignal (3.7.0)
+    appsignal (3.7.1)
       rack
     autoprefixer-rails (10.4.16.0)
       execjs (~> 2)
@@ -89,7 +89,7 @@ GEM
     bindex (0.8.1)
     bootsnap (1.18.3)
       msgpack (~> 1.2)
-    bootstrap (5.3.2)
+    bootstrap (5.3.3)
       autoprefixer-rails (>= 9.1.0)
       popper_js (>= 2.11.8, < 3)
     builder (3.2.4)
@@ -103,6 +103,7 @@ GEM
       bigdecimal
       rexml
     crass (1.0.6)
+    csv (3.3.0)
     date (3.3.4)
     drb (2.2.1)
     erubi (1.12.0)
@@ -142,7 +143,8 @@ GEM
     groupdate (6.4.0)
       activesupport (>= 6.1)
     hashdiff (1.1.0)
-    httparty (0.21.0)
+    httparty (0.22.0)
+      csv
       mini_mime (>= 1.0.0)
       multi_xml (>= 0.5.2)
     i18n (1.14.4)
@@ -151,7 +153,7 @@ GEM
     irb (1.12.0)
       rdoc
       reline (>= 0.4.2)
-    jbuilder (2.11.5)
+    jbuilder (2.12.0)
       actionview (>= 5.0.0)
       activesupport (>= 5.0.0)
     jquery-rails (4.6.0)
@@ -274,7 +276,7 @@ GEM
       redis-client (>= 0.22.0)
     redis-client (0.22.1)
       connection_pool
-    reline (0.5.3)
+    reline (0.5.4)
       io-console (~> 0.5)
     rexml (3.2.6)
     rswag-api (2.13.0)
