@@ -19,6 +19,7 @@ class Repository < ApplicationRecord
   scope :topic, ->(topic) { where("topics @> ARRAY[?]::varchar[]", topic) }
   scope :with_commit_stats, -> { where('length(commit_stats::text) > 2') }
   scope :starred, -> { where('stargazers_count > 0') }
+  scope :minimum_stars, ->(stars) { where('stargazers_count >= ?', stars) }
   
   scope :created_after, ->(date) { where('created_at > ?', date) }
   scope :updated_after, ->(date) { where('updated_at > ?', date) }
