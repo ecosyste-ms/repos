@@ -31,6 +31,19 @@ class Api::V1::UsageController < Api::V1::ApplicationController
   def dependent_repositories
     @usage = PackageUsage.find_by(ecosystem: params[:ecosystem], name: params[:name])
 
+    if @usage.nil?
+      if Dependency.where(ecosystem: params[:ecosystem], package_name: params[:name]).any?
+        @usage = PackageUsage.create({
+          ecosystem: params[:ecosystem],
+          name: params[:name],
+          key: "#{params[:ecosystem]}:#{params[:name]}",
+          dependents_count: 1})
+        @usage.sync
+      else
+        raise ActiveRecord::RecordNotFound
+      end
+    end
+
     scope = @usage.repositories.includes(:host)
 
     if params[:sort].present? || params[:order].present?
@@ -50,19 +63,6 @@ class Api::V1::UsageController < Api::V1::ApplicationController
     scope = scope.archived(params[:archived]) if params[:archived].present?
     scope = scope.starred if params[:starred].present?
     scope = scope.minimum_stars(params[:min_stars]) if params[:min_stars].present?
-
-    if @usage.nil?
-      if Dependency.where(ecosystem: params[:ecosystem], package_name: params[:name]).any?
-        @usage = PackageUsage.create({
-          ecosystem: params[:ecosystem],
-          name: params[:name],
-          key: "#{params[:ecosystem]}:#{params[:name]}",
-          dependents_count: 1})
-        @usage.sync
-      else
-        raise ActiveRecord::RecordNotFound
-      end
-    end
 
     @pagy, @repositories = pagy_countless(scope)
     fresh_when @repositories, public: true
