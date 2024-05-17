@@ -2,7 +2,7 @@ module Hosts
   class Gitlab < Base
     class GitlabAnonClient
       def initialize(endpoint:)
-        Rails.logger.info("Gitlab: Using anonymous client for endpoint #{endpoint}")
+        Rails.logger.debug("Gitlab: Using anonymous client for endpoint #{endpoint}")
         @endpoint = endpoint
         @gitlab_client = ::Gitlab.client(endpoint: endpoint)
       end
