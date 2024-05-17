@@ -62,8 +62,8 @@ module Hosts
         JSON.parse(response.body)
       end
 
-      def group_projects(username, per_page:, archived:, simple:)
-        url = "#{@endpoint}/groups/#{CGI.escape(username)}/projects?per_page=#{per_page}&archived=#{archived}&simple=#{simple}"
+      def group_projects(username, per_page:, archived:, simple:, include_subgroups:)
+        url = "#{@endpoint}/groups/#{CGI.escape(username)}/projects?per_page=#{per_page}&archived=#{archived}&simple=#{simple}&include_subgroups=#{include_subgroups}"
         Rails.logger.debug("Gitlab[group_projects]: Fetching group projects from URL: #{url}")
 
         response = RestClient.get(url)
@@ -71,7 +71,7 @@ module Hosts
       end
 
       def get(path, options = {})
-        url = "#{@endpoint}/#{path}"
+        url = "#{@endpoint}#{path}"
         Rails.logger.debug("Gitlab[get]: Fetching from URL: #{url}")
 
         response = RestClient.get(url)
@@ -249,11 +249,11 @@ module Hosts
         fork: project.try(:forked_from_project).present?,
         updated_at: project.last_activity_at,
         stargazers_count: project.star_count,
-        has_issues: project['issues_enabled'],
-        has_wiki: project.wiki_enabled,
+        has_issues: project.try(:issues_enabled),
+        has_wiki: project.try(:wiki_enabled),
         scm: 'git',
         private: project.visibility != "public",
-        pull_requests_enabled: project.merge_requests_enabled,
+        pull_requests_enabled: project.try(:merge_requests_enabled),
         logo_url: project.avatar_url,
         parent: {
           full_name: project.try(:forked_from_project).try(:path_with_namespace)
@@ -291,10 +291,10 @@ module Hosts
       if owner.user?
         api_client.user_projects(owner.login, per_page: 100, archived: false, simple: true).map{|repo| repo["path_with_namespace"] }
       else
-        api_client.group_projects(owner.login, per_page: 100, archived: false, simple: true).map{|repo| repo["path_with_namespace"] }
+        api_client.group_projects(owner.login, per_page: 100, archived: false, simple: true, include_subgroups: true).map{|repo| repo["path_with_namespace"] }
       end
-    rescue *IGNORABLE_EXCEPTIONS
-      []
+    # rescue *IGNORABLE_EXCEPTIONS
+    #   []
     end
 
     def fetch_owner(login)
@@ -325,7 +325,8 @@ module Hosts
           kind: 'organization'
         }
       end
-    rescue *IGNORABLE_EXCEPTIONS
+    rescue *IGNORABLE_EXCEPTIONS => e
+      pp e
       nil
     end
 
