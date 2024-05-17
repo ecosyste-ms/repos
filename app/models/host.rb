@@ -61,7 +61,7 @@ class Host < ApplicationRecord
     SyncRepositoryWorker.perform_async(id, full_name)
   end
 
-  def sync_repository(full_name)
+  def sync_repository(full_name, uuid: nil)
     return if full_name.blank?
     puts "syncing #{full_name}"
     repo = repositories.find_by('lower(full_name) = ?', full_name.downcase)
@@ -69,7 +69,7 @@ class Host < ApplicationRecord
     if repo
       repo.sync
     else
-      repo_hash = host_instance.fetch_repository(full_name)
+      repo_hash = host_instance.fetch_repository(uuid || full_name)
       return if repo_hash.blank?
 
       ActiveRecord::Base.transaction do
