@@ -14,7 +14,7 @@ class Repository < ApplicationRecord
   scope :forked, ->(fork) { where(fork: fork) }
   scope :archived, ->(archived) { where(archived: archived) }
   scope :active, -> { archived(false) }
-  scope :source, -> { fork(false) }
+  scope :source, -> { forked(false) }
   scope :no_topic, -> { where("topics = '{}'") }
   scope :topic, ->(topic) { where("topics @> ARRAY[?]::varchar[]", topic) }
   scope :with_commit_stats, -> { where('length(commit_stats::text) > 2') }
@@ -26,6 +26,8 @@ class Repository < ApplicationRecord
 
   scope :with_manifests, -> { joins(:manifests).group(:id) }
   scope :without_manifests, -> { includes(:manifests).where(manifests: {repository_id: nil}) }
+
+  scope :with_funding, -> { where("metadata->'funding' is not null") }
 
   def self.topics
     Repository.connection.select_rows("select topics, count (topics) as topics_count from (select id, unnest(topics) as topics from repositories) as foo group by topics order by topics_count desc, topics asc;")
