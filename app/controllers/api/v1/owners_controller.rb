@@ -2,8 +2,11 @@ class Api::V1::OwnersController < Api::V1::ApplicationController
   def index
     @host = Host.find_by_name!(params[:host_id])
     scope = @host.owners
+    
     scope = scope.created_after(params[:created_after]) if params[:created_after].present?
     scope = scope.updated_after(params[:updated_after]) if params[:updated_after].present?
+    scope = scope.kind(params[:kind]) if params[:kind].present?
+    scope = scope.has_sponsors_listing if params[:has_sponsors_listing].present?
 
     if params[:sort].present? || params[:order].present?
       sort = params[:sort] || 'last_synced_at'
