@@ -5,11 +5,10 @@ class RepositoriesController < ApplicationController
     fresh_when(@repository, public: true)
     if @repository.nil?
       @host.sync_repository_async(params[:id])
-      raise ActiveRecord::RecordNotFound
+      raise ActiveRecord::RecordNotFound and return
     else
       if @repository.full_name.downcase != params[:id].downcase
-        redirect_to host_repository_path(@host, @repository.full_name), status: :moved_permanently
-        return
+        redirect_to host_repository_path(@host, @repository.full_name), status: :moved_permanently and return
       end
       
       @tags = @repository.tags.order('published_at DESC')
