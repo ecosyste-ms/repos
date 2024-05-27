@@ -37,7 +37,7 @@ gem 'jquery-rails'
 gem 'chartkick'
 gem 'google-protobuf'
 gem "sanitize-url"
-gem 'faraday-typhoeus'
+# gem 'faraday-typhoeus'
 gem 'appsignal'
 gem 'sitemap_generator'
 gem 'counter_culture'
