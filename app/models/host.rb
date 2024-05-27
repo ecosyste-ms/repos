@@ -8,7 +8,7 @@ class Host < ApplicationRecord
   scope :kind, ->(kind) { where(kind: kind) }
 
   def topics
-    Repository.connection.select_rows("SELECT topics, COUNT(topics) AS topics_count FROM (SELECT id, unnest(topics) AS topics FROM repositories WHERE host_id = #{self.id}) AS foo GROUP BY topics ORDER BY topics_count DESC, topics ASC;")
+    Repository.connection.select_rows("SELECT topics, COUNT(topics) AS topics_count FROM (SELECT id, unnest(topics) AS topics FROM repositories WHERE host_id = #{self.id}) AS foo GROUP BY topics ORDER BY topics_count DESC, topics ASC limit 50000;")
   end
 
   def self.find_by_name(name)

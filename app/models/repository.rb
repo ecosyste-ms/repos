@@ -30,7 +30,7 @@ class Repository < ApplicationRecord
   scope :with_funding, -> { where("metadata->'funding' is not null") }
 
   def self.topics
-    Repository.connection.select_rows("select topics, count (topics) as topics_count from (select id, unnest(topics) as topics from repositories) as foo group by topics order by topics_count desc, topics asc;")
+    Repository.connection.select_rows("select topics, count (topics) as topics_count from (select id, unnest(topics) as topics from repositories) as foo group by topics order by topics_count desc, topics asc limit 50000;")
   end
 
   def self.parse_dependencies_async
