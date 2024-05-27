@@ -21,7 +21,11 @@ class UsageController < ApplicationController
           name: params[:name],
           key: "#{params[:ecosystem]}:#{params[:name]}",
           dependents_count: 1})
-        @package_usage.sync
+        if @package_usage.persisted?
+          @package_usage.sync 
+        else
+          raise ActiveRecord::RecordNotFound
+        end
       else
         raise ActiveRecord::RecordNotFound
       end
