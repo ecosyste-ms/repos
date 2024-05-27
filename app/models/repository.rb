@@ -30,7 +30,9 @@ class Repository < ApplicationRecord
   scope :with_funding, -> { where("metadata->'funding' is not null") }
 
   def self.topics
-    Repository.connection.select_rows("SELECT topics, COUNT(topics) AS topics_count FROM (SELECT id, unnest(topics) AS topics FROM repositories WHERE topics IS NOT NULL AND array_length(topics, 1) > 0) AS foo GROUP BY topics ORDER BY topics_count DESC, topics ASC LIMIT 50000;")
+    Rails.cache.fetch("host/#{self.id}/topics", expires_in: 1.week) do
+      Repository.connection.select_rows("SELECT topics, COUNT(topics) AS topics_count FROM (SELECT id, unnest(topics) AS topics FROM repositories WHERE topics IS NOT NULL AND array_length(topics, 1) > 0) AS foo GROUP BY topics ORDER BY topics_count DESC, topics ASC LIMIT 50000;")
+    end
   end
 
   def self.parse_dependencies_async

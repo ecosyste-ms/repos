@@ -8,7 +8,9 @@ class Host < ApplicationRecord
   scope :kind, ->(kind) { where(kind: kind) }
 
   def topics
-    Repository.connection.select_rows("SELECT topics, COUNT(topics) AS topics_count FROM (SELECT id, unnest(topics) AS topics FROM repositories WHERE host_id = #{self.id} AND topics IS NOT NULL AND array_length(topics, 1) > 0) AS foo GROUP BY topics ORDER BY topics_count DESC, topics ASC LIMIT 50000;")
+    Rails.cache.fetch("host/#{self.id}/topics", expires_in: 1.week) do
+      Repository.connection.select_rows("SELECT topics, COUNT(topics) AS topics_count FROM (SELECT id, unnest(topics) AS topics FROM repositories WHERE host_id = #{self.id} AND topics IS NOT NULL AND array_length(topics, 1) > 0) AS foo GROUP BY topics ORDER BY topics_count DESC, topics ASC LIMIT 50000;")
+    end
   end
 
   def self.find_by_name(name)
