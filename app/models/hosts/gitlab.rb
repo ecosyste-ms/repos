@@ -153,7 +153,7 @@ module Hosts
         fork: project.try(:forked_from_project).present?,
         updated_at: project.last_activity_at,
         stargazers_count: project.star_count,
-        has_issues: project.issues_enabled,
+        has_issues: project['issues_enabled'],
         has_wiki: project.wiki_enabled,
         scm: 'git',
         private: project.visibility != "public",
