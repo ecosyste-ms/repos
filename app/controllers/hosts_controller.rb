@@ -30,6 +30,11 @@ class HostsController < ApplicationController
     raise ActiveRecord::RecordNotFound if @hosts.empty?
   end
 
+  def topics
+    @host = Host.find_by_name!(params[:id])
+    @pagy, @topics = pagy_array(@host.topics)
+  end
+
   def topic
     @host = Host.find_by_name!(params[:id])
 
