@@ -1,16 +1,16 @@
 <div class="container-sm">
   <div class="card mb-3">
     <div class="card-header">
-      Statistics
+      <%= t('.statistics') %>
     </div>
     <div class="card-body">
       <div class="d-flex">
-        Hosts: <%= number_with_delimiter @hosts.length %><br/>
-        Repositories: <%= number_with_delimiter @hosts.sum(&:repositories_count) %><br/>
-        Owners: <%= number_with_delimiter @hosts.sum(&:owners_count) %><br/>
-        Tags: <%= number_with_delimiter Tag.fast_total %><br/>
-        Manifests: <%= number_with_delimiter Manifest.fast_total %><br/>
-        Dependencies: <%= number_with_delimiter Dependency.fast_total %><br/>
+        <%= Host.model_name.human(count: 2) %>: <%= number_with_delimiter @hosts.length %><br/>
+        <%= Repository.model_name.human(count: 2) %>: <%= number_with_delimiter @hosts.sum(&:repositories_count) %><br/>
+        <%= Owner.model_name.human(count: 2) %>: <%= number_with_delimiter @hosts.sum(&:owners_count) %><br/>
+        <%= Tag.model_name.human(count: 2) %>: <%= number_with_delimiter Tag.fast_total %><br/>
+        <%= Manifest.model_name.human(count: 2) %>: <%= number_with_delimiter Manifest.fast_total %><br/>
+        <%= Dependency.model_name.human(count: 2) %>: <%= number_with_delimiter Dependency.fast_total %><br/>
       </div>
     </div>
   </div>
@@ -19,10 +19,10 @@
     <div class="card mb-3">
       <div class="card-header">
         <img src="<%= hosts.first.kind_icon_url %>" class="me-1 pull-left" height='20' width='20' onerror="this.style.display='none'">
-        <%= link_to kind, kind_hosts_path(kind), class: 'text-decoration-none' %>
+        <%= link_to t(kind), kind_hosts_path(kind), class: 'text-decoration-none' %>
         <span class="text-black-50">
-          <%= pluralize number_with_delimiter(hosts.length), 'instance' %> - 
-          <%= pluralize number_with_delimiter(hosts.sum(&:repositories_count)), 'repository' %>
+          <%= number_with_delimiter(hosts.length) %> <%= t('virtual.models.instance', count: hosts.length) %> - 
+          <%= number_with_delimiter(hosts.sum(&:repositories_count)) %> <%= Repository.model_name.human(count: hosts.sum(&:repositories_count)) %>
         </span>
       </div>
        <ul class="list-group list-group-flush">
@@ -30,14 +30,14 @@
           <li class="list-group-item">
             <%= link_to host.name.downcase, host %>
             <span class="text-black-50">
-              <%= pluralize number_with_delimiter(host.repositories_count), 'repository' %> 
+              <%= number_with_delimiter(host.repositories_count) %> <%= Repository.model_name.human(count: host.repositories_count) %> 
             </span>
           </li>
         <% end %>
       </ul>
       <% if hosts.length > 20 %>
           <div class="card-footer">
-            <%= link_to "and #{hosts.length - 20} more...", kind_hosts_path(kind) %>
+            <%= link_to t('and_more', count: hosts.length - 20), kind_hosts_path(kind) %>
           </div>
         <% end %>
     </div>

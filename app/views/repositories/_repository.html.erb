@@ -1,56 +1,54 @@
 <div class="card mb-3 repository d-flex" id="repository_<%= repository.id %>">
   <div class="card-body pb-1">
     <div class="d-flex">
-      
       <div class="flex-grow-1 ms-3 text-break">
         <h5 class='card-title'>
           <%= link_to repository, host_repository_path(repository.host, repository) %>
           <% if repository.fork && repository.source_name %>
           <small class='text-muted'><i>
-            Fork of <%= link_to repository.source_name, host_repository_path(host_id: repository.host, id: repository.source_name) %>
+            <%= t('repositories.fork_of') %> <%= link_to repository.source_name, host_repository_path(host_id: repository.host, id: repository.source_name) %>
           </i></small>
           <% end %>
           <% if repository.archived %>
             <span title='Archived'>📦</span>
           <% end %>
         </h5>
-      
         <p class="card-subtitle mb-2 text-muted">
           <%= repository.description %>
         </p>
         <p class="card-subtitle mb-2 text-muted"><i><small>
           <% if repository.language %>
-            Language: <%= repository.language %>
+            <span class='text-capitalize'><%= Repository.human_attribute_name(:language) %></span>: <%= repository.language %>
           <% end %>
           <% if repository.language && repository.size %>
             -
           <% end %>
           <% if repository.size %>
-            Size: <%= number_to_human_size repository.size*1000 %> 
+            <span class='text-capitalize'><%= Repository.human_attribute_name(:size) %></span>: <%= number_to_human_size repository.size*1000 %> 
           <% end %>
           <% if repository.size && repository.last_synced_at %>
             - 
           <% end %>  
           <% if repository.last_synced_at %>
-              Last synced: <%= distance_of_time_in_words_to_now repository.last_synced_at %> ago
+              <span class='text-capitalize'><%= Repository.human_attribute_name(:last_synced_at) %></span>: <%= t('time_ago', time: time_ago_in_words(repository.last_synced_at)) %>
           <% end %>
           <% if repository.pushed_at && repository.last_synced_at %>
             - 
           <% end %>  
           <% if repository.pushed_at %>
-              Pushed: <%= distance_of_time_in_words_to_now repository.pushed_at %> ago
+              <span class='text-capitalize'><%= Repository.human_attribute_name(:pushed_at) %></span>: <%= t('time_ago', time: time_ago_in_words(repository.pushed_at)) %>
           <% end %>
           <% if repository.stargazers_count || repository.forks_count %>
             -
           <% end %>
           <% if repository.stargazers_count %>
-            Stars: <%= number_with_delimiter repository.stargazers_count %>
+            <span class='text-capitalize'><%= Repository.human_attribute_name(:stargazers_count) %></span>: <%= number_with_delimiter repository.stargazers_count %>
           <% end %>
           <% if repository.stargazers_count && repository.forks_count %>
             -
           <% end %>
           <% if repository.forks_count %>
-            Forks: <%= number_with_delimiter repository.forks_count %>
+            <span class='text-capitalize'><%= Repository.human_attribute_name(:forks_count) %></span>: <%= number_with_delimiter repository.forks_count %>
           <% end %>
         </small></i></p>
       </div>
