@@ -215,7 +215,7 @@ GEM
     pghero (3.5.0)
       activerecord (>= 6)
     popper_js (2.11.8)
-    postgresql_cursor (0.6.8)
+    postgresql_cursor (0.6.9)
       activerecord (>= 6.0)
     psych (5.1.2)
       stringio
