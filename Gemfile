@@ -45,10 +45,13 @@ gem 'after_commit_action'
 gem 'postgresql_cursor'
 gem 'packageurl-ruby', require: 'package_url'
 gem 'csv'
+
+# Translation
 gem 'http_accept_language'
 gem 'i18n'
 gem 'i18n-tasks'
 gem 'rails-i18n'
+gem 'enum_help'
 
 group :development do
   gem "web-console"

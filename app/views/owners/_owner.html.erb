@@ -5,11 +5,11 @@
       <div class="flex-grow-1 ms-3 text-break">
         <h5 class='card-title'>
           <%= link_to owner.login, host_owner_path(@host, owner.login) %>
-          <i><small class="text-muted"><%= owner.kind %></small></i>
+          <i><small class="text-muted"><%= owner.kind_i18n %></small></i>
         </h5>
       
         <p class="card-subtitle mb-2 text-muted">
-          <%= pluralize number_with_delimiter(owner.repositories_count), 'repository' %> 
+          <%= number_with_delimiter(owner.repositories_count) %> <%= Repository.model_name.human(count: owner.repositories_count) %>
         </p>
       </div>
       <div class="flex-shrink-0">

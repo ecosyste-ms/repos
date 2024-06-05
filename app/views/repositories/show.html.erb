@@ -74,7 +74,7 @@
 
   <% if @repository.topics.any? %>
     <p><small class='text-muted'>
-    Topics: 
+    <%= t 'virtual.models.topic.other' %>: 
     <% if @repository.host.host_instance.topic_url('test') %>
       <% @repository.topics.reject(&:blank?).uniq.each_with_index do |k, i| %><%= ', ' if i > 0 %><%= link_to k, topic_host_path(@repository.host.name, k), target: :_blank %><% end %>
     <% else %>
@@ -86,7 +86,7 @@
 
   <% if @repository.funding_links.any? %>
     <p><small class='text-muted'>
-    Funding links: <% @repository.funding_links.each_with_index do |url,i| %><%= ', ' if i > 0 %><%= link_to(url, sanitize_user_url(url), target: :_blank) %><% end %>
+    <%= t '.funding_links' %> <% @repository.funding_links.each_with_index do |url,i| %><%= ', ' if i > 0 %><%= link_to(url, sanitize_user_url(url), target: :_blank) %><% end %>
     </small></p>
   <% end %>
 
@@ -108,7 +108,7 @@
     </div>
   <% end %>
 
-  <h5>Files</h5>
+  <h5><%= t '.files' %></h5>
 
   <div class='card' id="files" data-url="<%= @repository.download_url(@sha, params['sha'].present? ? 'tag' : 'branch') %>" data-basename="<%= @sha || @repository.archive_basename %>" data-path="<%= params[:path] %>">
     <div id='files-header' class="card-header"></div>

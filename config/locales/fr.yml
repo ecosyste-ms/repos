@@ -1,6 +1,11 @@
 ---
 fr:
   time_ago: "il y a %{time}"
+  enums:
+    owner:
+      kind:
+        user: Utilisateur
+        organization: Organisation
   activerecord:
     attributes:
       repository:
@@ -13,6 +18,8 @@ fr:
         open_issues_count: issues ouvertes
         license: licence
         dependencies_parsed_at: dépendances analysées
+        created_at: date de création
+        updated_at: date de mise à jour
     models:
       dependency:
         one: Dépendance
@@ -42,6 +49,10 @@ fr:
         one: Tag
         other: Tags
         zero: Tag
+      package:
+        one: Paquet
+        other: Paquets
+        zero: Paquet
   and_more: Et %{count} de plus
   home:
     index:
@@ -59,13 +70,26 @@ fr:
       about: À propos
       intro: Un service API ouvert fournissant des métadonnées de dépôt pour de nombreux
         écosystèmes de logiciels open source.
+  owners:
+    show:
+      funding_links: "Faire un don :"
   repositories:
     fork_of: Fork de %{name}
     dependencies:
       pending: En attente
+    show:
+      funding_links: "Faire un don :"
+      files: Fichiers
+  topics:
+    show:
+      related_topics: Sujets associés
   virtual:
     models:
       instance:
         one: Instance
         other: Instances
         zero: Instance
+      topic:
+        one: Sujet
+        other: Sujets
+        zero: Sujet

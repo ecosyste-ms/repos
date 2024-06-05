@@ -1,8 +1,94 @@
----
 en:
+  time_ago: "%{time} ago"
+  enums:
+    owner:
+      kind:
+        user: User
+        organization: Organization
+  activerecord:
+    attributes:
+      repository:
+        language: Language
+        size: Size
+        last_synced_at: Last synced at
+        stargazers_count: Stars
+        forks_count: Forks
+        pushed_at: Pushed at
+        open_issues_count: Open issues
+        license: License
+        dependencies_parsed_at: Dependencies parsed at
+        created_at: Created at
+        updated_at: Updated at
+    models:
+      dependency:
+        one: Dependency
+        other: Dependencies
+        zero: Dependency
+      host:
+        one: Host
+        other: Hosts
+        zero: Host
+      instance:
+        one: Instance
+        other: Instances
+        zero: Instance
+      manifest:
+        one: Manifest
+        other: Manifests
+        zero: Manifest
+      owner:
+        one: Owner
+        other: Owners
+        zero: Owner
+      repository:
+        one: Repository
+        other: Repositories
+        zero: Repository
+      tag:
+        one: Tag
+        other: Tags
+        zero: Tag
+      package:
+        one: Package
+        other: Packages
+        zero: Package
   and_more: And %{count} more
+  home:
+    index:
+      statistics: Statistics
+  hosts:
+    kind:
+      title: %{kind} Hosts
+    sort:
+      forks: Forks
+      recently_pushed: Recently synced
+      sort: Sort
+      stars: Stars
   layouts:
     application:
-      about: About d
+      about: About
       intro: An open API service providing repository metadata for many open source
         software ecosystems.
+  owners:
+    show:
+      funding_links: "Donate:"
+  repositories:
+    fork_of: Fork of %{name}
+    dependencies:
+      pending: Pending
+    show:
+      funding_links: "Donate:"
+      files: Files
+  topics:
+    show:
+      related_topics: Related Topics
+  virtual:
+    models:
+      instance:
+        one: Instance
+        other: Instances
+        zero: Instance
+      topic:
+        one: Topic
+        other: Topics
+        zero: Topic

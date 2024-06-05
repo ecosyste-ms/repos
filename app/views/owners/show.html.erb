@@ -5,7 +5,7 @@
     <%= link_to @host, host_path(@host) %> / <%= link_to @owner, "#{@host.url}/#{@owner}", target: :_blank %>
     <% if @owner_record %>
       <small class='text-muted'>
-        <%= pluralize number_with_delimiter(@owner_record.repositories_count), 'repository' %>
+        <%= number_with_delimiter(@owner_record.repositories_count) %> <%= Repository.model_name.human(count: @owner_record.repositories_count) %>
       </small>
     <% end %>
   </h1>
@@ -19,7 +19,7 @@
 
     <% if @owner_record.funding_links.any? %>
       <p><small class='text-muted'>
-      Funding links: <% @owner_record.funding_links.each_with_index do |url,i| %><%= ', ' if i > 0 %><%= link_to(url, sanitize_user_url(url), target: :_blank) %><% end %>
+      <%= t '.funding_links' %> <% @owner_record.funding_links.each_with_index do |url,i| %><%= ', ' if i > 0 %><%= link_to(url, sanitize_user_url(url), target: :_blank) %><% end %>
       </small></p>
     <% end %>
   <% end %>
@@ -27,7 +27,7 @@
     <ul class="nav nav-tabs my-3">
     <li class="nav-item">
       <a class="nav-link active" aria-current="page">
-        Repositories
+        <%= Repository.model_name.human(count: @owner_record.repositories_count) %>
         <% if @owner_record %>
         <span class="badge bg-secondary rounded-pill">
           <%= number_with_delimiter @owner_record.repositories_count %>

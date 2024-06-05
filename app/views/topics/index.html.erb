@@ -1,8 +1,8 @@
-<% @meta_title = "Topics" %>
+<% @meta_title = t('virtual.models.topic.other') %>
 
 <div class="container-sm">
   <h2>
-    Topics
+    <%= t 'virtual.models.topic.other' %>
   </h2>
 
 
@@ -16,12 +16,12 @@
               <%= link_to topic, topic_path(topic) %>
             </h5>
             <p class="card-text">
-              <%= number_with_delimiter count %> packages
+              <%= number_with_delimiter count %> <%= Repository.model_name.human(count: count) %>
             </p>
           </div>
         </div>
       </div>
     <% end %>
   </div>
-  <%== pagy_bootstrap_nav(@pagy) if @pagy.pages > 1 %>  
+  <%== pagy_bootstrap_nav(@pagy) if @pagy.pages > 1 %>
 </div>

@@ -107,6 +107,8 @@ GEM
     csv (3.3.0)
     date (3.3.4)
     drb (2.2.1)
+    enum_help (0.0.19)
+      activesupport (>= 3.0.0)
     erubi (1.12.0)
     execjs (2.9.1)
     faraday (2.9.0)
@@ -385,6 +387,7 @@ DEPENDENCIES
   chartkick
   counter_culture
   csv
+  enum_help
   faraday
   faraday-follow_redirects
   faraday-gzip
