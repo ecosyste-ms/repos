@@ -1,24 +1,18 @@
 ---
 fr:
-  time_ago: "il y a %{time}"
-  enums:
-    owner:
-      kind:
-        user: Utilisateur
-        organization: Organisation
   activerecord:
     attributes:
       repository:
-        language: langage
-        size: taille
-        last_synced_at: dernière synchronisation
-        stargazers_count: étoiles
-        forks_count: forks
-        pushed_at: enregistré
-        open_issues_count: issues ouvertes
-        license: licence
-        dependencies_parsed_at: dépendances analysées
         created_at: date de création
+        dependencies_parsed_at: dépendances analysées
+        forks_count: forks
+        language: langage
+        last_synced_at: dernière synchronisation
+        license: licence
+        open_issues_count: issues ouvertes
+        pushed_at: enregistré
+        size: taille
+        stargazers_count: étoiles
         updated_at: date de mise à jour
     models:
       dependency:
@@ -41,6 +35,10 @@ fr:
         one: Propriétaire
         other: Propriétaires
         zero: Propriétaire
+      package:
+        one: Paquet
+        other: Paquets
+        zero: Paquet
       repository:
         one: Dépôt
         other: Dépôts
@@ -49,11 +47,12 @@ fr:
         one: Tag
         other: Tags
         zero: Tag
-      package:
-        one: Paquet
-        other: Paquets
-        zero: Paquet
   and_more: Et %{count} de plus
+  enums:
+    owner:
+      kind:
+        organization: Organisation
+        user: Utilisateur
   home:
     index:
       statistics: Statistiques
@@ -72,14 +71,15 @@ fr:
         écosystèmes de logiciels open source.
   owners:
     show:
-      funding_links: "Faire un don :"
+      funding_links: 'Faire un don :'
   repositories:
-    fork_of: Fork de %{name}
     dependencies:
       pending: En attente
+    fork_of: Fork de %{name}
     show:
-      funding_links: "Faire un don :"
       files: Fichiers
+      funding_links: 'Faire un don :'
+  time_ago: il y a %{time}
   topics:
     show:
       related_topics: Sujets associés

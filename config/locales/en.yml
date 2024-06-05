@@ -1,23 +1,18 @@
+---
 en:
-  time_ago: "%{time} ago"
-  enums:
-    owner:
-      kind:
-        user: User
-        organization: Organization
   activerecord:
     attributes:
       repository:
-        language: Language
-        size: Size
-        last_synced_at: Last synced at
-        stargazers_count: Stars
-        forks_count: Forks
-        pushed_at: Pushed at
-        open_issues_count: Open issues
-        license: License
-        dependencies_parsed_at: Dependencies parsed at
         created_at: Created at
+        dependencies_parsed_at: Dependencies parsed at
+        forks_count: Forks
+        language: Language
+        last_synced_at: Last synced at
+        license: License
+        open_issues_count: Open issues
+        pushed_at: Pushed at
+        size: Size
+        stargazers_count: Stars
         updated_at: Updated at
     models:
       dependency:
@@ -40,6 +35,10 @@ en:
         one: Owner
         other: Owners
         zero: Owner
+      package:
+        one: Package
+        other: Packages
+        zero: Package
       repository:
         one: Repository
         other: Repositories
@@ -48,17 +47,18 @@ en:
         one: Tag
         other: Tags
         zero: Tag
-      package:
-        one: Package
-        other: Packages
-        zero: Package
   and_more: And %{count} more
+  enums:
+    owner:
+      kind:
+        organization: Organization
+        user: User
   home:
     index:
       statistics: Statistics
   hosts:
     kind:
-      title: %{kind} Hosts
+      title: "%{kind} Hosts"
     sort:
       forks: Forks
       recently_pushed: Recently synced
@@ -71,14 +71,15 @@ en:
         software ecosystems.
   owners:
     show:
-      funding_links: "Donate:"
+      funding_links: 'Donate:'
   repositories:
-    fork_of: Fork of %{name}
     dependencies:
       pending: Pending
+    fork_of: Fork of %{name}
     show:
-      funding_links: "Donate:"
       files: Files
+      funding_links: 'Donate:'
+  time_ago: "%{time} ago"
   topics:
     show:
       related_topics: Related Topics
