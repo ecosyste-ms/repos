@@ -16,6 +16,7 @@ class Repository < ApplicationRecord
   scope :active, -> { archived(false) }
   scope :source, -> { forked(false) }
   scope :no_topic, -> { where("topics = '{}'") }
+  scope :with_topics, -> { where("topics != '{}'") }
   scope :topic, ->(topic) { where("topics @> ARRAY[?]::varchar[]", topic) }
   scope :with_commit_stats, -> { where('length(commit_stats::text) > 2') }
   scope :starred, -> { where('stargazers_count > 0') }
