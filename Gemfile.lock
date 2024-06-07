@@ -155,6 +155,9 @@ GEM
     google-protobuf (4.27.2-x86_64-linux)
       bigdecimal
       rake (>= 13)
+    google-protobuf (4.27.1-x86_64-linux)
+      bigdecimal
+      rake (>= 13)
     groupdate (6.4.0)
       activesupport (>= 6.1)
     hashdiff (1.1.0)
