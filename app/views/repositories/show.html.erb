@@ -11,7 +11,6 @@
         <%= link_to group, subgroup_host_owner_path(@host, @repository.owner, subgroups) %> / 
       <%end %>
     <% end %>
-      
     <%= link_to @repository.project_slug, @repository.html_url, target: :_blank %>
   </h1>
 
@@ -25,36 +24,36 @@
     <div class="col-md-4">
       <p><small class='text-muted'>
         <% if @repository.fork && @repository.source_name %>
-          Fork of <%= link_to @repository.source_name, host_repository_path(@host, @repository.source_name) %><br/>
+          <%= t('repositories.fork_of') %> <%= link_to @repository.source_name, host_repository_path(@host, @repository.source_name) %><br/>
         <% end %>
-        Stars: <%= number_with_delimiter @repository.stargazers_count %><br/>
-        Forks: <%= number_with_delimiter @repository.forks_count %><br/>
-        Open Issues: <%= number_with_delimiter @repository.open_issues_count %><br/>
+        <span class='text-capitalize'><%= Repository.human_attribute_name(:stargazers_count) %></span>: <%= number_with_delimiter @repository.stargazers_count %><br/>
+        <span class='text-capitalize'><%= Repository.human_attribute_name(:forks_count) %></span>: <%= number_with_delimiter @repository.forks_count %><br/>
+        <span class='text-capitalize'><%= Repository.human_attribute_name(:open_issues_count) %></span>: <%= number_with_delimiter @repository.open_issues_count %><br/>
       </small></p>
     </div>
     <div class="col-md-4">
       <p><small class='text-muted'>
-        License: <%= @repository.license || 'None' %><br/>
-        Language: <%= @repository.language %><br/>
+        <span class='text-capitalize'><%= Repository.human_attribute_name(:license) %></span>: <%= @repository.license || 'None' %><br/>
+        <span class='text-capitalize'><%= Repository.human_attribute_name(:language) %></span>: <%= @repository.language %><br/>
         <% if @repository.size %>
-          Repo Size: <%= number_to_human_size @repository.size*1000 %><br/>
+          <span class='text-capitalize'><%= Repository.human_attribute_name(:size) %></span>: <%= number_to_human_size @repository.size*1000 %><br/>
         <% end %>
-        Dependencies: <% if @repository.dependencies_parsed_at && @manifests %>
+       <span class='text-capitalize'><%= Repository.human_attribute_name(:dependencies_parsed_at) %>: <% if @repository.dependencies_parsed_at && @manifests %>
           <%= number_with_delimiter @manifests.sum{|m| m.dependencies.length } %>
         <% else %>
-          pending
+          <%= t('repositories.dependencies.pending') %>
         <% end %>
       </small></p>
     </div>
     <div class="col-md-4">
       <p><small class='text-muted'>
-        Created: <%= distance_of_time_in_words_to_now @repository.created_at %> ago<br/>
-        Updated: <%= distance_of_time_in_words_to_now @repository.updated_at %> ago<br/>
+        <span class='text-capitalize'><%= Repository.human_attribute_name(:created_at) %></span>: <%= t('time_ago', time: distance_of_time_in_words_to_now(@repository.created_at)) %><br/>
+        <span class='text-capitalize'><%= Repository.human_attribute_name(:updated_at) %></span>: <%= t('time_ago', time: distance_of_time_in_words_to_now(@repository.updated_at)) %><br/>
         <% if @repository.pushed_at %>
-          Last pushed: <%= distance_of_time_in_words_to_now @repository.pushed_at %> ago<br/>
+          <span class='text-capitalize'><%= Repository.human_attribute_name(:pushed_at) %></span>: <%= t('time_ago', time: distance_of_time_in_words_to_now(@repository.pushed_at)) %><br/>
         <% end %>
         <% if @repository.last_synced_at %>
-          Last synced: <%= distance_of_time_in_words_to_now @repository.last_synced_at %> ago<br/>
+          <span class='text-capitalize'><%= Repository.human_attribute_name(:last_synced_at) %></span>: <%= t('time_ago', time: distance_of_time_in_words_to_now(@repository.last_synced_at)) %><br/>
         <% end %>
       </small></p>
     </div>
@@ -75,7 +74,7 @@
 
   <% if @repository.topics.any? %>
     <p><small class='text-muted'>
-    Topics: 
+    <%= t 'virtual.models.topic.other' %>: 
     <% if @repository.host.host_instance.topic_url('test') %>
       <% @repository.topics.reject(&:blank?).uniq.each_with_index do |k, i| %><%= ', ' if i > 0 %><%= link_to k, topic_host_path(@repository.host.name, k), target: :_blank %><% end %>
     <% else %>
@@ -87,7 +86,7 @@
 
   <% if @repository.funding_links.any? %>
     <p><small class='text-muted'>
-    Funding links: <% @repository.funding_links.each_with_index do |url,i| %><%= ', ' if i > 0 %><%= link_to(url, sanitize_user_url(url), target: :_blank) %><% end %>
+    <%= t '.funding_links' %> <% @repository.funding_links.each_with_index do |url,i| %><%= ', ' if i > 0 %><%= link_to(url, sanitize_user_url(url), target: :_blank) %><% end %>
     </small></p>
   <% end %>
 
@@ -109,7 +108,7 @@
     </div>
   <% end %>
 
-  <h5>Files</h5>
+  <h5><%= t '.files' %></h5>
 
   <div class='card' id="files" data-url="<%= @repository.download_url(@sha, params['sha'].present? ? 'tag' : 'branch') %>" data-basename="<%= @sha || @repository.archive_basename %>" data-path="<%= params[:path] %>">
     <div id='files-header' class="card-header"></div>

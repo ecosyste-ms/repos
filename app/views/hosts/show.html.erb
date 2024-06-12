@@ -8,7 +8,7 @@
   <ul class="nav nav-tabs my-3">
     <li class="nav-item">
       <a class="nav-link active" aria-current="page">
-        Repositories
+        <%= Repository.model_name.human(count: @host.repositories_count) %>
         <span class="badge bg-secondary rounded-pill">
           <%= number_with_delimiter @host.repositories_count %>
         </span>
@@ -16,7 +16,7 @@
     </li>
     <li class="nav-item">
       <a class="nav-link" href="<%= host_owners_path(@host) %>">
-        Owners
+        <%= Owner.model_name.human(count: @host.owners_count) %>
         <span class="badge bg-secondary rounded-pill">
           <%= number_with_delimiter @host.owners_count %>
         </span>
@@ -24,7 +24,7 @@
     </li>
     <li class="nav-item">
       <a class="nav-link" href="<%= topics_host_path(@host) %>">
-        Topics
+        <%= t('virtual.models.topic.other') %>
       </a>
     </li>
     <%= render 'sort' %>

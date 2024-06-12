@@ -1,0 +1,95 @@
+---
+fr:
+  activerecord:
+    attributes:
+      repository:
+        created_at: date de création
+        dependencies_parsed_at: dépendances analysées
+        forks_count: forks
+        language: langage
+        last_synced_at: dernière synchronisation
+        license: licence
+        open_issues_count: issues ouvertes
+        pushed_at: enregistré
+        size: taille
+        stargazers_count: étoiles
+        updated_at: date de mise à jour
+    models:
+      dependency:
+        one: Dépendance
+        other: Dépendances
+        zero: Dépendance
+      host:
+        one: Hôte
+        other: Hôtes
+        zero: Hôte
+      instance:
+        one: Instance
+        other: Instances
+        zero: Instance
+      manifest:
+        one: Manifeste
+        other: Manifestes
+        zero: Manifeste
+      owner:
+        one: Propriétaire
+        other: Propriétaires
+        zero: Propriétaire
+      package:
+        one: Paquet
+        other: Paquets
+        zero: Paquet
+      repository:
+        one: Dépôt
+        other: Dépôts
+        zero: Dépôt
+      tag:
+        one: Tag
+        other: Tags
+        zero: Tag
+  and_more: Et %{count} de plus
+  enums:
+    owner:
+      kind:
+        organization: Organisation
+        user: Utilisateur
+  home:
+    index:
+      statistics: Statistiques
+  hosts:
+    kind:
+      title: Hôtes %{kind}
+    sort:
+      forks: Forks
+      recently_pushed: Récemments synchronisés
+      sort: Trier
+      stars: Étoiles
+  layouts:
+    application:
+      about: À propos
+      intro: Un service API ouvert fournissant des métadonnées de dépôt pour de nombreux
+        écosystèmes de logiciels open source.
+  owners:
+    show:
+      funding_links: 'Faire un don :'
+  repositories:
+    dependencies:
+      pending: En attente
+    fork_of: Fork de %{name}
+    show:
+      files: Fichiers
+      funding_links: 'Faire un don :'
+  time_ago: il y a %{time}
+  topics:
+    show:
+      related_topics: Sujets associés
+  virtual:
+    models:
+      instance:
+        one: Instance
+        other: Instances
+        zero: Instance
+      topic:
+        one: Sujet
+        other: Sujets
+        zero: Sujet

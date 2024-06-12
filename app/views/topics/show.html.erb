@@ -1,9 +1,9 @@
-<% @meta_title = "#{@topic} | Topics" %>
+<% @meta_title = "#{@topic} | #{t('virtual.models.topic.one')}" %>
 
 <div class="container-sm">
   <h2>
+    <%= t('virtual.models.topic.one') %>:
     "<%= @topic %>"
-    topic
   </h2>
 
   <div class='row'>
@@ -14,7 +14,7 @@
     <div class='col-md-4'>
       <div class="card">
         <div class="card-header">
-          Related Topics
+          <%= t('.related_topics') %>
         </div>
         <div class="list-group list-group-flush">
           <% @related_topics.each do |topic, count| %>

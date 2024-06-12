@@ -192,7 +192,7 @@ module Hosts
     end
 
     def load_owner_repos_names(owner)
-      if owner.kind == 'user'
+      if owner.user?
         api_client.user_projects(owner.login, per_page: 100, archived: false, simple: true).map{|repo| repo["path_with_namespace"] }
       else
         api_client.group_projects(owner.login, per_page: 100, archived: false, simple: true).map{|repo| repo["path_with_namespace"] }
