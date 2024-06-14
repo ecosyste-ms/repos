@@ -127,7 +127,7 @@ GEM
     ffi (1.17.0-arm64-darwin)
     ffi (1.17.0-x86_64-darwin)
     ffi (1.17.0-x86_64-linux-gnu)
-    gitlab (4.19.0)
+    gitlab (4.20.1)
       httparty (~> 0.20)
       terminal-table (>= 1.5.1)
     globalid (1.2.1)
