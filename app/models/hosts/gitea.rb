@@ -103,7 +103,7 @@ module Hosts
       resp = api_client.get("api/v1/repos/search?sort=id&page=#{page}&limit=100")
       return unless resp.success?
       repos = resp.body['data']
-      if repos.present?
+      if repos.present? && repos.is_a?(Array)
         repos.each{|repo| @host.sync_repository_async(repo["full_name"])  }
         REDIS.set("gitea_last_page:#{@host.id}", page)
       end
