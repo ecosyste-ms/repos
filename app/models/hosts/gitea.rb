@@ -122,17 +122,21 @@ module Hosts
     end
 
     def fetch_repository(id_or_name)
-      id_or_name = id_or_name.to_i if id_or_name.match(/\A\d+\Z/)
+      begin
+        id_or_name = id_or_name.to_i if id_or_name.match(/\A\d+\Z/)
 
-      if id_or_name.is_a? Integer
-        url = "api/v1/repositories/#{id_or_name}"
-      else
-        url = "api/v1/repos/#{id_or_name}"
+        if id_or_name.is_a? Integer
+          url = "api/v1/repositories/#{id_or_name}"
+        else
+          url = "api/v1/repos/#{id_or_name}"
+        end
+        resp = api_client.get(url)
+        return nil unless resp.success? && resp.body.present?
+        return nil if resp.body['private']
+        map_repository_data(resp.body)
+      rescue Faraday::Error
+        nil
       end
-      resp = api_client.get(url)
-      return nil unless resp.success? && resp.body.present?
-      return nil if resp.body['private']
-      map_repository_data(resp.body)
     end
 
     def map_repository_data(data)
