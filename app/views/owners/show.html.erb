@@ -27,7 +27,7 @@
     <ul class="nav nav-tabs my-3">
     <li class="nav-item">
       <a class="nav-link active" aria-current="page">
-        <%= Repository.model_name.human(count: @owner_record.repositories_count) %>
+        <%= Repository.model_name.human(count: @owner_record&.repositories_count || 0) %>
         <% if @owner_record %>
         <span class="badge bg-secondary rounded-pill">
           <%= number_with_delimiter @owner_record.repositories_count %>
