@@ -107,6 +107,8 @@ module Hosts
         repos.each{|repo| @host.sync_repository_async(repo["full_name"])  }
         REDIS.set("gitea_last_page:#{@host.id}", page)
       end
+    rescue Faraday::Error
+      nil
     end
 
     def crawl_repositories
@@ -119,6 +121,8 @@ module Hosts
         repos.each{|repo| @host.sync_repository(repo["full_name"])  }
         REDIS.set("gitea_last_page:#{@host.id}", page)
       end
+    rescue Faraday::Error
+      nil
     end
 
     def fetch_repository(id_or_name)

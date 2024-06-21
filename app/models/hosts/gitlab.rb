@@ -4,7 +4,8 @@ module Hosts
                             ::Gitlab::Error::Forbidden,
                             ::Gitlab::Error::Unauthorized,
                             ::Gitlab::Error::InternalServerError,
-                            ::Gitlab::Error::Parsing]
+                            ::Gitlab::Error::Parsing,
+                            ::Gitlab::Error::BadGateway]
 
     def self.api_missing_error_class
       ::Gitlab::Error::NotFound
@@ -125,6 +126,8 @@ module Hosts
 
     def load_repo_names(page_number = 1, order = 'created_at')
       api_client.projects(per_page: 100, page: page_number, order_by: order, archived: false, simple: true)
+    rescue *IGNORABLE_EXCEPTIONS
+      []
     end
 
     def recursive_gitlab_repos(page_number = 1, limit = 5, order = "created_asc")
