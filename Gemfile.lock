@@ -75,12 +75,12 @@ GEM
       minitest (>= 5.1)
       mutex_m
       tzinfo (~> 2.0)
-    addressable (2.8.6)
-      public_suffix (>= 2.0.2, < 6.0)
+    addressable (2.8.7)
+      public_suffix (>= 2.0.2, < 7.0)
     after_commit_action (1.1.0)
       activerecord (>= 3.0.0)
       activesupport (>= 3.0.0)
-    appsignal (3.8.1)
+    appsignal (3.9.0)
       rack
     ast (2.4.2)
     autoprefixer-rails (10.4.16.0)
@@ -240,7 +240,7 @@ GEM
       activerecord (>= 6.0)
     psych (5.1.2)
       stringio
-    public_suffix (5.1.1)
+    public_suffix (6.0.0)
     puma (6.4.2)
       nio4r (~> 2.0)
     racc (1.8.0)
@@ -440,4 +440,4 @@ RUBY VERSION
    ruby 3.3.1p53
 
 BUNDLED WITH
-   2.5.13
+   2.5.14
