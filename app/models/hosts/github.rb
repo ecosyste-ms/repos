@@ -269,6 +269,7 @@ module Hosts
     def map_tags(tags)
       return [] unless tags && tags[:data] && tags[:data][:repository] && tags[:data][:repository][:refs]
       tags[:data][:repository][:refs][:nodes].map do |tag|
+        next if tag.nil? || tag[:target].nil?
         if tag[:target][:__typename] == 'Tag'
           {
             name: tag[:name],
