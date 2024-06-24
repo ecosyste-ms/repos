@@ -9,3 +9,4 @@ production:
     - Faraday::TimeoutError
     - Addressable::URI::InvalidURIError
     - Faraday::SSLError
+    - ActiveRecord::RecordNotUnique
