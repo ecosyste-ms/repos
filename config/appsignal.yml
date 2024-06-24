@@ -8,3 +8,4 @@ production:
     - Faraday::ConnectionFailed 
     - Faraday::TimeoutError
     - Addressable::URI::InvalidURIError
+    - Faraday::SSLError
