@@ -309,7 +309,7 @@ class Repository < ApplicationRecord
     return if file_list.blank?
     {
       readme:           file_list.find{|file| file.match(/^README/i) },
-      changelog:        file_list.find{|file| file.match(/^CHANGE|^HISTORY/i) },
+      changelog:        file_list.find{|file| file.match(/^CHANGE|^HISTORY|^NEWS/i) },
       contributing:     file_list.find{|file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?CONTRIBUTING/i) },
       funding:          file_list.find{|file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?FUNDING.yml/i) },
       license:          file_list.find{|file| file.match(/^LICENSE|^COPYING|^MIT-LICENSE/i) },
