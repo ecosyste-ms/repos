@@ -1,7 +1,7 @@
 source "https://rubygems.org"
 git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
-ruby "3.3.1"
+ruby "3.3.3"
 
 gem "rails", "~> 7.1.3"
 gem "sprockets-rails"
@@ -45,6 +45,7 @@ gem 'after_commit_action'
 gem 'postgresql_cursor'
 gem 'packageurl-ruby', require: 'package_url'
 gem 'csv'
+gem "net-pop", github: "ruby/net-pop" # temporary fix for net-pop until ruby 3.3.4
 
 # Translation
 gem 'http_accept_language'
