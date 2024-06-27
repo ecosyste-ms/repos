@@ -308,7 +308,7 @@ class Repository < ApplicationRecord
     file_list = get_file_list
     return if file_list.blank?
     {
-      readme:           file_list.find{|file| file.match(/^README/i) },
+      readme:           file_list.find{|file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?README/i) },
       changelog:        file_list.find{|file| file.match(/^CHANGE|^HISTORY|^NEWS/i) },
       contributing:     file_list.find{|file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?CONTRIBUTING/i) },
       funding:          file_list.find{|file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?FUNDING.yml/i) },
