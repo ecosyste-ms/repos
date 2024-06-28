@@ -88,11 +88,7 @@ class Host < ApplicationRecord
         repo.save
         repo.ping_packages_async if repo_changed && repo.persisted?
         repo.sync_extra_details_async if !repo.fork? && repo_changed && repo.persisted? && repo.files_changed?
-        begin
-          repo.sync_owner
-        rescue RestClient::NotFound => e
-          p e
-        end
+        repo.sync_owner
         repo
       end
     end
@@ -252,11 +248,11 @@ class Host < ApplicationRecord
     existing_owner = owners.find_by('lower(login) = ?', login)
     return existing_owner if existing_owner && existing_owner.last_synced_at && existing_owner.last_synced_at > 1.day.ago
     owner_hash = host_instance.fetch_owner(login)
-    if owner_hash.nil?
+    if owner_hash.nil? || owner_hash[:login].nil?
       owners.find_by('lower(login) = ?', login).try(:check_status)
-      return nil 
+      return nil
     end
-    
+
     owner = owners.find_by(uuid: owner_hash[:uuid])
     owner = owners.find_by('lower(login) = ?', owner_hash[:login].downcase) if owner.nil?
     if owner.nil?

@@ -113,7 +113,6 @@ GEM
     crass (1.0.6)
     csv (3.3.0)
     date (3.3.4)
-    domain_name (0.6.20240107)
     drb (2.2.1)
     enum_help (0.0.19)
       activesupport (>= 3.0.0)
@@ -439,7 +438,6 @@ DEPENDENCIES
   rails-controller-testing
   rails-i18n
   redis
-  rest-client
   rswag-api
   rswag-ui
   sanitize-url
