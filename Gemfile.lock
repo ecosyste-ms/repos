@@ -154,7 +154,16 @@ GEM
     google-protobuf (4.27.2-x86_64-linux)
       bigdecimal
       rake (>= 13)
-    google-protobuf (4.27.1-x86_64-linux)
+    google-protobuf (4.27.2-aarch64-linux)
+      bigdecimal
+      rake (>= 13)
+    google-protobuf (4.27.2-arm64-darwin)
+      bigdecimal
+      rake (>= 13)
+    google-protobuf (4.27.2-x86_64-darwin)
+      bigdecimal
+      rake (>= 13)
+    google-protobuf (4.27.2-x86_64-linux)
       bigdecimal
       rake (>= 13)
     groupdate (6.4.0)
@@ -250,9 +259,6 @@ GEM
     popper_js (2.11.8)
     postgresql_cursor (0.6.9)
       activerecord (>= 6.0)
-    pry (0.14.2)
-      coderay (~> 1.1)
-      method_source (~> 1.0)
     psych (5.1.2)
       stringio
     public_suffix (6.0.0)
@@ -429,7 +435,6 @@ DEPENDENCIES
   pg_query
   pghero
   postgresql_cursor
-  pry
   puma
   rack-attack
   rack-attack-rate-limit
