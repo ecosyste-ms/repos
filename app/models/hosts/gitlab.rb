@@ -29,7 +29,7 @@ module Hosts
 
       def project(id_or_full_name, license: false)
         url = "#{@endpoint}/projects/#{CGI.escape(id_or_full_name.to_s)}?license=#{license}"
-        Rails.logger.debug("Gitlab[projec]: Fetching project from URL: #{url}")
+        Rails.logger.debug("Gitlab[project]: Fetching project from URL: #{url}")
 
         response = Faraday.get(url)
         project = JSON.parse(response.body, object_class: OpenStruct)
