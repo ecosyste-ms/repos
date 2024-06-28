@@ -15,7 +15,6 @@ externalDocs:
   url: https://github.com/ecosyste-ms/repos
 servers:
 - url: https://repos.ecosyste.ms/api/v1
-- url: https://data.code.gouv.fr/api/v1
 paths:
   /topics:
     get:
