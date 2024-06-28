@@ -1,5 +1,89 @@
 module Hosts
   class Gitlab < Base
+    class GitlabAnonClient
+      def initialize(endpoint:)
+        Rails.logger.debug("Gitlab: Using anonymous client for endpoint #{endpoint}")
+        @endpoint = endpoint
+        @gitlab_client = ::Gitlab.client(endpoint: endpoint)
+      end
+
+      def tags(id_or_full_name, &block)
+        # return an iterator if no block is given
+        return enum_for(__callee__, id_or_full_name) unless block_given?
+
+        per_page = 100
+        page = 1
+        loop do
+          url = "#{@endpoint}/projects/#{CGI.escape(id_or_full_name.to_s)}/repository/tags?search=&per_page=#{per_page}&page=#{page}"
+          Rails.logger.debug("Gitlab: Fetching tags from URL: #{url}")
+          response = Faraday.get(url)
+          tags = JSON.parse(response.body, object_class: OpenStruct)
+          Rails.logger.debug("Gitlab: Fetched #{tags.count} tags")
+          tags.each do |tag|
+            yield tag
+          end
+          return if tags.count < per_page
+          page += 1
+        end
+      end
+
+      def project(id_or_full_name, license: false)
+        url = "#{@endpoint}/projects/#{CGI.escape(id_or_full_name.to_s)}?license=#{license}"
+        Rails.logger.debug("Gitlab[project]: Fetching project from URL: #{url}")
+
+        response = Faraday.get(url)
+        project = JSON.parse(response.body, object_class: OpenStruct)
+        project.visibility = "public" # We get it from a nonauthenticated public endpoint
+        project
+      end
+
+      def projects(per_page:, archived:, id_before:, simple:)
+        url = "#{@endpoint}/projects?per_page=#{per_page}&archived=#{archived}&id_before=#{id_before}&simple=#{simple}"
+        Rails.logger.debug("Gitlab[projects]: Fetching projects from URL: #{url}")
+
+        response = Faraday.get(url)
+        JSON.parse(response.body, object_class: OpenStruct)
+      end
+
+      def user(username)
+        # 403 forbidden
+        url = "#{@endpoint}/users/#{CGI.escape(username.to_s)}"
+        Rails.logger.debug("Gitlab[user]: Fetching user from URL: #{url}")
+
+        response = Faraday.get(url)
+        JSON.parse(response.body)
+      end
+
+      def group(username, with_projects:)
+        url = "#{@endpoint}/groups/#{CGI.escape(username)}?with_projects=#{with_projects}"
+        Rails.logger.debug("Gitlab[group]: Fetching group from URL: #{url}")
+
+        response = Faraday.get(url)
+        JSON.parse(response.body)
+      end
+
+      def group_projects(username, per_page:, archived:, simple:, include_subgroups:)
+        url = "#{@endpoint}/groups/#{CGI.escape(username)}/projects?per_page=#{per_page}&archived=#{archived}&simple=#{simple}&include_subgroups=#{include_subgroups}"
+        Rails.logger.debug("Gitlab[group_projects]: Fetching group projects from URL: #{url}")
+
+        response = Faraday.get(url)
+        JSON.parse(response.body, object_class: OpenStruct)
+      end
+
+      def get(path, options = {})
+        url = "#{@endpoint}#{path}"
+        Rails.logger.debug("Gitlab[get]: Fetching from URL: #{url}")
+
+        response = Faraday.get(url)
+        JSON.parse(response.body)
+      end
+
+      def method_missing(method, *args, &block)
+        Rails.logger.warn("Gitlab: delegating unauthenticated, non implemented method #{method} to Gitlab client, it should fail.")
+        @gitlab_client.send(method, *args, &block)
+      end
+    end
+
     IGNORABLE_EXCEPTIONS = [::Gitlab::Error::NotFound,
                             ::Gitlab::Error::Forbidden,
                             ::Gitlab::Error::Unauthorized,
@@ -139,15 +223,23 @@ module Hosts
       end
     end
 
+    def api_token
+      @api_token ||= REDIS.get("gitlab_token:#{@host.id}")
+    end
+
     def api_client
-      ::Gitlab.client(endpoint: "#{@host.url}/api/v4", private_token:  REDIS.get("gitlab_token:#{@host.id}"))
+      if api_token.present?
+        ::Gitlab.client(endpoint: "#{@host.url}/api/v4", private_token: api_token)
+      else
+        GitlabAnonClient.new(endpoint: "#{@host.url}/api/v4")
+      end
     end
 
     def fetch_repository(full_name)
       project = api_client.project(full_name, license: true)
       return nil if project.visibility != "public"
 
-      repo_hash = project.to_hash.with_indifferent_access.slice(:id, :description, :created_at, :name, :open_issues_count, :forks_count, :default_branch, :archived, :topics)
+      repo_hash = project.to_h.with_indifferent_access.slice(:id, :description, :created_at, :name, :open_issues_count, :forks_count, :default_branch, :archived, :topics)
 
       repo_hash.merge!({
         uuid: project.id,
@@ -156,11 +248,11 @@ module Hosts
         fork: project.try(:forked_from_project).present?,
         updated_at: project.last_activity_at,
         stargazers_count: project.star_count,
-        has_issues: project['issues_enabled'],
-        has_wiki: project.wiki_enabled,
+        has_issues: project.try(:issues_enabled),
+        has_wiki: project.try(:wiki_enabled),
         scm: 'git',
         private: project.visibility != "public",
-        pull_requests_enabled: project.merge_requests_enabled,
+        pull_requests_enabled: project.try(:merge_requests_enabled),
         logo_url: project.avatar_url,
         parent: {
           full_name: project.try(:forked_from_project).try(:path_with_namespace)
@@ -187,7 +279,7 @@ module Hosts
       last_id = REDIS.get("gitlab_last_id:#{@host.id}")
       repos = api_client.projects(per_page: 100, archived: false, id_before: last_id, simple: true)
       if repos.present?
-        repos.each{|repo| @host.sync_repository(repo["path_with_namespace"])  }
+        repos.each{|repo| @host.sync_repository(repo["path_with_namespace"], uuid: repo['id'])  }
         REDIS.set("gitlab_last_id:#{@host.id}", repos.last["id"])
       end
     rescue *IGNORABLE_EXCEPTIONS
@@ -198,15 +290,14 @@ module Hosts
       if owner.user?
         api_client.user_projects(owner.login, per_page: 100, archived: false, simple: true).map{|repo| repo["path_with_namespace"] }
       else
-        api_client.group_projects(owner.login, per_page: 100, archived: false, simple: true).map{|repo| repo["path_with_namespace"] }
+        api_client.group_projects(owner.login, per_page: 100, archived: false, simple: true, include_subgroups: true).map{|repo| repo["path_with_namespace"] }
       end
-    rescue *IGNORABLE_EXCEPTIONS
-      []
+    # rescue *IGNORABLE_EXCEPTIONS
+    #   []
     end
 
     def fetch_owner(login)
       search = api_client.get "/users?username=#{login}"
-      
       if search.present?
         user = search.first.to_hash
         id = user["id"]
@@ -233,7 +324,8 @@ module Hosts
           kind: 'organization'
         }
       end
-    rescue *IGNORABLE_EXCEPTIONS
+    rescue *IGNORABLE_EXCEPTIONS => e
+      pp e
       nil
     end
 

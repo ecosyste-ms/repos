@@ -61,7 +61,7 @@ class Host < ApplicationRecord
     SyncRepositoryWorker.perform_async(id, full_name)
   end
 
-  def sync_repository(full_name)
+  def sync_repository(full_name, uuid: nil)
     return if full_name.blank?
     puts "syncing #{full_name}"
     repo = repositories.find_by('lower(full_name) = ?', full_name.downcase)
@@ -69,7 +69,7 @@ class Host < ApplicationRecord
     if repo
       repo.sync
     else
-      repo_hash = host_instance.fetch_repository(full_name)
+      repo_hash = host_instance.fetch_repository(uuid || full_name)
       return if repo_hash.blank?
 
       ActiveRecord::Base.transaction do
@@ -119,6 +119,13 @@ class Host < ApplicationRecord
     names = host_instance.load_owner_repos_names(owner)
     names.each do |full_name|
       sync_repository_async(full_name)
+    end
+  end
+
+  def sync_owner_repositories(owner)
+    names = host_instance.load_owner_repos_names(owner)
+    names.each do |full_name|
+      sync_repository(full_name)
     end
   end
 
@@ -241,11 +248,11 @@ class Host < ApplicationRecord
     existing_owner = owners.find_by('lower(login) = ?', login)
     return existing_owner if existing_owner && existing_owner.last_synced_at && existing_owner.last_synced_at > 1.day.ago
     owner_hash = host_instance.fetch_owner(login)
-    if owner_hash.nil?
+    if owner_hash.nil? || owner_hash[:login].nil?
       owners.find_by('lower(login) = ?', login).try(:check_status)
-      return nil 
+      return nil
     end
-    
+
     owner = owners.find_by(uuid: owner_hash[:uuid])
     owner = owners.find_by('lower(login) = ?', owner_hash[:login].downcase) if owner.nil?
     if owner.nil?
