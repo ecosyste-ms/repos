@@ -154,18 +154,6 @@ GEM
     google-protobuf (4.27.2-x86_64-linux)
       bigdecimal
       rake (>= 13)
-    google-protobuf (4.27.2-aarch64-linux)
-      bigdecimal
-      rake (>= 13)
-    google-protobuf (4.27.2-arm64-darwin)
-      bigdecimal
-      rake (>= 13)
-    google-protobuf (4.27.2-x86_64-darwin)
-      bigdecimal
-      rake (>= 13)
-    google-protobuf (4.27.2-x86_64-linux)
-      bigdecimal
-      rake (>= 13)
     groupdate (6.4.0)
       activesupport (>= 6.1)
     hashdiff (1.1.0)
@@ -207,10 +195,6 @@ GEM
       net-pop
       net-smtp
     marcel (1.0.4)
-    method_source (1.1.0)
-    mime-types (3.5.2)
-      mime-types-data (~> 3.2015)
-    mime-types-data (3.2024.0305)
     mini_mime (1.1.5)
     mini_portile2 (2.8.7)
     minitest (5.24.0)
