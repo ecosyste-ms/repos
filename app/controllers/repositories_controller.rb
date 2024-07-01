@@ -8,7 +8,7 @@ class RepositoriesController < ApplicationController
       raise ActiveRecord::RecordNotFound and return
     else
       if @repository.full_name.downcase != params[:id].downcase
-        redirect_to host_repository_path(@host, @repository.full_name), status: :moved_permanently and return
+        redirect_to(host_repository_path(@host, @repository.full_name), status: :moved_permanently) and return
       end
       
       @tags = @repository.tags.order('published_at DESC')
