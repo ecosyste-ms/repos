@@ -197,7 +197,7 @@ GEM
     marcel (1.0.4)
     mini_mime (1.1.5)
     mini_portile2 (2.8.7)
-    minitest (5.24.0)
+    minitest (5.24.1)
     mocha (2.4.0)
       ruby2_keywords (>= 0.0.5)
     msgpack (1.7.2)
@@ -231,7 +231,7 @@ GEM
     oj (3.16.4)
       bigdecimal (>= 3.0)
     packageurl-ruby (0.1.0)
-    pagy (8.6.1)
+    pagy (8.6.2)
     parser (3.3.3.0)
       ast (~> 2.4.1)
       racc
