@@ -5,8 +5,14 @@ production:
     - ActiveRecord::QueryCanceled
     - Rack::Timeout::RequestTimeoutException
     - Octokit::ServerError
-    - Faraday::ConnectionFailed 
+    - Faraday::ConnectionFailed
     - Faraday::TimeoutError
     - Addressable::URI::InvalidURIError
     - Faraday::SSLError
     - ActiveRecord::RecordNotUnique
+    - PackageURL::InvalidPackageURL
+    - Rack::Timeout::RequestExpiryError
+    - Oj::ParseError
+    - Pagy::VariableError
+    - Pagy::OverflowError
+    - ActiveRecord::StatementInvalid
