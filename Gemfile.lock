@@ -234,7 +234,7 @@ GEM
       bigdecimal (>= 3.0)
     packageurl-ruby (0.1.0)
     pagy (8.6.3)
-    parser (3.3.3.0)
+    parser (3.3.4.0)
       ast (~> 2.4.1)
       racc
     pg (1.5.6)
