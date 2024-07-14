@@ -234,14 +234,14 @@ GEM
       bigdecimal (>= 3.0)
     packageurl-ruby (0.1.0)
     pagy (8.6.3)
-    parser (3.3.3.0)
+    parser (3.3.4.0)
       ast (~> 2.4.1)
       racc
     pg (1.5.6)
     pg_query (5.1.0)
       google-protobuf (>= 3.22.3)
-    pghero (3.5.0)
-      activerecord (>= 6)
+    pghero (3.6.0)
+      activerecord (>= 6.1)
     popper_js (2.11.8)
     postgresql_cursor (0.6.9)
       activerecord (>= 6.0)
@@ -251,7 +251,7 @@ GEM
     puma (6.4.2)
       nio4r (~> 2.0)
     racc (1.8.0)
-    rack (3.1.6)
+    rack (3.1.7)
     rack-attack (6.7.0)
       rack (>= 1.0, < 4)
     rack-attack-rate-limit (1.1.0)
@@ -449,4 +449,4 @@ RUBY VERSION
    ruby 3.3.3p53
 
 BUNDLED WITH
-   2.5.14
+   2.5.15
