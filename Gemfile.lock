@@ -158,7 +158,8 @@ GEM
     groupdate (6.4.0)
       activesupport (>= 6.1)
     hashdiff (1.1.0)
-    highline (3.0.1)
+    highline (3.1.0)
+      reline
     http_accept_language (2.1.1)
     httparty (0.22.0)
       csv
