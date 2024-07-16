@@ -158,7 +158,8 @@ GEM
     groupdate (6.4.0)
       activesupport (>= 6.1)
     hashdiff (1.1.0)
-    highline (3.0.1)
+    highline (3.1.0)
+      reline
     http_accept_language (2.1.1)
     httparty (0.22.0)
       csv
@@ -311,7 +312,7 @@ GEM
       connection_pool
     reline (0.5.9)
       io-console (~> 0.5)
-    rexml (3.3.1)
+    rexml (3.3.2)
       strscan
     rswag-api (2.13.0)
       activesupport (>= 3.1, < 7.2)
