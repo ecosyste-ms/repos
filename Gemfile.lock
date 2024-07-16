@@ -1,10 +1,3 @@
-GIT
-  remote: https://github.com/ruby/net-pop.git
-  revision: e8d0afe2773b9eb6a23c39e9e437f6fc0fc7c733
-  specs:
-    net-pop (0.1.2)
-      net-protocol
-
 GEM
   remote: https://rubygems.org/
   specs:
@@ -126,6 +119,8 @@ GEM
     faraday-gzip (2.0.1)
       faraday (>= 1.0)
       zlib (~> 3.0)
+    faraday-multipart (1.0.4)
+      multipart-post (~> 2)
     faraday-net_http (3.1.0)
       net-http
     faraday-retry (2.2.1)
@@ -201,16 +196,19 @@ GEM
     mini_mime (1.1.5)
     mini_portile2 (2.8.7)
     minitest (5.24.1)
-    mocha (2.4.0)
+    mocha (2.4.1)
       ruby2_keywords (>= 0.0.5)
     msgpack (1.7.2)
     multi_xml (0.7.1)
       bigdecimal (~> 3.1)
+    multipart-post (2.4.1)
     mutex_m (0.2.0)
     net-http (0.4.1)
       uri
     net-imap (0.4.14)
       date
+      net-protocol
+    net-pop (0.1.2)
       net-protocol
     net-protocol (0.2.2)
       timeout
@@ -403,6 +401,7 @@ DEPENDENCIES
   faraday
   faraday-follow_redirects
   faraday-gzip
+  faraday-multipart
   faraday-retry
   gitlab
   google-protobuf
@@ -413,7 +412,6 @@ DEPENDENCIES
   jbuilder
   jquery-rails
   mocha
-  net-pop!
   nokogiri
   octokit
   oj
@@ -447,7 +445,7 @@ DEPENDENCIES
   webmock
 
 RUBY VERSION
-   ruby 3.3.3p53
+   ruby 3.3.4p53
 
 BUNDLED WITH
    2.5.15
