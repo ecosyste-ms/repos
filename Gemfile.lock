@@ -232,7 +232,7 @@ GEM
     oj (3.16.4)
       bigdecimal (>= 3.0)
     packageurl-ruby (0.1.0)
-    pagy (8.6.3)
+    pagy (9.0.0)
     parser (3.3.4.0)
       ast (~> 2.4.1)
       racc
