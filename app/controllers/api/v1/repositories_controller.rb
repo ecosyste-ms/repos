@@ -37,7 +37,7 @@ class Api::V1::RepositoriesController < Api::V1::ApplicationController
       scope = scope#.order('last_synced_at DESC')
     end
 
-    @pagy, @repositories = pagy_countless(scope, limit_max: 10000)
+    @pagy, @repositories = pagy_countless(scope, max_items: 10000)
     if stale?(@repositories, public: true)
       render json: @repositories.pluck(:full_name)
     end
