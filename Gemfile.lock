@@ -80,7 +80,7 @@ GEM
     after_commit_action (1.1.0)
       activerecord (>= 3.0.0)
       activesupport (>= 3.0.0)
-    appsignal (3.11.0)
+    appsignal (3.12.0)
       rack
     ast (2.4.2)
     autoprefixer-rails (10.4.16.0)
@@ -121,7 +121,7 @@ GEM
       zlib (~> 3.0)
     faraday-multipart (1.0.4)
       multipart-post (~> 2)
-    faraday-net_http (3.1.0)
+    faraday-net_http (3.1.1)
       net-http
     faraday-retry (2.2.1)
       faraday (~> 2.0)
@@ -196,7 +196,7 @@ GEM
     mini_mime (1.1.5)
     mini_portile2 (2.8.7)
     minitest (5.24.1)
-    mocha (2.4.2)
+    mocha (2.4.5)
       ruby2_keywords (>= 0.0.5)
     msgpack (1.7.2)
     multi_xml (0.7.1)
@@ -246,7 +246,7 @@ GEM
       activerecord (>= 6.0)
     psych (5.1.2)
       stringio
-    public_suffix (6.0.0)
+    public_suffix (6.0.1)
     puma (6.4.2)
       nio4r (~> 2.0)
     racc (1.8.0)
