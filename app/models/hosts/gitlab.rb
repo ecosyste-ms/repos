@@ -24,7 +24,7 @@ module Hosts
         loop do
           url = "#{@endpoint}/projects/#{CGI.escape(id_or_full_name.to_s)}/repository/tags?search=&per_page=#{per_page}&page=#{page}"
           Rails.logger.debug("Gitlab: Fetching tags from URL: #{url}")
-          response = Faraday_client.get(url)
+          response = faraday_client.get(url)
           tags = JSON.parse(response.body, object_class: OpenStruct)
           Rails.logger.debug("Gitlab: Fetched #{tags.count} tags")
           tags.each do |tag|
@@ -49,7 +49,7 @@ module Hosts
         url = "#{@endpoint}/projects?per_page=#{per_page}&archived=#{archived}&id_before=#{id_before}&simple=#{simple}"
         Rails.logger.debug("Gitlab[projects]: Fetching projects from URL: #{url}")
 
-        response = Faraday_client.get(url)
+        response = faraday_client.get(url)
         JSON.parse(response.body, object_class: OpenStruct)
       end
 
@@ -58,7 +58,7 @@ module Hosts
         url = "#{@endpoint}/users/#{CGI.escape(username.to_s)}"
         Rails.logger.debug("Gitlab[user]: Fetching user from URL: #{url}")
 
-        response = Faraday_client.get(url)
+        response = faraday_client.get(url)
         JSON.parse(response.body)
       end
 
@@ -66,7 +66,7 @@ module Hosts
         url = "#{@endpoint}/groups/#{CGI.escape(username)}?with_projects=#{with_projects}"
         Rails.logger.debug("Gitlab[group]: Fetching group from URL: #{url}")
 
-        response = Faraday_client.get(url)
+        response = faraday_client.get(url)
         JSON.parse(response.body)
       end
 
@@ -74,7 +74,7 @@ module Hosts
         url = "#{@endpoint}/groups/#{CGI.escape(username)}/projects?per_page=#{per_page}&archived=#{archived}&simple=#{simple}&include_subgroups=#{include_subgroups}"
         Rails.logger.debug("Gitlab[group_projects]: Fetching group projects from URL: #{url}")
 
-        response = Faraday_client.get(url)
+        response = faraday_client.get(url)
         JSON.parse(response.body, object_class: OpenStruct)
       end
 
@@ -82,7 +82,7 @@ module Hosts
         url = "#{@endpoint}#{path}"
         Rails.logger.debug("Gitlab[get]: Fetching from URL: #{url}")
 
-        response = Faraday_client.get(url)
+        response = faraday_client.get(url)
         JSON.parse(response.body)
       end
 
