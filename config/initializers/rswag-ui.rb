@@ -1,4 +1,15 @@
+
+def patch_server(host)
+  data = YAML.load_file('openapi/api/v1/openapi.yaml')
+  data['servers'][0]['url'] = host + '/api/v1'
+  File.open('openapi/api/v1/openapi.yaml', 'w') { |f| f.write data.to_yaml }
+end
+
 Rswag::Ui.configure do |c|
+
+  if ENV['API_HOST'].present?
+    patch_server(ENV['API_HOST'])
+  end
 
   # List the Swagger endpoints that you want to be documented through the swagger-ui
   # The first parameter is the path (absolute or relative to the UI host) to the corresponding
