@@ -78,8 +78,6 @@ module Dinum
       end
     end
 
-    puts "GitHub: #{github.owners.count}"
-    puts "GitLab: #{gitlab.owners.count}"
     p "missing_owners: #{missing_owners}"
     p "owner_without_repos: #{owner_without_repos}"
     p "service_unknown: #{service_unknown}"
