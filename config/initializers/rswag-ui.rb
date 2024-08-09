@@ -8,6 +8,8 @@ end
 Rswag::Ui.configure do |c|
 
   if ENV['API_HOST'].present?
+    # We rewrite url used by Swagger ui at /docs which is hardcoded in yaml file
+    # This will allow documentation call the API on the right host
     patch_server(ENV['API_HOST'])
   end
 
