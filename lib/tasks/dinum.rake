@@ -53,6 +53,8 @@ module Dinum
   end
 
   # Import the general purpose hosts with only state owned owners
+  # after: skip all the hosts before this one
+  # dry: do not perform any action
   def import_general_purpose_owner_repos(after: nil, dry: false)
     missing_owners = []
     owner_without_repos = []
