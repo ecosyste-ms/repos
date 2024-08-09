@@ -15,10 +15,6 @@ module Dinum
     'gitlab',
   ]
 
-  IGNORE_HOSTS = Set[
-    'gitlab.limos.fr'
-  ]
-
   def accounts_data
     @accounts_data ||= begin
       response = Faraday.get ACCOUNTS_FILE
@@ -30,15 +26,15 @@ module Dinum
   end
 
   def general_purpose_hosts
-    @general_purpose_hosts ||= accounts_data.select { |k, v| v['general_purpose'] }
+    @general_purpose_hosts ||= Dinum.accounts_data.select { |k, v| v['general_purpose'] }
   end
 
   def state_hosts
-    @state_hosts ||= accounts_data.select { |k, v| !v['general_purpose'] }
+    @state_hosts ||= Dinum.accounts_data.select { |k, v| !v['general_purpose'] }
   end
 
   def state_hosts?(host)
-    state_hosts.keys.include?(URI(host.url).host)
+    Dinum.state_hosts.keys.include?(URI(host.url).host)
   end
 
   def import_general_purpose_owner_repos(after: nil, dry: false)
@@ -47,7 +43,7 @@ module Dinum
     service_unknown = []
     skip = true if after
 
-    general_purpose_hosts.each do |host_url, host_data|
+    Dinum.general_purpose_hosts.each do |host_url, host_data|
       forge = host_data['forge']
       groups = host_data['groups']
       url = "https://#{host_url}"
@@ -90,9 +86,7 @@ module Dinum
   end
 
   def import_state_hosts
-    state_hosts.each do |host_domain, host_data|
-      IGNORE_HOSTS.include?(host_domain) && next
-
+    Dinum.state_hosts.each do |host_domain, host_data|
       forge = host_data['forge']
       url = "https://#{host_domain}"
       host = Host
@@ -115,8 +109,6 @@ module Dinum
 
   def hosts_initial_full_synchronization
     Host.all.each do |host|
-      IGNORE_HOSTS.include?(URI(host.url).host) && next
-
       next if state_hosts?(host)
       begin
         host_initial_full_synchronization(host)
@@ -136,7 +128,6 @@ module Dinum
 
   def hosts_list_sync_problem
     Host.where(repositories_count: 0, kind: :gitlab).each do |h|
-      IGNORE_HOSTS.include?(URI(h.url).host) && next
       begin
         response = Faraday.get(h.url+"/api/v4/projects?per_page=1")
         if response.status != 200
@@ -194,7 +185,7 @@ namespace :dinum do
 
   desc "Destroy no longer used hosts"
   task :destroy_old_hosts => :environment do
-    urls = accounts_data.map { |host_domain, data| "https://#{host_domain}" }
+    urls = Dinum.accounts_data.map { |host_domain, data| "https://#{host_domain}" }
     hosts = Host.where.not(url: urls)
     puts "!! Destroying #{hosts.count}/#{Host.count} hosts (enter to continue) !!"
     STDIN.gets
