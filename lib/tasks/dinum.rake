@@ -1,8 +1,18 @@
 module Dinum
   extend self
 
+  # Script to manage dinum data for the instance https://data.code.gouv.fr
+  # This instance reference the repositories of the public administration in France
+
+  # The master data for host and repos is stored in a YAML file
+  # The file will describe general purpose hosts and state hosts
+  # The general purpose hosts will be imported with only state owned owners
+  # The state hosts will be imported with all the owners
+  # Some hosts are ignored because they are not currently available (missconfigured, not reachable, etc)
   ACCOUNTS_FILE = "https://git.sr.ht/~codegouvfr/codegouvfr-sources/blob/main/comptes-organismes-publics_new_specs.yml"
 
+
+  # Pretty names for common hosts
   HOST_NAMING_MAP = {
     'github.com' => 'GitHub',
     'gitlab.com' => 'GitLab',
@@ -10,11 +20,14 @@ module Dinum
     'gitlab.ow2.org' => 'OW2'
   }
 
+  # Forges which support standard synchronisation
+  # By exemple source hut miss fetch_owner method and is not supported
   SUPPORTED_FORGES_KIND = Set[
     'github',
     'gitlab',
   ]
 
+  # Parse the master data YAML file and return the data
   def accounts_data
     @accounts_data ||= begin
       response = Faraday.get ACCOUNTS_FILE
@@ -25,10 +38,12 @@ module Dinum
     end
   end
 
+  # Extract the general purpose hosts from the master data
   def general_purpose_hosts
     @general_purpose_hosts ||= Dinum.accounts_data.select { |k, v| v['general_purpose'] }
   end
 
+  # Extract the state hosts from the master data
   def state_hosts
     @state_hosts ||= Dinum.accounts_data.select { |k, v| !v['general_purpose'] }
   end
@@ -37,6 +52,7 @@ module Dinum
     Dinum.state_hosts.keys.include?(URI(host.url).host)
   end
 
+  # Import the general purpose hosts with only state owned owners
   def import_general_purpose_owner_repos(after: nil, dry: false)
     missing_owners = []
     owner_without_repos = []
@@ -83,6 +99,7 @@ module Dinum
     p "service_unknown: #{service_unknown}"
   end
 
+  # Import the state hosts without any repos yet
   def import_state_hosts
     Dinum.state_hosts.each do |host_domain, host_data|
       forge = host_data['forge']
@@ -94,6 +111,9 @@ module Dinum
     puts "Total: #{Host.count} hosts"
   end
 
+  # Method to perform a full synchronization for a host
+  # crawl_repositories will fetch a batch of repositories from the host
+  # The method will loop until the number of repositories fetched is the same as the previous batch
   def host_initial_full_synchronization(host)
     puts "Starting full synchronization for host: #{host.name} #{host.id}"
     host_reset(host) if host.repositories_count == 0
@@ -105,6 +125,7 @@ module Dinum
     end
   end
 
+  # Method to perform a full synchronization for all state hosts
   def hosts_initial_full_synchronization
     Host.all.each do |host|
       next if state_hosts?(host)
@@ -124,6 +145,8 @@ module Dinum
     REDIS.del("gitlab_last_id:#{host.id}")
   end
 
+  # Method to check all hosts to see if they are reachable with projects available
+  # not working host should be marked in the master data file as ignored
   def hosts_list_sync_problem
     Host.where(repositories_count: 0, kind: :gitlab).each do |h|
       begin
