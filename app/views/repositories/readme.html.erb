@@ -1,0 +1,25 @@
+<% @meta_title = "#{@repository.full_name} readme | #{@host}" %>
+<% @meta_description = @repository.description %>
+
+<div class="container-sm">
+  <%= render 'overview' %>
+
+  <ul class="nav nav-tabs mt-3">
+    <li class="nav-item">
+      <a class="nav-link" href="<%= host_repository_path(@host, @repository) %>">Files</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link active" href="<%= readme_host_repository_path(@host, @repository) %>">Readme</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link"href="<%= dependencies_host_repository_path(@host, @repository) %>">Dependencies</a>
+    </li>
+  </ul>
+
+  <div class='card mt-3' id="readme" data-url="<%= @repository.download_url(@sha, params['sha'].present? ? 'tag' : 'branch') %>">
+    <div id='readme-header' class="card-header">Readme</div>
+    <div id="readme-content" class="card-body">Loading...</div>
+  </div>
+</div>
+
+  

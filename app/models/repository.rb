@@ -79,7 +79,7 @@ class Repository < ApplicationRecord
   end
 
   def owner_record
-    host.owners.find_by('lower(login) = ?', owner.downcase)
+    @owner_record ||= host.owners.find_by('lower(login) = ?', owner.downcase)
   end
 
   def owner

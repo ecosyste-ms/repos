@@ -100,7 +100,7 @@ $( document ).ready(function() {
   }
 
   if ($('#readme').length > 0) {
-    var download_url = $('#files').data('url');
+    var download_url = $('#readme').data('url');
     var readme_url = archives_service + "/api/v1/archives/readme?url=" + download_url
 
     $.getJSON(readme_url, function( data ) {

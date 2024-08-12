@@ -71,6 +71,8 @@ Rails.application.routes.draw do
     resources :repositories, constraints: { id: /.*/ }, only: [:index, :show] do
       member do
         get :funding
+        get :dependencies
+        get :readme
       end
     end
     resources :owners, only:[:index, :show] do
