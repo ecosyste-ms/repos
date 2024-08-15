@@ -18,7 +18,7 @@ gem "faraday-multipart"
 gem "nokogiri"
 gem "oj"
 gem "redis"
-gem "sidekiq", "7.3.0"
+gem "sidekiq", "7.3.1"
 gem 'sidekiq-unique-jobs'
 gem "pagy"
 gem "pghero"
