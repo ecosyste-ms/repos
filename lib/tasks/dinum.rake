@@ -9,7 +9,7 @@ module Dinum
   # The general purpose hosts will be imported with only state owned owners
   # The state hosts will be imported with all the owners
   # Some hosts are ignored because they are not currently available (missconfigured, not reachable, etc)
-  ACCOUNTS_FILE = "https://git.sr.ht/~codegouvfr/codegouvfr-sources/blob/main/comptes-organismes-publics_new_specs.yml"
+  ACCOUNTS_FILE = "https://code.gouv.fr/data/comptes-organismes-publics.yml"
 
 
   # Pretty names for common hosts
@@ -42,6 +42,8 @@ module Dinum
   def general_purpose_hosts
     @general_purpose_hosts ||= Dinum.accounts_data.select { |k, v| v['general_purpose'] }
   end
+  
+  # TODO: replace state by pso : Public Sector Organization
 
   # Extract the state hosts from the master data
   def state_hosts
