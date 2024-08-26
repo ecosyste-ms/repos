@@ -30,6 +30,8 @@ class Repository < ApplicationRecord
 
   scope :with_funding, -> { where("metadata->'funding' is not null") }
 
+  self.record_timestamps = false
+
   def self.topics
     if self == Repository
       Rails.cache.fetch("topics", expires_in: 1.week) do
