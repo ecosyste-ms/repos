@@ -12,8 +12,6 @@ class Owner < ApplicationRecord
 
   scope :has_sponsors_listing, -> { where("metadata->>'has_sponsors_listing' = 'true'") }
   
-  self.record_timestamps = false
-  
   def self.sync_least_recently_synced
     Owner.order('last_synced_at asc nulls first').includes(:host).limit(2500).each(&:sync_async)
   end
