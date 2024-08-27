@@ -3,7 +3,7 @@ require 'test_helper'
 class ApiV1RepositoriesControllerTest < ActionDispatch::IntegrationTest
   setup do
     @host = Host.create(name: 'GitHub', url: 'https://github.com', kind: 'github')
-    @repository = @host.repositories.create(full_name: 'ecosyste-ms/repos')
+    @repository = @host.repositories.create(full_name: 'ecosyste-ms/repos', created_at: Time.now, updated_at: Time.now)
   end
 
   test 'list repositories for a host' do

@@ -3,7 +3,7 @@ require 'test_helper'
 class ApiV1PackageNamesControllerTest < ActionDispatch::IntegrationTest
   setup do
     @host = Host.create!(name: 'GitHub', url: 'https://github.com', kind: 'github')
-    @repository = @host.repositories.create!(full_name: 'ecosysteme-ms/dependents')
+    @repository = @host.repositories.create!(full_name: 'ecosysteme-ms/dependents', created_at: Time.now, updated_at: Time.now)
     @manifest = @repository.manifests.create!(ecosystem: 'docker')
     @dependency = @manifest.dependencies.create!(package_name: 'ruby', repository: @repository)
   end

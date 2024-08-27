@@ -3,7 +3,7 @@ require 'test_helper'
 class ApiV1TagsControllerTest < ActionDispatch::IntegrationTest
   setup do
     @host = Host.create(name: 'GitHub', url: 'https://github.com', kind: 'github')
-    @repository = @host.repositories.create(full_name: 'ecosyste-ms/repos')
+    @repository = @host.repositories.create(full_name: 'ecosyste-ms/repos', created_at: Time.now, updated_at: Time.now)
     @tag = @repository.tags.create(name: '1.0.0', sha: 'deadbeef')
   end
 
