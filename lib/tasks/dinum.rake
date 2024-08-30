@@ -5,9 +5,9 @@ module Dinum
   # This instance reference the repositories of the public administration in France
 
   # The master data for host and repos is stored in a YAML file
-  # The file will describe general purpose hosts and state hosts
-  # The general purpose hosts will be imported with only state owned owners
-  # The state hosts will be imported with all the owners
+  # The file will describe general purpose hosts and pso hosts
+  # The general purpose hosts will be imported with only pso owned owners
+  # The pso hosts will be imported with all the owners
   # Some hosts are ignored because they are not currently available (missconfigured, not reachable, etc)
   ACCOUNTS_FILE = "https://code.gouv.fr/data/comptes-organismes-publics.yml"
 
@@ -42,19 +42,17 @@ module Dinum
   def general_purpose_hosts
     @general_purpose_hosts ||= Dinum.accounts_data.select { |k, v| v['general_purpose'] }
   end
-  
-  # TODO: replace state by pso : Public Sector Organization
 
-  # Extract the state hosts from the master data
-  def state_hosts
-    @state_hosts ||= Dinum.accounts_data.select { |k, v| !v['general_purpose'] }
+  # Extract the pso hosts from the master data
+  def pso_hosts
+    @pso_hosts ||= Dinum.accounts_data.select { |k, v| !v['general_purpose'] }
   end
 
-  def state_hosts?(host)
-    Dinum.state_hosts.keys.include?(URI(host.url).host)
+  def pso_hosts?(host)
+    Dinum.pso_hosts.keys.include?(URI(host.url).host)
   end
 
-  # Import the general purpose hosts with only state owned owners
+  # Import the general purpose hosts with only pso owned owners
   # after: skip all the hosts before this one
   # dry: do not perform any action
   def import_general_purpose_owner_repos(after: nil, dry: false)
@@ -103,9 +101,9 @@ module Dinum
     p "service_unknown: #{service_unknown}"
   end
 
-  # Import the state hosts without any repos yet
-  def import_state_hosts
-    Dinum.state_hosts.each do |host_domain, host_data|
+  # Import the pso hosts without any repos yet
+  def import_pso_hosts
+    Dinum.pso_hosts.each do |host_domain, host_data|
       forge = host_data['forge']
       url = "https://#{host_domain}"
       host = Host
@@ -129,10 +127,10 @@ module Dinum
     end
   end
 
-  # Method to perform a full synchronization for all state hosts
+  # Method to perform a full synchronization for all pso hosts
   def hosts_initial_full_synchronization
     Host.all.each do |host|
-      next if state_hosts?(host)
+      next if pso_hosts?(host)
       begin
         host_initial_full_synchronization(host)
       rescue StandardError => e
@@ -185,6 +183,22 @@ module Dinum
     end
     puts "#{Host.where(repositories_count: 0).count} hosts with sync problem"
   end
+
+  def hosts_run_async(pso:, &block)
+    Host.find_each.map do |host|
+      next if host.repositories_count == 0
+      next if Dinum.pso_hosts?(host) != pso
+      Thread.new do
+        begin
+          ActiveRecord::Base.connection_pool.with_connection do
+            block.call(host)
+          end
+        rescue StandardError => e
+          puts "Error: #{e} for host: #{host.name}"
+        end
+      end
+    end
+  end
 end
 
 namespace :dinum do
@@ -193,9 +207,9 @@ namespace :dinum do
     Dinum.import_general_purpose_owner_repos
   end
 
-  desc "Import state hosts"
-  task :import_state_hosts => :environment do
-    Dinum.import_state_hosts
+  desc "Import pso hosts"
+  task :import_pso_hosts => :environment do
+    Dinum.import_pso_hosts
   end
 
   desc "Hosts initial full synchronization"
