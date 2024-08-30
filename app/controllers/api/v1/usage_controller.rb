@@ -1,7 +1,7 @@
 class Api::V1::UsageController < Api::V1::ApplicationController
   def index
     @ecosystems = PackageUsage.group(:ecosystem).count.sort_by{|e,c| -c }
-    fresh_when @ecosystems, public: true
+    expires_in 1.week, public: true
   end
 
   def ecosystem
