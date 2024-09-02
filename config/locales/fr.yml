@@ -75,7 +75,7 @@ fr:
   repositories:
     dependencies:
       pending: En attente
-    fork_of: Fork de %{name}
+    fork_of: Fork de
     show:
       files: Fichiers
       funding_links: 'Faire un don :'
