@@ -229,11 +229,11 @@ GEM
       ostruct (>= 0.2)
     ostruct (0.6.0)
     packageurl-ruby (0.1.0)
-    pagy (9.0.8)
+    pagy (9.0.9)
     parser (3.3.5.0)
       ast (~> 2.4.1)
       racc
-    pg (1.5.7)
+    pg (1.5.8)
     pg_query (5.1.0)
       google-protobuf (>= 3.22.3)
     pghero (3.6.0)
@@ -305,7 +305,7 @@ GEM
       redis-client (>= 0.22.0)
     redis-client (0.22.2)
       connection_pool
-    reline (0.5.9)
+    reline (0.5.10)
       io-console (~> 0.5)
     rexml (3.3.7)
     rswag-api (2.14.0)
