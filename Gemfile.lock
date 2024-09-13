@@ -412,6 +412,7 @@ DEPENDENCIES
   nokogiri
   octokit
   oj
+  ostruct
   packageurl-ruby
   pagy
   pg
@@ -442,7 +443,7 @@ DEPENDENCIES
   webmock
 
 RUBY VERSION
-   ruby 3.3.4p53
+   ruby 3.3.5p53
 
 BUNDLED WITH
    2.5.18

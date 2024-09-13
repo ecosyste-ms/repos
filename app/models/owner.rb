@@ -8,7 +8,7 @@ class Owner < ApplicationRecord
   scope :updated_after, ->(date) { where('updated_at > ?', date) }
 
   scope :kind, ->(kind) { where(kind: kind) }
-  enum kind: { user: 'user', organization: 'organization' }
+  enum :kind, {:user=>"user", :organization=>"organization"}
 
   scope :has_sponsors_listing, -> { where("metadata->>'has_sponsors_listing' = 'true'") }
   
