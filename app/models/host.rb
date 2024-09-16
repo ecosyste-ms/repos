@@ -63,6 +63,8 @@ class Host < ApplicationRecord
 
   def sync_repository(full_name, uuid: nil)
     return if full_name.blank?
+    # remove .git from the end of the full_name
+    full_name = full_name.gsub(/\.git$/, '')
     puts "syncing #{full_name}"
     repo = repositories.find_by('lower(full_name) = ?', full_name.downcase)
 
