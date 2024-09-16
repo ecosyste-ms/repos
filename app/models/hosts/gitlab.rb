@@ -268,7 +268,7 @@ module Hosts
       })
 
       repo_hash[:license] = project.license.try(:key)
-
+      return nil if repo_hash[:full_name].nil?
       return repo_hash.slice(*repository_columns)
     end
 
