@@ -252,7 +252,7 @@ module Hosts
       repo_hash.merge!({
         uuid: project.id,
         full_name: project.path_with_namespace,
-        owner: project.path_with_namespace.split('/').first,
+        owner: project.path_with_namespace.try(:split,'/').try(:first),
         fork: project.try(:forked_from_project).present?,
         updated_at: project.last_activity_at,
         stargazers_count: project.star_count,
