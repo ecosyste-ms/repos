@@ -33,19 +33,19 @@ module Dinum
       response = Faraday.get ACCOUNTS_FILE
       data = YAML.safe_load(response.body, permitted_classes: [Date])
       data.select! { |k, v| !v['ignored_since'] || v['ignored_since'] < Date.today }
-      puts "Total: #{data.size} forges"
+      puts "[accounts_data] Total: #{data.size} forges"
       data
     end
   end
 
   # Extract the general purpose hosts from the master data
   def general_purpose_hosts
-    @general_purpose_hosts ||= Dinum.accounts_data.select { |k, v| v['general_purpose'] }
+    @general_purpose_hosts ||= Dinum.accounts_data.select { |k, v| v['owners'] }
   end
 
   # Extract the pso hosts from the master data
   def pso_hosts
-    @pso_hosts ||= Dinum.accounts_data.select { |k, v| !v['general_purpose'] }
+    @pso_hosts ||= Dinum.accounts_data.select { |k, v| !v['owners'] }
   end
 
   def pso_hosts?(host)
@@ -63,7 +63,7 @@ module Dinum
 
     Dinum.general_purpose_hosts.each do |host_url, host_data|
       forge = host_data['forge']
-      groups = host_data['groups']
+      owners = host_data['owners']
       url = "https://#{host_url}"
       host = Host
         .create_with(name: HOST_NAMING_MAP.fetch(url, host_url), kind: forge)
@@ -74,9 +74,9 @@ module Dinum
         next
       end
 
-      puts "Syncing #{host.name} with #{groups.size} groups"
+      puts "Syncing #{host.name} with #{owners.size} owners"
 
-      groups.each do |owner_name, metadatas|
+      owners.each do |owner_name, metadatas|
         puts owner_name
 
         if skip
@@ -226,8 +226,12 @@ namespace :dinum do
   task :destroy_old_hosts => :environment do
     urls = Dinum.accounts_data.map { |host_domain, data| "https://#{host_domain}" }
     hosts = Host.where.not(url: urls)
-    puts "!! Destroying #{hosts.count}/#{Host.count} hosts (enter to continue) !!"
-    STDIN.gets
-    hosts.destroy_all
+    if hosts.any?
+      puts "!! Destroying #{hosts.count}/#{Host.count} hosts (enter to continue) !!"
+      STDIN.gets
+      hosts.destroy_all
+    else
+      puts "No hosts to destroy"
+    end
   end
 end
