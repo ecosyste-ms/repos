@@ -45,6 +45,8 @@ Rails.application.routes.draw do
             get :ping
           end
         end
+
+        resources :topics, only: [:index, :show], constraints: { id: /.*/ }
         
         member do
           get :repository_names, to: 'repositories#names', as: :repository_names
