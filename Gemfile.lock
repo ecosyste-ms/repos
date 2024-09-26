@@ -76,7 +76,7 @@ GEM
     after_commit_action (1.1.0)
       activerecord (>= 3.0.0)
       activesupport (>= 3.0.0)
-    appsignal (4.0.9)
+    appsignal (4.1.0)
       logger
       rack
     ast (2.4.2)
