@@ -306,7 +306,7 @@ module Hosts
 
     def fetch_owner(login)
       search = api_client.get "/users?username=#{login}"
-      if search.present?
+      if search.present? && search.is_a?(Array)
         user = search.first.to_hash
         id = user["id"]
         user_hash = api_client.user(id).to_hash
