@@ -44,6 +44,7 @@ class RepositoriesController < ApplicationController
     @host = Host.find_by_name!(params[:host_id])
     @repository = @host.find_repository(params[:id].downcase)
     
+    raise ActiveRecord::RecordNotFound if @repository.nil?
 
     if @repository.full_name.downcase != params[:id].downcase
       redirect_to(host_repository_path(@host, @repository.full_name), status: :moved_permanently) and return
