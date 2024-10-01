@@ -148,8 +148,8 @@ GEM
     google-protobuf (4.28.2-x86_64-linux)
       bigdecimal
       rake (>= 13)
-    groupdate (6.4.0)
-      activesupport (>= 6.1)
+    groupdate (6.5.0)
+      activesupport (>= 7)
     hashdiff (1.1.1)
     highline (3.1.1)
       reline
@@ -371,7 +371,7 @@ GEM
       activemodel (>= 6.0.0)
       bindex (>= 0.4.0)
       railties (>= 6.0.0)
-    webmock (3.23.1)
+    webmock (3.24.0)
       addressable (>= 2.8.0)
       crack (>= 0.3.2)
       hashdiff (>= 0.4.0, < 2.0.0)
