@@ -89,7 +89,7 @@ module Dinum
           owner.update_repositories_count
           owner_without_repos.append owner if owner.repositories_count == 0
         else
-          puts "Owner not found: #{owner_name}"
+          puts "Owner not found: #{owner_name} or kind == user"
           missing_owners.append owner_name
         end
       end
@@ -189,7 +189,7 @@ module Dinum
   def hosts_run_async(pso:, &block)
     Host.find_each.map do |host|
       next if host.repositories_count == 0
-      next if Dinum.pso_hosts?(host) != pso
+      next if Dinum.pso_hoOwnsts?(host) != pso
       Thread.new do
         ActiveRecord::Base.connection_pool.with_connection do
           block.call(host)
