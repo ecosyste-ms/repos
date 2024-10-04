@@ -76,7 +76,7 @@ GEM
     after_commit_action (1.1.0)
       activerecord (>= 3.0.0)
       activesupport (>= 3.0.0)
-    appsignal (4.1.1)
+    appsignal (4.1.2)
       logger
       rack
     ast (2.4.2)
@@ -232,7 +232,7 @@ GEM
       ostruct (>= 0.2)
     ostruct (0.6.0)
     packageurl-ruby (0.1.0)
-    pagy (9.0.9)
+    pagy (9.1.0)
     parser (3.3.5.0)
       ast (~> 2.4.1)
       racc
@@ -311,10 +311,10 @@ GEM
     reline (0.5.10)
       io-console (~> 0.5)
     rexml (3.3.8)
-    rswag-api (2.14.0)
+    rswag-api (2.15.0)
       activesupport (>= 5.2, < 8.0)
       railties (>= 5.2, < 8.0)
-    rswag-ui (2.14.0)
+    rswag-ui (2.15.0)
       actionpack (>= 5.2, < 8.0)
       railties (>= 5.2, < 8.0)
     ruby2_keywords (0.0.5)
@@ -449,4 +449,4 @@ RUBY VERSION
    ruby 3.3.5p53
 
 BUNDLED WITH
-   2.5.20
+   2.5.21
