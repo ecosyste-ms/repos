@@ -187,18 +187,42 @@ module Dinum
   end
 
   def hosts_run_async(pso:, &block)
+    count = 0
+    pool = Concurrent::FixedThreadPool.new(5)
     Host.find_each.map do |host|
       next if host.repositories_count == 0
-      next if Dinum.pso_hoOwnsts?(host) != pso
-      Thread.new do
+      next if Dinum.pso_hosts?(host) != pso
+      count += 1
+      pool.post do
         ActiveRecord::Base.connection_pool.with_connection do
           block.call(host)
         end
       rescue => e
         puts "Error: #{e} for host: #{host.name}"
+      ensure
+        count -= 1
+        pool.shutdown if count == 0
+      end
+    end
+    pool.wait_for_termination
+  end
+
+  def repository_run_async(pso:, &block)
+    hosts_run_async(pso: pso) do |host|
+      host.repositories.find_each do |repo|
+        block.call(repo)
+      rescue => e
+        puts "Error: #{e} for repo: #{repo.full_name}"
       end
     end
   end
+
+  def sync_extra_details(pso:)
+    repository_run_async(pso:) do |r|
+      r.sync_extra_details
+    end
+  end
+
 end
 
 namespace :dinum do
