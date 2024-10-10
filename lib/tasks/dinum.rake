@@ -106,7 +106,7 @@ module Dinum
       forge = host_data["forge"]
 
       if !SUPPORTED_FORGES_KIND.include?(forge)
-        puts "Unsupported forge: #{forge} for host: #{host.name}, not syncinc"
+        puts "Unsupported forge: #{forge} for host: #{host_domain}, not syncinc"
         next
       end
 
@@ -260,3 +260,7 @@ namespace :dinum do
     end
   end
 end
+
+# To load in console : 
+# require 'rake'
+# Rails.application.load_tasks
