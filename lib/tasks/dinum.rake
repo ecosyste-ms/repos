@@ -210,6 +210,7 @@ module Dinum
   def repository_run_async(pso:, &block)
     hosts_run_async(pso: pso) do |host|
       host.repositories.find_each do |repo|
+        puts repo.full_name
         block.call(repo)
       rescue => e
         puts "Error: #{e} for repo: #{repo.full_name}"
