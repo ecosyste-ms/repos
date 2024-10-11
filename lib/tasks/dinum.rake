@@ -207,9 +207,11 @@ module Dinum
     pool.wait_for_termination
   end
 
-  def repository_run_async(pso:, &block)
+  def repository_run_async(pso:, fork: nil, &block)
     hosts_run_async(pso: pso) do |host|
       host.repositories.find_each do |repo|
+        next if fork == false && repo.fork
+        next if fork == true && !repo.fork
         puts repo.full_name
         block.call(repo)
       rescue => e
@@ -218,8 +220,8 @@ module Dinum
     end
   end
 
-  def sync_extra_details(pso:)
-    repository_run_async(pso:) do |r|
+  def sync_extra_details(pso:, fork: nil)
+    repository_run_async(pso:, fork:) do |r|
       r.sync_extra_details(force: true)
     end
   end
