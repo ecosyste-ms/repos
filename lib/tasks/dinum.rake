@@ -220,7 +220,7 @@ module Dinum
 
   def sync_extra_details(pso:)
     repository_run_async(pso:) do |r|
-      r.sync_extra_details
+      r.sync_extra_details(force: true)
     end
   end
 
