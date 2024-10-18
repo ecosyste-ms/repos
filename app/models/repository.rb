@@ -9,7 +9,7 @@ class Repository < ApplicationRecord
   has_many :repository_usages, dependent: :delete_all
 
   scope :owner, ->(owner) { where(owner: owner) }
-  scope :subgroup, ->(owner, subgroup) { where(owner: owner).where('lower(full_name) ilike ?', "#{owner}/#{subgroup}/%") }
+  scope :subgroup, ->(owner, subgroup) { where(owner: owner).where("lower(full_name) ilike ?", "#{owner}/#{subgroup}/%") }
   scope :language, ->(language) { where(language: language) }
   scope :forked, ->(fork) { where(fork: fork) }
   scope :archived, ->(archived) { where(archived: archived) }
@@ -18,12 +18,12 @@ class Repository < ApplicationRecord
   scope :no_topic, -> { where("topics = '{}'") }
   scope :with_topics, -> { where("topics != '{}'") }
   scope :topic, ->(topic) { where("topics @> ARRAY[?]::varchar[]", topic) }
-  scope :with_commit_stats, -> { where('length(commit_stats::text) > 2') }
-  scope :starred, -> { where('stargazers_count > 0') }
-  scope :minimum_stars, ->(stars) { where('stargazers_count >= ?', stars) }
-  
-  scope :created_after, ->(date) { where('created_at > ?', date) }
-  scope :updated_after, ->(date) { where('updated_at > ?', date) }
+  scope :with_commit_stats, -> { where("length(commit_stats::text) > 2") }
+  scope :starred, -> { where("stargazers_count > 0") }
+  scope :minimum_stars, ->(stars) { where("stargazers_count >= ?", stars) }
+
+  scope :created_after, ->(date) { where("created_at > ?", date) }
+  scope :updated_after, ->(date) { where("updated_at > ?", date) }
 
   scope :with_manifests, -> { joins(:manifests).group(:id) }
   scope :without_manifests, -> { includes(:manifests).where(manifests: {repository_id: nil}) }
@@ -38,38 +38,38 @@ class Repository < ApplicationRecord
         Repository.connection.select_rows("SELECT topics, COUNT(topics) AS topics_count FROM (SELECT id, unnest(topics) AS topics FROM repositories WHERE topics IS NOT NULL AND array_length(topics, 1) > 0) AS foo GROUP BY topics ORDER BY topics_count DESC, topics ASC LIMIT 50000;")
       end
     else
-      Rails.cache.fetch("host/#{self.id}/topics", expires_in: 1.week) do
+      Rails.cache.fetch("host/#{id}/topics", expires_in: 1.week) do
         Repository.connection.select_rows("SELECT topics, COUNT(topics) AS topics_count FROM (SELECT id, unnest(topics) AS topics FROM repositories WHERE topics IS NOT NULL AND array_length(topics, 1) > 0) AS foo GROUP BY topics ORDER BY topics_count DESC, topics ASC LIMIT 50000;")
       end
     end
   end
 
   def self.parse_dependencies_async
-    Repository.where.not(dependency_job_id: nil).limit(2000).select('id, dependencies_parsed_at').each(&:parse_dependencies_async)
-    return if Sidekiq::Queue.new('dependencies').size > 2_000
+    Repository.where.not(dependency_job_id: nil).limit(2000).select("id, dependencies_parsed_at").each(&:parse_dependencies_async)
+    return if Sidekiq::Queue.new("dependencies").size > 2_000
     Repository.where(status: nil)
-              .where(fork: false)
-              .where(dependencies_parsed_at: nil, dependency_job_id: nil)
-              .select('id, dependencies_parsed_at')
-              .limit(2000).each(&:parse_dependencies_async)
+      .where(fork: false)
+      .where(dependencies_parsed_at: nil, dependency_job_id: nil)
+      .select("id, dependencies_parsed_at")
+      .limit(2000).each(&:parse_dependencies_async)
   end
 
   def self.download_tags_async
-    return if Sidekiq::Queue.new('tags').size > 5_000
+    return if Sidekiq::Queue.new("tags").size > 5_000
     Repository.where(fork: false, status: nil)
-              .order('tags_last_synced_at ASC nulls first')
-              .limit(5_000)
-              .select('id')
-              .each(&:download_tags_async)
+      .order("tags_last_synced_at ASC nulls first")
+      .limit(5_000)
+      .select("id")
+      .each(&:download_tags_async)
   end
 
   def self.update_metadata_files_async
-    return if Sidekiq::Queue.new('default').size > 10_000
+    return if Sidekiq::Queue.new("default").size > 10_000
     Repository.where(status: nil, fork: false)
-              .where('length(metadata::text) = 2')
-              .limit(5_000)
-              .select('id')
-              .each(&:update_metadata_files_async)
+      .where("length(metadata::text) = 2")
+      .limit(5_000)
+      .select("id")
+      .each(&:update_metadata_files_async)
   end
 
   def sync_owner
@@ -81,11 +81,11 @@ class Repository < ApplicationRecord
   end
 
   def owner_record
-    @owner_record ||= host.owners.find_by('lower(login) = ?', owner.downcase)
+    @owner_record ||= host.owners.find_by("lower(login) = ?", owner.downcase)
   end
 
   def owner
-    read_attribute(:owner) || full_name.split('/').first
+    read_attribute(:owner) || full_name.split("/").first
   end
 
   def to_s
@@ -101,37 +101,37 @@ class Repository < ApplicationRecord
   end
 
   def subgroups
-    return [] if full_name.split('/').size < 3
-    full_name.split('/')[1..-2]
+    return [] if full_name.split("/").size < 3
+    full_name.split("/")[1..-2]
   end
 
   def project_slug
-    full_name.split('/').last
+    full_name.split("/").last
   end
 
   def project_name
-    full_name.split('/')[1..-1].join('/')
+    full_name.split("/")[1..-1].join("/")
   end
 
   def sync
     if last_synced_at && last_synced_at > 1.day.ago
       # if recently synced, schedule for syncing 1 day later
       delay = (last_synced_at + 1.day) - Time.now
-      UpdateRepositoryWorker.perform_in(delay, self.id)
+      UpdateRepositoryWorker.perform_in(delay, id)
       return
     end
     host.host_instance.update_from_host(self)
   end
 
   def sync_async
-    UpdateRepositoryWorker.perform_async(self.id)
+    UpdateRepositoryWorker.perform_async(id)
   end
 
   def html_url
     host.html_url(self)
   end
 
-  def download_url(branch = default_branch, kind = 'branch')
+  def download_url(branch = default_branch, kind = "branch")
     host.download_url(self, branch, kind)
   end
 
@@ -145,20 +145,20 @@ class Repository < ApplicationRecord
   end
 
   def parse_dependencies_async
-    ParseDependenciesWorker.perform_async(self.id)
+    ParseDependenciesWorker.perform_async(id)
   end
 
   def parse_dependencies
     connection = Faraday.new(url: PARSER_DOMAIN) do |faraday|
       faraday.use Faraday::FollowRedirects::Middleware
-    
+
       faraday.adapter Faraday.default_adapter
     end
 
-    if dependency_job_id
-      res = connection.get("/api/v1/jobs/#{dependency_job_id}")
-    else  
-      res = connection.post("/api/v1/jobs?url=#{CGI.escape(download_url)}")
+    res = if dependency_job_id
+      connection.get("/api/v1/jobs/#{dependency_job_id}")
+    else
+      connection.post("/api/v1/jobs?url=#{CGI.escape(download_url)}")
     end
     if res.success?
       json = Oj.load(res.body)
@@ -167,14 +167,14 @@ class Repository < ApplicationRecord
   end
 
   def record_dependency_parsing(json)
-    if ['complete', 'error'].include?(json['status'])
-      if json['status'] == 'complete'
-        new_manifests = json['results'].to_h.with_indifferent_access['manifests']
-        
+    if ["complete", "error"].include?(json["status"])
+      if json["status"] == "complete"
+        new_manifests = json["results"].to_h.with_indifferent_access["manifests"]
+
         if new_manifests.blank?
           manifests.each(&:destroy)
         else
-          new_manifests.each {|m| sync_manifest(m) }
+          new_manifests.each { |m| sync_manifest(m) }
           delete_old_manifests(new_manifests)
         end
       end
@@ -183,17 +183,17 @@ class Repository < ApplicationRecord
       RepositoryUsage.from_repository(self)
     else
       update_column(:dependency_job_id, json["id"]) if dependency_job_id != json["id"]
-      ParseDependenciesWorker.perform_in(10.minutes, self.id)
+      ParseDependenciesWorker.perform_in(10.minutes, id)
     end
   end
 
   def sync_manifest(m)
-    args = {ecosystem: (m[:platform] || m[:ecosystem]), kind: m[:kind], filepath: m[:path], sha: m[:sha]}
+    args = {ecosystem: m[:platform] || m[:ecosystem], kind: m[:kind], filepath: m[:path], sha: m[:sha]}
 
     unless manifests.find_by(args)
       manifest = manifests.create(args)
       return if m[:dependencies].nil?
-      dependencies = m[:dependencies].compact.map(&:with_indifferent_access).uniq{|dep| [dep[:name].try(:strip), dep[:requirement], dep[:type]]}
+      dependencies = m[:dependencies].compact.map(&:with_indifferent_access).uniq { |dep| [dep[:name].try(:strip), dep[:requirement], dep[:type]] }
 
       deps = dependencies.map do |dep|
         ecosystem = manifest.ecosystem
@@ -205,8 +205,8 @@ class Repository < ApplicationRecord
           ecosystem: ecosystem,
           requirements: dep[:requirement],
           kind: dep[:type],
-          repository_id: self.id,
-          direct: manifest.kind == 'manifest',
+          repository_id: id,
+          direct: manifest.kind == "manifest",
           created_at: Time.now,
           updated_at: Time.now
         }
@@ -217,8 +217,8 @@ class Repository < ApplicationRecord
   end
 
   def delete_old_manifests(new_manifests)
-    existing_manifests = manifests.map{|m| [m.ecosystem, m.filepath] }
-    to_be_removed = existing_manifests - new_manifests.map{|m| [(m[:platform] || m[:ecosystem]), m[:path]] }
+    existing_manifests = manifests.map { |m| [m.ecosystem, m.filepath] }
+    to_be_removed = existing_manifests - new_manifests.map { |m| [m[:platform] || m[:ecosystem], m[:path]] }
     to_be_removed.each do |m|
       manifests.where(ecosystem: m[0], filepath: m[1]).each(&:destroy)
     end
@@ -226,7 +226,7 @@ class Repository < ApplicationRecord
   end
 
   def latest_tag
-    @latest_tag ||= tags.order('published_at desc nulls last').first
+    @latest_tag ||= tags.order("published_at desc nulls last").first
   end
 
   def set_latest_tag_published_at
@@ -238,17 +238,17 @@ class Repository < ApplicationRecord
   end
 
   def self.sync_extra_details_async
-    Repository.where(files_changed: true, fork: false).limit(600).order('pushed_at asc').select('id').each(&:sync_extra_details_async)
+    Repository.where(files_changed: true, fork: false).limit(600).order("pushed_at asc").select("id").each(&:sync_extra_details_async)
   end
 
   def sync_extra_details_async
-    SyncExtraDetailsWorker.perform_async(self.id)
+    SyncExtraDetailsWorker.perform_async(id)
   end
 
-  def sync_extra_details
-    return if fork?
-    return unless files_changed?
-    if pushed_at.present?
+  def sync_extra_details(force: false)
+    return if fork? && !force
+    return unless files_changed? || force
+    if pushed_at.present? || force
       parse_dependencies unless dependencies_parsed_at.present? && dependencies_parsed_at > pushed_at
       update_metadata_files
       download_tags
@@ -277,23 +277,19 @@ class Repository < ApplicationRecord
   end
 
   def download_tags_async
-    DownloadTagsWorker.perform_async(self.id)
+    DownloadTagsWorker.perform_async(id)
   end
 
   def archive_list
-    begin
-      Oj.load(Faraday.get(archive_list_url).body)
-    rescue
-      []
-    end
+    Oj.load(Faraday.get(archive_list_url).body)
+  rescue
+    []
   end
 
   def archive_contents(path)
-    begin
-      Oj.load(Faraday.get(archive_contents_url(path)).body)
-    rescue
-      {}
-    end
+    Oj.load(Faraday.get(archive_contents_url(path)).body)
+  rescue
+    {}
   end
 
   def archive_list_url
@@ -316,47 +312,47 @@ class Repository < ApplicationRecord
     file_list = get_file_list
     return if file_list.blank?
     {
-      readme:           file_list.find{|file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?README/i) },
-      changelog:        file_list.find{|file| file.match(/^CHANGE|^HISTORY|^NEWS/i) },
-      contributing:     file_list.find{|file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?CONTRIBUTING/i) },
-      funding:          file_list.find{|file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?FUNDING.yml/i) },
-      license:          file_list.find{|file| file.match(/^LICENSE|^COPYING|^MIT-LICENSE/i) },
-      code_of_conduct:  file_list.find{|file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?CODE[-_]OF[-_]CONDUCT/i) },
-      threat_model:     file_list.find{|file| file.match(/^THREAT[-_]MODEL/i) },
-      audit:            file_list.find{|file| file.match(/^AUDIT/i) },
-      citation:         file_list.find{|file| file.match(/^CITATION/i) },
-      codeowners:       file_list.find{|file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?CODEOWNERS/i) },
-      security:         file_list.find{|file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?SECURITY/i) },
-      support:          file_list.find{|file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?SUPPORT/i) },
-      governance:       file_list.find{|file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?GOVERNANCE/i) },
-      roadmap:          file_list.find{|file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?ROADMAP/i) },
-      authors:          file_list.find{|file| file.match(/^AUTHORS/i) },
-      dei:              file_list.find{|file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?DEI/i) },
-      publiccode:       file_list.find{|file| file.match(/^publiccode.yml/i) },
-      codemeta:         file_list.find{|file| file.match(/^codemeta.json/i) },
+      readme: file_list.find { |file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?README/i) },
+      changelog: file_list.find { |file| file.match(/^CHANGE|^HISTORY|^NEWS/i) },
+      contributing: file_list.find { |file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?CONTRIBUTING/i) },
+      funding: file_list.find { |file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?FUNDING.yml/i) },
+      license: file_list.find { |file| file.match(/^LICENSE|^COPYING|^MIT-LICENSE/i) },
+      code_of_conduct: file_list.find { |file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?CODE[-_]OF[-_]CONDUCT/i) },
+      threat_model: file_list.find { |file| file.match(/^THREAT[-_]MODEL/i) },
+      audit: file_list.find { |file| file.match(/^AUDIT/i) },
+      citation: file_list.find { |file| file.match(/^CITATION/i) },
+      codeowners: file_list.find { |file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?CODEOWNERS/i) },
+      security: file_list.find { |file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?SECURITY/i) },
+      support: file_list.find { |file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?SUPPORT/i) },
+      governance: file_list.find { |file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?GOVERNANCE/i) },
+      roadmap: file_list.find { |file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?ROADMAP/i) },
+      authors: file_list.find { |file| file.match(/^AUTHORS/i) },
+      dei: file_list.find { |file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?DEI/i) },
+      publiccode: file_list.find { |file| file.match(/^publiccode.yml/i) },
+      codemeta: file_list.find { |file| file.match(/^codemeta.json/i) }
     }
   end
 
   def update_metadata_files_async
-    UpdateMetadataFilesWorker.perform_async(self.id)
+    UpdateMetadataFilesWorker.perform_async(id)
   end
 
   def update_metadata_files
     metadata_files = fetch_metadata_files_list
     return if metadata_files.nil?
-    metadata['files'] = metadata_files
+    metadata["files"] = metadata_files
     save
     parse_funding
   end
 
   def parse_funding
-    if related_dot_github_repo.present? && related_dot_github_repo.metadata['funding'].present?
-      metadata['funding'] = related_dot_github_repo.metadata['funding']
+    if related_dot_github_repo.present? && related_dot_github_repo.metadata["funding"].present?
+      metadata["funding"] = related_dot_github_repo.metadata["funding"]
     else
-      return if metadata['files']['funding'].blank?
-      file = get_file_contents(metadata['files']['funding'])
+      return if metadata["files"]["funding"].blank?
+      file = get_file_contents(metadata["files"]["funding"])
       return if file.blank?
-      metadata['funding'] = YAML.load(file[:content])
+      metadata["funding"] = YAML.load(file[:content])
     end
     save
   rescue
@@ -364,7 +360,7 @@ class Repository < ApplicationRecord
   end
 
   def related_dot_github_repo
-    return nil if project_name == '.github'
+    return nil if project_name == ".github"
     host.find_repository("#{owner}/.github")
   end
 
@@ -377,13 +373,13 @@ class Repository < ApplicationRecord
   end
 
   def repo_funding_links
-    return [] if metadata.blank? ||  metadata["funding"].blank?
+    return [] if metadata.blank? || metadata["funding"].blank?
     return [] unless metadata["funding"].is_a?(Hash)
-    metadata["funding"].map do |key,v|
+    metadata["funding"].map do |key, v|
       next if v.blank?
       case key
       when "github"
-        Array(v).map{|username| "https://github.com/sponsors/#{username}" }
+        Array(v).map { |username| "https://github.com/sponsors/#{username}" }
       when "tidelift"
         "https://tidelift.com/funding/github/#{v}"
       when "community_bridge"
@@ -404,7 +400,7 @@ class Repository < ApplicationRecord
         "https://patreon.com/#{v}"
       when "polar"
         "https://polar.sh/#{v}"
-      when 'buy_me_a_coffee'
+      when "buy_me_a_coffee"
         "https://buymeacoffee.com/#{v}"
       else
         v
@@ -413,7 +409,7 @@ class Repository < ApplicationRecord
   end
 
   def ping_packages_async
-    PingPackagesWorker.perform_async(self.id)
+    PingPackagesWorker.perform_async(id)
   end
 
   def ping_packages
@@ -421,7 +417,7 @@ class Repository < ApplicationRecord
   end
 
   def commits_url
-  "#{COMMITS_DOMAIN}/hosts/#{host.name}/repositories/#{full_name}"
+    "#{COMMITS_DOMAIN}/hosts/#{host.name}/repositories/#{full_name}"
   end
 
   def commits_api_url
@@ -433,13 +429,13 @@ class Repository < ApplicationRecord
     return if response.status != 200
     stats = Oj.load(response.body)
     return if stats.blank?
-    return if stats['total_commits'].nil?
-    self.commit_stats = stats.slice('total_commits', 'total_committers', 'mean_commits', 'dds', 'last_synced_commit')
+    return if stats["total_commits"].nil?
+    self.commit_stats = stats.slice("total_commits", "total_committers", "mean_commits", "dds", "last_synced_commit")
     save
   end
 
   def sync_commit_stats_async
-    SyncCommitStatsWorker.perform_async(self.id)
+    SyncCommitStatsWorker.perform_async(id)
   end
 
   def self.parse_dependencies_for_github_actions_tags
@@ -456,26 +452,26 @@ class Repository < ApplicationRecord
 
     links = parse_link_header(response.headers)
 
-    while links['next'].present?
+    while links["next"].present?
       json = response.body
 
       json.each do |package|
-        repo_names << package['name']
+        repo_names << package["name"]
       end
-    
-      response = conn.get(links['next'])
+
+      response = conn.get(links["next"])
       return nil unless response.success?
       links = parse_link_header(response.headers)
     end
 
-    host = Host.find_by_name('GitHub')
+    host = Host.find_by_name("GitHub")
 
     repo_names.each do |repo_name|
       puts repo_name
       repo = host.find_repository(repo_name)
       if repo.nil?
         host.sync_repository_async(repo_name)
-        next 
+        next
       end
       repo.download_tags
       repo.tags.each do |tag|
@@ -485,10 +481,10 @@ class Repository < ApplicationRecord
   end
 
   def self.parse_link_header(headers)
-    return {} unless headers['Link'].present?
+    return {} unless headers["Link"].present?
 
-    links = headers['Link'].split(',').map do |link|
-      url, rel = link.split(';')
+    links = headers["Link"].split(",").map do |link|
+      url, rel = link.split(";")
       url = url[/<(.*)>/, 1]
       rel = rel[/rel="(.*)"/, 1]
       [rel, url]
@@ -498,8 +494,8 @@ class Repository < ApplicationRecord
   end
 
   def cleanup_duplicate_releases
-    releases.group(:uuid).having('count(*) > 1').count.each do |uuid,count|
-      releases.where(uuid: uuid).order('created_at desc').offset(1).each(&:destroy)
+    releases.group(:uuid).having("count(*) > 1").count.each do |uuid, count|
+      releases.where(uuid: uuid).order("created_at desc").offset(1).each(&:destroy)
     end
   end
 end
