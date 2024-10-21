@@ -5,26 +5,25 @@ module Dinum
   # This instance reference the repositories of the public administration in France
 
   # The master data for host and repos is stored in a YAML file
-  # The file will describe general purpose hosts and state hosts
-  # The general purpose hosts will be imported with only state owned owners
-  # The state hosts will be imported with all the owners
+  # The file will describe general purpose hosts and pso hosts
+  # The general purpose hosts will be imported with only pso owned owners
+  # The pso hosts will be imported with all the owners
   # Some hosts are ignored because they are not currently available (missconfigured, not reachable, etc)
-  ACCOUNTS_FILE = "https://git.sr.ht/~codegouvfr/codegouvfr-sources/blob/main/comptes-organismes-publics_new_specs.yml"
-
+  ACCOUNTS_FILE = "https://code.gouv.fr/data/comptes-organismes-publics.yml"
 
   # Pretty names for common hosts
   HOST_NAMING_MAP = {
-    'github.com' => 'GitHub',
-    'gitlab.com' => 'GitLab',
-    'framagit.org' => 'Framagit',
-    'gitlab.ow2.org' => 'OW2'
+    "github.com" => "GitHub",
+    "gitlab.com" => "GitLab",
+    "framagit.org" => "Framagit",
+    "gitlab.ow2.org" => "OW2"
   }
 
   # Forges which support standard synchronisation
   # By exemple source hut miss fetch_owner method and is not supported
   SUPPORTED_FORGES_KIND = Set[
-    'github',
-    'gitlab',
+    "github",
+    "gitlab",
   ]
 
   # Parse the master data YAML file and return the data
@@ -32,27 +31,27 @@ module Dinum
     @accounts_data ||= begin
       response = Faraday.get ACCOUNTS_FILE
       data = YAML.safe_load(response.body, permitted_classes: [Date])
-      data.select! { |k, v| !v['ignored_since'] || v['ignored_since'] < Date.today }
-      puts "Total: #{data.size} forges"
+      data.select! { |k, v| !v["ignored_since"] || v["ignored_since"] < Date.today }
+      puts "[accounts_data] Total: #{data.size} forges"
       data
     end
   end
 
   # Extract the general purpose hosts from the master data
   def general_purpose_hosts
-    @general_purpose_hosts ||= Dinum.accounts_data.select { |k, v| v['general_purpose'] }
+    @general_purpose_hosts ||= Dinum.accounts_data.select { |k, v| v["owners"] }
   end
 
-  # Extract the state hosts from the master data
-  def state_hosts
-    @state_hosts ||= Dinum.accounts_data.select { |k, v| !v['general_purpose'] }
+  # Extract the pso hosts from the master data
+  def pso_hosts
+    @pso_hosts ||= Dinum.accounts_data.select { |k, v| !v["owners"] }
   end
 
-  def state_hosts?(host)
-    Dinum.state_hosts.keys.include?(URI(host.url).host)
+  def pso_hosts?(host)
+    Dinum.pso_hosts.keys.include?(URI(host.url).host)
   end
 
-  # Import the general purpose hosts with only state owned owners
+  # Import the general purpose hosts with only pso owned owners
   # after: skip all the hosts before this one
   # dry: do not perform any action
   def import_general_purpose_owner_repos(after: nil, dry: false)
@@ -62,21 +61,21 @@ module Dinum
     skip = true if after
 
     Dinum.general_purpose_hosts.each do |host_url, host_data|
-      forge = host_data['forge']
-      groups = host_data['groups']
+      forge = host_data["forge"]
+      owners = host_data["owners"]
       url = "https://#{host_url}"
       host = Host
         .create_with(name: HOST_NAMING_MAP.fetch(url, host_url), kind: forge)
         .find_or_create_by!(url: url)
 
-      if ! SUPPORTED_FORGES_KIND.include?(forge)
+      if !SUPPORTED_FORGES_KIND.include?(forge)
         puts "Unsupported forge: #{forge} for host: #{host.name}, not syncinc"
         next
       end
 
-      puts "Syncing #{host.name} with #{groups.size} groups"
+      puts "Syncing #{host.name} with #{owners.size} owners"
 
-      groups.each do |owner_name, metadatas|
+      owners.each do |owner_name, metadatas|
         puts owner_name
 
         if skip
@@ -90,7 +89,7 @@ module Dinum
           owner.update_repositories_count
           owner_without_repos.append owner if owner.repositories_count == 0
         else
-          puts "Owner not found: #{owner_name}"
+          puts "Owner not found: #{owner_name} or kind == user"
           missing_owners.append owner_name
         end
       end
@@ -101,10 +100,16 @@ module Dinum
     p "service_unknown: #{service_unknown}"
   end
 
-  # Import the state hosts without any repos yet
-  def import_state_hosts
-    Dinum.state_hosts.each do |host_domain, host_data|
-      forge = host_data['forge']
+  # Import the pso hosts without any repos yet
+  def import_pso_hosts
+    Dinum.pso_hosts.each do |host_domain, host_data|
+      forge = host_data["forge"]
+
+      if !SUPPORTED_FORGES_KIND.include?(forge)
+        puts "Unsupported forge: #{forge} for host: #{host_domain}, not syncinc"
+        next
+      end
+
       url = "https://#{host_domain}"
       host = Host
         .create_with(name: HOST_NAMING_MAP.fetch(url, host_domain), kind: forge)
@@ -127,13 +132,13 @@ module Dinum
     end
   end
 
-  # Method to perform a full synchronization for all state hosts
+  # Method to perform a full synchronization for all pso hosts
   def hosts_initial_full_synchronization
     Host.all.each do |host|
-      next if state_hosts?(host)
+      next if pso_hosts?(host)
       begin
         host_initial_full_synchronization(host)
-      rescue StandardError => e
+      rescue => e
         puts "Error: #{e} for host: #{host.name}"
       end
     end
@@ -151,67 +156,124 @@ module Dinum
   # not working host should be marked in the master data file as ignored
   def hosts_list_sync_problem
     Host.where(repositories_count: 0, kind: :gitlab).each do |h|
-      begin
-        response = Faraday.get(h.url+"/api/v4/projects?per_page=1")
-        if response.status != 200
-          host_log_message(h, response.status)
-          next
-        end
-
-        json = JSON.parse(response.body)
-        if json.empty?
-          host_log_message(h, "Empty")
-        else
-          # host_log_message(h, "OK")
-        end
-
-      rescue JSON::ParserError
-        host_log_message(h, "JSON error")
-      rescue Faraday::ConnectionFailed
-        host_log_message(h, "ConnectionFailed")
-      rescue Faraday::TimeoutError
-        host_log_message(h, "TimeoutError")
-      rescue Faraday::SSLError
-        host_log_message(h, "SSLError")
-      rescue OpenSSL::SSL::SSLError
-        host_log_message(h, "SSLError")
-      rescue Errno::ECONNREFUSED
-        host_log_message(h, "ECONNREFUSED")
-      rescue StandardError => e
-        host_log_message(h, e)
+      response = Faraday.get(h.url + "/api/v4/projects?per_page=1")
+      if response.status != 200
+        host_log_message(h, response.status)
+        next
       end
+
+      json = JSON.parse(response.body)
+      if json.empty?
+        host_log_message(h, "Empty")
+      else
+        # host_log_message(h, "OK")
+      end
+    rescue JSON::ParserError
+      host_log_message(h, "JSON error")
+    rescue Faraday::ConnectionFailed
+      host_log_message(h, "ConnectionFailed")
+    rescue Faraday::TimeoutError
+      host_log_message(h, "TimeoutError")
+    rescue Faraday::SSLError
+      host_log_message(h, "SSLError")
+    rescue OpenSSL::SSL::SSLError
+      host_log_message(h, "SSLError")
+    rescue Errno::ECONNREFUSED
+      host_log_message(h, "ECONNREFUSED")
+    rescue => e
+      host_log_message(h, e)
     end
     puts "#{Host.where(repositories_count: 0).count} hosts with sync problem"
   end
+
+  def hosts_run_async(pso:, &block)
+    count = 0
+    pool = Concurrent::FixedThreadPool.new(5)
+    puts "Got a thread pool"
+    Host.find_each.map do |host|
+      puts "Host: #{host.name}"
+      next if host.repositories_count == 0
+      next if pso.present? && Dinum.pso_hosts?(host) != pso
+      count += 1
+      puts "- OK, will run async for host: #{host.name}"
+      pool.post do
+        begin
+          puts "Running async for host: #{host.name}"
+          ActiveRecord::Base.connection_pool.with_connection do
+            block.call(host)
+          end
+        rescue => e
+          puts "Error: #{e} for host: #{host.name}"
+        ensure
+          count -= 1
+          pool.shutdown if count == 0
+        end
+      end
+    end
+    pool.wait_for_termination if count > 0
+  ensure
+    pool.shutdown
+  end
+
+  def repository_run_async(pso:, fork: nil, &block)
+    hosts_run_async(pso: pso) do |host|
+      repositories = host.repositories
+      repositories = repositories.where(fork: fork) unless fork.nil?
+      puts "Host: #{host.name} - Repositories: #{repositories.count}"
+      repositories.find_each do |repo|
+        next if fork == false && repo.fork
+        next if fork == true && !repo.fork
+        puts repo.full_name
+        block.call(repo)
+      rescue => e
+        puts "Error: #{e} for repo: #{repo.full_name}"
+      end
+    end
+  end
+
+  def sync_extra_details(pso:, fork: nil)
+    repository_run_async(pso:, fork:) do |r|
+      r.sync_extra_details(force: true)
+    end
+  end
+
 end
 
 namespace :dinum do
   desc "Import general purpose owner repos"
-  task :import_general_purpose_owner_repos => :environment do
+  task import_general_purpose_owner_repos: :environment do
     Dinum.import_general_purpose_owner_repos
   end
 
-  desc "Import state hosts"
-  task :import_state_hosts => :environment do
-    Dinum.import_state_hosts
+  desc "Import pso hosts"
+  task import_pso_hosts: :environment do
+    Dinum.import_pso_hosts
   end
 
   desc "Hosts initial full synchronization"
-  task :hosts_initial_full_synchronization => :environment do
+  task hosts_initial_full_synchronization: :environment do
     Dinum.hosts_initial_full_synchronization
   end
 
   desc "Hosts list sync problem"
-  task :hosts_list_sync_problem => :environment do
+  task hosts_list_sync_problem: :environment do
     Dinum.hosts_list_sync_problem
   end
 
   desc "Destroy no longer used hosts"
-  task :destroy_old_hosts => :environment do
+  task destroy_old_hosts: :environment do
     urls = Dinum.accounts_data.map { |host_domain, data| "https://#{host_domain}" }
     hosts = Host.where.not(url: urls)
-    puts "!! Destroying #{hosts.count}/#{Host.count} hosts (enter to continue) !!"
-    STDIN.gets
-    hosts.destroy_all
+    if hosts.any?
+      puts "!! Destroying #{hosts.count}/#{Host.count} hosts (enter to continue) !!"
+      hosts.each { |h| puts h.url }
+      STDIN.gets
+      hosts.destroy_all
+    else
+      puts "No hosts to destroy"
+    end
   end
 end
+
+# To load in console : 
+# require 'rake'; Rails.application.load_tasks

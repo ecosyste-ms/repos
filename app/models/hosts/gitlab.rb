@@ -10,14 +10,14 @@ module Hosts
       def faraday_client
         connection = Faraday.new do |faraday|
           faraday.use Faraday::FollowRedirects::Middleware
-        
+
           faraday.adapter Faraday.default_adapter
         end
       end
 
       def tags(id_or_full_name, &block)
         # return an iterator if no block is given
-        return enum_for(__callee__, id_or_full_name) unless block_given?
+        return enum_for(__callee__, id_or_full_name) unless block
 
         per_page = 100
         page = 1
@@ -93,11 +93,11 @@ module Hosts
     end
 
     IGNORABLE_EXCEPTIONS = [::Gitlab::Error::NotFound,
-                            ::Gitlab::Error::Forbidden,
-                            ::Gitlab::Error::Unauthorized,
-                            ::Gitlab::Error::InternalServerError,
-                            ::Gitlab::Error::Parsing,
-                            ::Gitlab::Error::BadGateway]
+      ::Gitlab::Error::Forbidden,
+      ::Gitlab::Error::Unauthorized,
+      ::Gitlab::Error::InternalServerError,
+      ::Gitlab::Error::Parsing,
+      ::Gitlab::Error::BadGateway]
 
     def self.api_missing_error_class
       ::Gitlab::Error::NotFound
@@ -132,15 +132,15 @@ module Hosts
       "#{url(repository)}/-/tags/#{tag_name}"
     end
 
-    def download_url(repository, branch = nil, kind = 'branch')
+    def download_url(repository, branch = nil, kind = "branch")
       branch = repository.default_branch if branch.nil?
-      name = repository.full_name.split('/').last
+      name = repository.full_name.split("/").last
       "#{@host.url}/#{repository.full_name}/-/archive/#{branch}/#{name}-#{branch}.zip"
     end
 
     def get_file_list(repository)
       files_and_folders = JSON.parse(Faraday.get("#{ARCHIVES_DOMAIN}/api/v1/archives/list?url=#{CGI.escape(download_url(repository))}").body)
-      files_and_folders.reject{|f| files_and_folders.any?{|ff| ff.starts_with?(f+'/')}}
+      files_and_folders.reject { |f| files_and_folders.any? { |ff| ff.starts_with?(f + "/") } }
     rescue
       []
     end
@@ -161,8 +161,8 @@ module Hosts
 
     def download_readme(repository)
       files = api_client.tree(repository.full_name)
-      paths =  files.map(&:path)
-      readme_path = paths.select{|path| path.match(/^readme/i) }.sort{|path| Readme.supported_format?(path) ? 0 : 1 }.first
+      paths = files.map(&:path)
+      readme_path = paths.select { |path| path.match(/^readme/i) }.sort { |path| Readme.supported_format?(path) ? 0 : 1 }.first
       return if readme_path.nil?
       file = get_file_contents(readme_path)
       return unless file.present?
@@ -200,23 +200,23 @@ module Hosts
       names = []
       page = 1
 
-      repos = load_repo_names(page, 'updated_at')
+      repos = load_repo_names(page, "updated_at")
       return [] unless repos.present?
       oldest = repos.last["last_activity_at"]
-      names += repos.map{|repo| repo["path_with_namespace"] }
+      names += repos.map { |repo| repo["path_with_namespace"] }
 
       while oldest > target_time
         page += 1
-        repos = load_repo_names(page, 'updated_at')
+        repos = load_repo_names(page, "updated_at")
         break unless repos.present?
         oldest = repos.last["last_activity_at"]
-        names += repos.map{|repo| repo["path_with_namespace"] }
+        names += repos.map { |repo| repo["path_with_namespace"] }
       end
 
-      return names.uniq
+      names.uniq
     end
 
-    def load_repo_names(page_number = 1, order = 'created_at')
+    def load_repo_names(page_number = 1, order = "created_at")
       api_client.projects(per_page: 100, page: page_number, order_by: order, archived: false, simple: true)
     rescue *IGNORABLE_EXCEPTIONS
       []
@@ -226,7 +226,7 @@ module Hosts
       return if limit.zero?
 
       if names.any?
-        limit = limit - 1
+        limit -= 1
         recursive_gitlab_repos(page_number.to_i + 1, limit, order)
       end
     end
@@ -247,18 +247,24 @@ module Hosts
       project = api_client.project(full_name, license: true)
       return nil if project.visibility != "public"
 
-      repo_hash = project.to_h.with_indifferent_access.slice(:id, :description, :created_at, :name, :open_issues_count, :forks_count, :default_branch, :archived, :topics)
+      full_hash = project.to_h.with_indifferent_access
+
+      namespace = full_hash[:namespace]&.to_h&.with_indifferent_access
+
+      return nil if namespace && namespace[:kind] == "user" && ENV["SKIP_USER_REPOS"]
+
+      repo_hash = full_hash.slice(:id, :description, :created_at, :name, :open_issues_count, :forks_count, :default_branch, :archived, :topics)
 
       repo_hash.merge!({
         uuid: project.id,
         full_name: project.path_with_namespace,
-        owner: project.path_with_namespace.try(:split,'/').try(:first),
+        owner: project.path_with_namespace.try(:split, "/").try(:first),
         fork: project.try(:forked_from_project).present?,
         updated_at: project.last_activity_at,
         stargazers_count: project.star_count,
         has_issues: project.try(:issues_enabled),
         has_wiki: project.try(:wiki_enabled),
-        scm: 'git',
+        scm: "git",
         private: project.visibility != "public",
         pull_requests_enabled: project.try(:merge_requests_enabled),
         logo_url: project.avatar_url,
@@ -269,14 +275,14 @@ module Hosts
 
       repo_hash[:license] = project.license.try(:key)
       return nil if repo_hash[:full_name].nil?
-      return repo_hash.slice(*repository_columns)
+      repo_hash.slice(*repository_columns)
     end
 
     def crawl_repositories_async
       last_id = REDIS.get("gitlab_last_id:#{@host.id}")
       repos = api_client.projects(per_page: 100, archived: false, id_before: last_id, simple: true)
       if repos.present?
-        repos.each{|repo| @host.sync_repository_async(repo["path_with_namespace"])  }
+        repos.each { |repo| @host.sync_repository_async(repo["path_with_namespace"]) }
         REDIS.set("gitlab_last_id:#{@host.id}", repos.last["id"])
       end
     rescue *IGNORABLE_EXCEPTIONS
@@ -287,7 +293,8 @@ module Hosts
       last_id = REDIS.get("gitlab_last_id:#{@host.id}")
       repos = api_client.projects(per_page: 100, archived: false, id_before: last_id, simple: true)
       if repos.present?
-        repos.each{|repo| @host.sync_repository(repo["path_with_namespace"], uuid: repo['id'])  }
+        repos.reject! { |repo| repo.dig("namespace", "kind") == "user" } if ENV["SKIP_USER_REPOS"]
+        repos.each { |repo| @host.sync_repository(repo["path_with_namespace"], uuid: repo["id"]) }
         REDIS.set("gitlab_last_id:#{@host.id}", repos.last["id"])
       end
     rescue *IGNORABLE_EXCEPTIONS
@@ -296,12 +303,12 @@ module Hosts
 
     def load_owner_repos_names(owner)
       if owner.user?
-        api_client.user_projects(owner.login, per_page: 100, archived: false, simple: true).map{|repo| repo["path_with_namespace"] }
+        api_client.user_projects(owner.login, per_page: 100, archived: false, simple: true).map { |repo| repo["path_with_namespace"] }
       else
-        api_client.group_projects(owner.login, per_page: 100, archived: false, simple: true, include_subgroups: true).map{|repo| repo["path_with_namespace"] }
+        api_client.group_projects(owner.login, per_page: 100, archived: false, simple: true, include_subgroups: true).map { |repo| repo["path_with_namespace"] }
       end
-    # rescue *IGNORABLE_EXCEPTIONS
-    #   []
+      # rescue *IGNORABLE_EXCEPTIONS
+      #   []
     end
 
     def fetch_owner(login)
@@ -318,8 +325,8 @@ module Hosts
           website: user_hash["website_url"],
           location: user_hash["location"],
           description: user_hash["bio"],
-          avatar_url: user_hash['avatar_url'],
-          kind: 'user'
+          avatar_url: user_hash["avatar_url"],
+          kind: "user"
         }
       else
         group = api_client.group(login, with_projects: false)
@@ -328,8 +335,8 @@ module Hosts
           login: group["path"],
           name: group["name"],
           description: group["description"],
-          avatar_url: group['avatar_url'],
-          kind: 'organization'
+          avatar_url: group["avatar_url"],
+          kind: "organization"
         }
       end
     rescue *IGNORABLE_EXCEPTIONS => e
