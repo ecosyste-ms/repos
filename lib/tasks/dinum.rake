@@ -189,27 +189,38 @@ module Dinum
   def hosts_run_async(pso:, &block)
     count = 0
     pool = Concurrent::FixedThreadPool.new(5)
+    puts "Got a thread pool"
     Host.find_each.map do |host|
+      puts "Host: #{host.name}"
       next if host.repositories_count == 0
-      next if Dinum.pso_hosts?(host) != pso
+      next if pso.present? && Dinum.pso_hosts?(host) != pso
       count += 1
+      puts "- OK, will run async for host: #{host.name}"
       pool.post do
-        ActiveRecord::Base.connection_pool.with_connection do
-          block.call(host)
+        begin
+          puts "Running async for host: #{host.name}"
+          ActiveRecord::Base.connection_pool.with_connection do
+            block.call(host)
+          end
+        rescue => e
+          puts "Error: #{e} for host: #{host.name}"
+        ensure
+          count -= 1
+          pool.shutdown if count == 0
         end
-      rescue => e
-        puts "Error: #{e} for host: #{host.name}"
-      ensure
-        count -= 1
-        pool.shutdown if count == 0
       end
     end
-    pool.wait_for_termination
+    pool.wait_for_termination if count > 0
+  ensure
+    pool.shutdown
   end
 
   def repository_run_async(pso:, fork: nil, &block)
     hosts_run_async(pso: pso) do |host|
-      host.repositories.find_each do |repo|
+      repositories = host.repositories
+      repositories = repositories.where(fork: fork) unless fork.nil?
+      puts "Host: #{host.name} - Repositories: #{repositories.count}"
+      repositories.find_each do |repo|
         next if fork == false && repo.fork
         next if fork == true && !repo.fork
         puts repo.full_name
@@ -265,5 +276,4 @@ namespace :dinum do
 end
 
 # To load in console : 
-# require 'rake'
-# Rails.application.load_tasks
+# require 'rake'; Rails.application.load_tasks
