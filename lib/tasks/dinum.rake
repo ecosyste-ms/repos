@@ -279,11 +279,13 @@ namespace :dinum do
     Dinum.general_purpose_hosts.each do |host_domain, host_data|
       host = Host.find_by(url: "https://#{host_domain}")
       next unless host
-      urls = host_data["groups"].keys
-      owners = host.owners.where.not(login: urls)
-      puts "!! Destroying #{owners.count}/#{host.owners.count} owners for #{host.name} (enter to continue) !!"
-      STDIN.gets
-      owners.destroy_all
+      logins = host_data["owners"].keys
+      owners = host.owners.where.not(login: logins)
+      if owners.any?
+        puts "!! Destroying #{owners.count}/#{host.owners.count} owners for #{host.name} (enter to continue) !!"
+        STDIN.gets
+        owners.destroy_all
+      end
     end
   end
 end
