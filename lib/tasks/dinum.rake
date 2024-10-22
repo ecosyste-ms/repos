@@ -273,7 +273,20 @@ namespace :dinum do
       puts "No hosts to destroy"
     end
   end
+
+  desc "Destroy no longer used owners"
+  task destroy_old_owners: :environment do
+    Dinum.general_purpose_hosts.each do |host_domain, host_data|
+      host = Host.find_by(url: "https://#{host_domain}")
+      next unless host
+      urls = host_data["groups"].keys
+      owners = host.owners.where.not(login: urls)
+      puts "!! Destroying #{owners.count}/#{host.owners.count} owners for #{host.name} (enter to continue) !!"
+      STDIN.gets
+      owners.destroy_all
+    end
+  end
 end
 
-# To load in console : 
+# To load in console :
 # require 'rake'; Rails.application.load_tasks
