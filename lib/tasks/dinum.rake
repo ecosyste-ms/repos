@@ -290,7 +290,10 @@ namespace :dinum do
       if repositories.any?
         puts "!! Destroying #{repositories.count}/#{host.repositories.count} repositories for #{host.name} (enter to continue) !!"
         STDIN.gets
-        repositories.destroy_all
+        while repositories.any?
+          puts repositories.count
+          repositories.limit(500).destroy_all
+        end
       end
     end
   end
