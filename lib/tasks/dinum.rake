@@ -286,6 +286,12 @@ namespace :dinum do
         STDIN.gets
         owners.destroy_all
       end
+      repositories = host.repositories.where.not(owner: logins)
+      if repositories.any?
+        puts "!! Destroying #{repositories.count}/#{host.repositories.count} repositories for #{host.name} (enter to continue) !!"
+        STDIN.gets
+        repositories.destroy_all
+      end
     end
   end
 end
