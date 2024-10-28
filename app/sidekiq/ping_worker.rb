@@ -7,7 +7,7 @@ class PingWorker
     return unless host
     repository = host.find_repository(full_name.downcase)
     if repository
-      if repository.last_synced_at && repository.last_synced_at > 1.day.ago
+      if repository.last_synced_at && repository.last_synced_at > 1.week.ago
         # if recently synced, schedule for syncing 1 day later
         delay = (repository.last_synced_at + 1.day) - Time.now
         UpdateRepositoryWorker.perform_in(delay, repository.id)
