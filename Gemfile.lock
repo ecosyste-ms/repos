@@ -212,7 +212,7 @@ GEM
       timeout
     net-smtp (0.5.0)
       net-protocol
-    nio4r (2.7.3)
+    nio4r (2.7.4)
     nokogiri (1.16.7)
       mini_portile2 (~> 2.8.2)
       racc (~> 1.4)
@@ -232,7 +232,7 @@ GEM
       ostruct (>= 0.2)
     ostruct (0.6.0)
     packageurl-ruby (0.1.0)
-    pagy (9.1.0)
+    pagy (9.1.1)
     parser (3.3.5.0)
       ast (~> 2.4.1)
       racc
@@ -289,7 +289,7 @@ GEM
     rails-html-sanitizer (1.6.0)
       loofah (~> 2.21)
       nokogiri (~> 1.14)
-    rails-i18n (7.0.9)
+    rails-i18n (7.0.10)
       i18n (>= 0.7, < 2)
       railties (>= 6.0.0, < 8)
     railties (7.2.1.2)
