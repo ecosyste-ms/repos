@@ -114,8 +114,8 @@ GEM
       logger
     faraday-follow_redirects (0.3.0)
       faraday (>= 1, < 3)
-    faraday-gzip (2.0.1)
-      faraday (>= 1.0)
+    faraday-gzip (3.0.0)
+      faraday (>= 2.0, < 3)
       zlib (~> 3.0)
     faraday-multipart (1.0.4)
       multipart-post (~> 2)
