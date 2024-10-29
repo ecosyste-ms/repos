@@ -249,14 +249,15 @@ class Host < ApplicationRecord
   def sync_owner(login)
     existing_owner = owners.find_by('lower(login) = ?', login)
 
+    return existing_owner if existing_owner && existing_owner.last_synced_at && existing_owner.last_synced_at > 1.week.ago
+
     # Sync local information now as we can return early (no token, or no need to sync external data)
     if existing_owner
       existing_owner.repositories_count = existing_owner.fetch_repositories_count
       existing_owner.total_stars = existing_owner.fetch_total_stars
-      existing_owner.save!
+      existing_owner.save! if existing_owner.changed?
     end
-
-    return existing_owner if existing_owner && existing_owner.last_synced_at && existing_owner.last_synced_at > 1.week.ago
+    
     owner_hash = host_instance.fetch_owner(login)
     if owner_hash.nil? || owner_hash[:login].nil?
       owners.find_by('lower(login) = ?', login).try(:check_status)
