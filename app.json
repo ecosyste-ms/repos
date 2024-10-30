@@ -47,6 +47,10 @@
     {
       "command": "bundle exec rake repositories:fetch_dependencies_for_github_actions_tags",
       "schedule": "0 4 * * *"
+    },
+    {
+      "command": "bundle exec rake repositories:clean_up_sidekiq_unique_jobs",
+      "schedule": "0 0 * * 0"
     }
   ]
 }

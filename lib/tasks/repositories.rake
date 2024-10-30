@@ -50,4 +50,9 @@ namespace :repositories do
   task fetch_dependencies_for_github_actions_tags: :environment do
     Repository.parse_dependencies_for_github_actions_tags
   end
+
+  desc 'clean up sidekiq unique jobs'
+  task clean_up_sidekiq_unique_jobs: :environment do
+    REDIS.del('uniquejobs:digests')
+  end
 end
