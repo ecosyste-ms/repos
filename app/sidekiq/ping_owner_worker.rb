@@ -1,6 +1,6 @@
 class PingOwnerWorker
   include Sidekiq::Worker
-  sidekiq_options queue: :ping#, lock: :until_executed
+  sidekiq_options queue: :ping, lock: :until_executed
 
   def perform(host_name, full_name)
     host = Host.find_by_name(host_name)
