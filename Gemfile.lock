@@ -335,7 +335,7 @@ GEM
       faraday (>= 0.17.3, < 3)
     securerandom (0.3.1)
     semantic (1.6.1)
-    semantic_range (3.0.0)
+    semantic_range (3.1.0)
     shoulda-context (2.0.0)
     shoulda-matchers (6.4.0)
       activesupport (>= 5.2.0)
