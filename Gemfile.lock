@@ -235,8 +235,8 @@ GEM
       ostruct (>= 0.2)
     ostruct (0.6.0)
     packageurl-ruby (0.1.0)
-    pagy (9.1.1)
-    parser (3.3.5.1)
+    pagy (9.2.0)
+    parser (3.3.6.0)
       ast (~> 2.4.1)
       racc
     pg (1.5.9)
@@ -361,7 +361,7 @@ GEM
       unicode-display_width (>= 1.1.1, < 3)
     thor (1.3.2)
     tilt (2.4.0)
-    timeout (0.4.1)
+    timeout (0.4.2)
     tzinfo (2.0.6)
       concurrent-ruby (~> 1.0)
     unicode-display_width (2.6.0)
@@ -449,4 +449,4 @@ RUBY VERSION
    ruby 3.3.5p53
 
 BUNDLED WITH
-   2.5.22
+   2.5.23
