@@ -15,6 +15,7 @@ gem "faraday-retry"
 gem "faraday-gzip"
 gem "faraday-follow_redirects"
 gem "faraday-multipart"
+gem 'faraday-net_http_persistent'
 gem "nokogiri"
 gem "oj"
 gem "redis"
