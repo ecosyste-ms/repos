@@ -156,7 +156,7 @@ GEM
       rake (>= 13)
     groupdate (6.5.1)
       activesupport (>= 7)
-    hashdiff (1.1.1)
+    hashdiff (1.1.2)
     highline (3.1.1)
       reline
     http_accept_language (2.1.1)
