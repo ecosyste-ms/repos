@@ -156,7 +156,7 @@ GEM
       rake (>= 13)
     groupdate (6.5.1)
       activesupport (>= 7)
-    hashdiff (1.1.1)
+    hashdiff (1.1.2)
     highline (3.1.1)
       reline
     http_accept_language (2.1.1)
@@ -203,7 +203,7 @@ GEM
     minitest (5.25.1)
     mocha (2.5.0)
       ruby2_keywords (>= 0.0.5)
-    msgpack (1.7.3)
+    msgpack (1.7.5)
     multi_xml (0.7.1)
       bigdecimal (~> 3.1)
     multipart-post (2.4.1)
@@ -385,7 +385,7 @@ GEM
       websocket-extensions (>= 0.1.0)
     websocket-extensions (0.1.5)
     zeitwerk (2.7.1)
-    zlib (3.1.1)
+    zlib (3.2.0)
 
 PLATFORMS
   aarch64-linux-musl
