@@ -82,6 +82,8 @@ class Owner < ApplicationRecord
         "https://polar.sh/#{v}"
       when 'buy_me_a_coffee'
         "https://buymeacoffee.com/#{v}"
+      when 'thanks_dev'
+        "https://thanks.dev/#{v}"
       else
         v
       end
