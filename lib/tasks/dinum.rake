@@ -54,7 +54,7 @@ module Dinum
   # Import the general purpose hosts with only pso owned owners
   # after: skip all the hosts before this one
   # dry: do not perform any action
-  def import_general_purpose_owner_repos(after: nil, dry: false)
+  def import_general_purpose_owner_repos(after: nil, dry: false, sync_repositories: true)
     missing_owners = []
     owner_without_repos = []
     service_unknown = []
@@ -85,12 +85,14 @@ module Dinum
         next if dry
         owner = host.sync_owner(owner_name)
         if owner
-          host.sync_owner_repositories(owner)
-          owner.update_repositories_count
-          owner_without_repos.append owner if owner.repositories_count == 0
+          if sync_repositories
+            host.sync_owner_repositories(owner)
+            owner.update_repositories_count
+            owner_without_repos.append owner if owner.repositories_count == 0
+          end
         else
           puts "Owner not found: #{owner_name} or kind == user"
-          missing_owners.append owner_name
+          missing_owners.append [forge, owner_name]
         end
       end
     end
@@ -240,6 +242,26 @@ module Dinum
 end
 
 namespace :dinum do
+
+  desc "set token in redis for a host"
+  task set_token: :environment do
+    host = Host.find_by!(name: ENV["HOST"])
+    case host.kind
+    when "github"
+      REDIS.del("github_tokens")
+      REDIS.sadd("github_tokens", ENV["TOKEN"])
+    when "gitlab"
+      REDIS.set("gitlab_token:#{host.id}", ENV["TOKEN"])
+    else
+      raise "Unsupported kind: #{host.kind}"
+    end
+  end
+
+  desc "Create general purpose owner repos"
+  task create_general_purpose_owner_repos: :environment do
+    Dinum.import_general_purpose_owner_repos(sync_repositories: false)
+  end
+
   desc "Import general purpose owner repos"
   task import_general_purpose_owner_repos: :environment do
     Dinum.import_general_purpose_owner_repos
@@ -302,7 +324,81 @@ namespace :dinum do
       end
     end
   end
+
+  class GithubApiEstimator
+    def initialize(api_client, sleep: false)
+      @github = api_client
+      @sleep = sleep
+      reset_estimation
+    end
+
+    def update_calls(calls)
+      @api_calls += calls
+      if @api_calls >= 300 || Time.now > @last_reset + 3.minutes
+        reset_estimation
+      end
+
+      if @sleep && @remaining-@api_calls < 500
+        sleep_time = (@next_remaining_reset_at - Time.now).to_i + 1
+        puts "Sleeping until reset time: #{sleep_time}s"
+        sleep(sleep_time)
+        reset_estimation
+      end
+
+      return @remaining - @api_calls
+    end
+
+    def reset_estimation
+      puts "Resetting estimation"
+      @api_calls = 0
+      rate = @github.get('rate_limit')['rate']
+      @remaining = rate['remaining']
+      @next_remaining_reset_at = Time.at(rate['reset'])
+      @last_reset = Time.now
+    end
+  end
+
+  desc "Sync Github.com"
+  task sync_github: :environment do
+    github = Host.find_by(name: "github.com")
+    estimator = GithubApiEstimator.new(github.host_instance.send(:api_client), sleep: true)
+    started_at = Time.now
+    repositories_synced = 0
+    github
+      .owners
+      .sort_by{|owner| owner.repositories.maximum(:last_synced_at) || Time.at(0) }
+      .each do |owner|
+        puts "Syncing #{owner.name}"
+        github.sync_owner_repositories(owner)
+        owner.update_repositories_count
+
+        remaining = estimator.update_calls(owner.repositories_count)
+        break if remaining < 500 + owner.repositories_count
+
+        puts "Finished syncing #{owner.name}, remaining api calls: #{remaining}, Syncing extra details"
+        owner.repositories.each do |repo|
+          repo.sync_extra_details(force: true)
+        end
+
+        remaining = estimator.update_calls(owner.repositories.count)
+        break if remaining < 500
+        puts "Finished syncing #{owner.name}, remaining api calls: #{remaining}"
+
+        repositories_synced += owner.repositories_count
+        puts "Total repositories synced: #{repositories_synced}"
+        puts "Time elapsed: #{Time.now - started_at}"
+        puts "Seconds per repository: #{(Time.now - started_at) / repositories_synced}"
+
+        if Time.now - started_at > 5.hours
+          puts "Time limit reached, stopping"
+          break
+        end
+      end
+  end
 end
 
 # To load in console :
 # require 'rake'; Rails.application.load_tasks
+
+# Some helpers command
+# github = Host.find_by(name: "github.com")
