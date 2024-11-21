@@ -360,7 +360,7 @@ namespace :dinum do
 
   desc "Sync Github.com"
   task sync_github: :environment do
-    github = Host.find_by(name: "github.com")
+    github = Host.find_by(url: "https://github.com")
     estimator = GithubApiEstimator.new(github.host_instance.send(:api_client), sleep: true)
     started_at = Time.now
     repositories_synced = 0
