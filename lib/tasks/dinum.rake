@@ -338,8 +338,9 @@ namespace :dinum do
         reset_estimation
       end
 
-      if @sleep && @remaining-@api_calls < 500
+      while @sleep && @remaining-@api_calls < 500
         sleep_time = (@next_remaining_reset_at - Time.now).to_i + 1
+        sleep_time = 60 if sleep_time < 60
         puts "Sleeping until reset time: #{sleep_time}s"
         sleep(sleep_time)
         reset_estimation
@@ -373,7 +374,7 @@ namespace :dinum do
         owner.update_repositories_count
 
         remaining = estimator.update_calls(owner.repositories_count)
-        break if remaining < 500 + owner.repositories_count
+        break if remaining < 500
 
         puts "Finished syncing #{owner.name}, remaining api calls: #{remaining}, Syncing extra details"
         owner.repositories.each do |repo|
