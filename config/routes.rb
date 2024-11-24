@@ -30,6 +30,7 @@ Rails.application.routes.draw do
         resources :owners, only:[:index, :show] do
           collection do
             get :lookup
+            get :sponsors_logins
           end
           member do
             get :repositories

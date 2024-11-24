@@ -71,4 +71,10 @@ class Api::V1::OwnersController < Api::V1::ApplicationController
     @pagy, @owners = pagy_countless(scope)
     fresh_when @owners, public: true
   end
+
+  def sponsors_logins
+    @host = Host.find_by_name!(params[:host_id])
+    @sponsors_logins = @host.owners.has_sponsors_listing.pluck(:login)
+    render json: @sponsors_logins
+  end
 end
