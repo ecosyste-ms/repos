@@ -73,6 +73,8 @@ module Dinum
         next
       end
 
+      return if host.url == "https://github.com" # Github is handled in a separate task
+
       puts "Syncing #{host.name} with #{owners.size} owners"
 
       owners.each do |owner_name, metadatas|
@@ -286,7 +288,6 @@ namespace :dinum do
   task cleanup: [:destroy_old_hosts, :destroy_old_owners] do
   end
 
-
   desc "Destroy no longer used hosts"
   task destroy_old_hosts: :environment do
     urls = Dinum.accounts_data.map { |host_domain, data| "https://#{host_domain}" }
@@ -294,7 +295,7 @@ namespace :dinum do
     if hosts.any?
       puts "!! Destroying #{hosts.count}/#{Host.count} hosts (enter to continue) !!"
       hosts.each { |h| puts h.url }
-      STDIN.gets
+      STDIN.gets unless ENV["FORCE"]
       hosts.destroy_all
     else
       puts "No hosts to destroy"
@@ -310,13 +311,13 @@ namespace :dinum do
       owners = host.owners.where(Owner.arel_table.lower(Owner.arel_table[:login]).not_in(logins.map(&:downcase)))
       if owners.any?
         puts "!! Destroying #{owners.count}/#{host.owners.count} owners for #{host.name} (enter to continue) !!"
-        STDIN.gets
+        STDIN.gets unless ENV["FORCE"]
         owners.destroy_all
       end
       repositories = host.repositories.where(Repository.arel_table.lower(Repository.arel_table[:owner]).not_in(logins.map(&:downcase)))
       if repositories.any?
         puts "!! Destroying #{repositories.count}/#{host.repositories.count} repositories for #{host.name} (enter to continue) !!"
-        STDIN.gets
+        STDIN.gets unless ENV["FORCE"]
         while repositories.any?
           puts repositories.count
           repositories.limit(500).destroy_all
