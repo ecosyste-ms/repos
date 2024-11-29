@@ -395,6 +395,9 @@ namespace :dinum do
           puts "Time limit reached, stopping"
           break
         end
+      rescue StandardError => e
+        puts "Error: #{e}"
+        File.write("/var/log/github_synchro_error.log", "#{Time.now} #{owner.name} - #{e}\n", mode: "a")
       end
   end
 end
