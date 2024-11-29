@@ -126,7 +126,7 @@ module Dinum
   # crawl_repositories will fetch a batch of repositories from the host
   # The method will loop until the number of repositories fetched is the same as the previous batch
   def host_initial_full_synchronization(host)
-    puts "Starting full synchronization for host: #{host.name} #{host.id}"
+    puts "Starting full synchronization for host:#{host.name} id:#{host.id}"
     host_reset(host) if host.repositories_count == 0
     loop do
       repo_count = host.repositories_count
@@ -139,7 +139,7 @@ module Dinum
   # Method to perform a full synchronization for all pso hosts
   def hosts_initial_full_synchronization
     Host.all.each do |host|
-      next if pso_hosts?(host)
+      next unless pso_hosts?(host)
       begin
         host_initial_full_synchronization(host)
       rescue => e
