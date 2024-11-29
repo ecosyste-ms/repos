@@ -1,7 +1,7 @@
 module Dinum
   extend self
 
-  # Script to manage dinum data for the instance https://data.code.gouv.fr
+  # Script to manage dinum data for the instance https://ecosystem.code.gouv.fr
   # This instance reference the repositories of the public administration in France
 
   # The master data for host and repos is stored in a YAML file

@@ -292,8 +292,8 @@ module Hosts
     def crawl_repositories
       last_id = REDIS.get("gitlab_last_id:#{@host.id}")
       repos = api_client.projects(per_page: 100, archived: false, id_before: last_id, simple: true)
+      repos.reject! { |repo| repo.dig("namespace", "kind") == "user" } if ENV["SKIP_USER_REPOS"]
       if repos.present?
-        repos.reject! { |repo| repo.dig("namespace", "kind") == "user" } if ENV["SKIP_USER_REPOS"]
         repos.each { |repo| @host.sync_repository(repo["path_with_namespace"], uuid: repo["id"]) }
         REDIS.set("gitlab_last_id:#{@host.id}", repos.last["id"])
       end
