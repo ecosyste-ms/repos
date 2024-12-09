@@ -110,7 +110,7 @@ GEM
       activesupport (>= 3.0.0)
     erubi (1.13.0)
     execjs (2.10.0)
-    faraday (2.12.1)
+    faraday (2.12.2)
       faraday-net_http (>= 2.0, < 3.5)
       json
       logger
