@@ -315,7 +315,7 @@ class Repository < ApplicationRecord
       readme: file_list.find { |file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?README/i) },
       changelog: file_list.find { |file| file.match(/^CHANGE|^HISTORY|^NEWS/i) },
       contributing: file_list.find { |file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?CONTRIBUTING/i) },
-      funding: file_list.find { |file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?FUNDING.yml/i) },
+      funding: file_list.find { |file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?FUNDING\.ya?ml/i)},
       license: file_list.find { |file| file.match(/^LICENSE|^COPYING|^MIT-LICENSE/i) },
       code_of_conduct: file_list.find { |file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?CODE[-_]OF[-_]CONDUCT/i) },
       threat_model: file_list.find { |file| file.match(/^THREAT[-_]MODEL/i) },
@@ -328,7 +328,7 @@ class Repository < ApplicationRecord
       roadmap: file_list.find { |file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?ROADMAP/i) },
       authors: file_list.find { |file| file.match(/^AUTHORS/i) },
       dei: file_list.find { |file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?DEI/i) },
-      publiccode: file_list.find { |file| file.match(/^publiccode.yml/i) },
+      publiccode: file_list.find { |file| file.match(/^publiccode.ya?ml/i) },
       codemeta: file_list.find { |file| file.match(/^codemeta.json/i) }
     }
   end
