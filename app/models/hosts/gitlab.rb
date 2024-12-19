@@ -281,7 +281,7 @@ module Hosts
     def crawl_repositories_async
       last_id = REDIS.get("gitlab_last_id:#{@host.id}")
       repos = api_client.projects(per_page: 100, archived: false, id_before: last_id, simple: true)
-      if repos.present?
+      if repos.present? && repos.any?
         repos.each { |repo| @host.sync_repository_async(repo["path_with_namespace"]) }
         REDIS.set("gitlab_last_id:#{@host.id}", repos.last["id"])
       end
@@ -292,7 +292,7 @@ module Hosts
     def crawl_repositories
       last_id = REDIS.get("gitlab_last_id:#{@host.id}")
       repos = api_client.projects(per_page: 100, archived: false, id_before: last_id, simple: true)
-      if repos.present?
+      if repos.present? && repos.any?
         repos.reject! { |repo| repo.dig("namespace", "kind") == "user" } if ENV["SKIP_USER_REPOS"]
         repos.each { |repo| @host.sync_repository(repo["path_with_namespace"], uuid: repo["id"]) }
         REDIS.set("gitlab_last_id:#{@host.id}", repos.last["id"])
