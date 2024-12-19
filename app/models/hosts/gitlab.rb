@@ -45,7 +45,7 @@ module Hosts
         project
       end
 
-      def projects(per_page:, archived:, id_before:, simple:)
+      def projects(per_page:, archived:, id_before: nil, simple:)
         url = "#{@endpoint}/projects?per_page=#{per_page}&archived=#{archived}&id_before=#{id_before}&simple=#{simple}"
         Rails.logger.debug("Gitlab[projects]: Fetching projects from URL: #{url}")
 
