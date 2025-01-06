@@ -43,14 +43,18 @@ module Hosts
         project = JSON.parse(response.body, object_class: OpenStruct)
         project.visibility = "public" # We get it from a nonauthenticated public endpoint
         project
+      rescue JSON::ParserError
+        nil
       end
 
-      def projects(per_page:, archived:, id_before: nil, simple:)
-        url = "#{@endpoint}/projects?per_page=#{per_page}&archived=#{archived}&id_before=#{id_before}&simple=#{simple}"
+      def projects(per_page:, archived:, id_before: nil, simple:, page:, order_by: nil)
+        url = "#{@endpoint}/projects?per_page=#{per_page}&archived=#{archived}&id_before=#{id_before}&simple=#{simple}&page=#{page}&order_by=#{order_by}"
         Rails.logger.debug("Gitlab[projects]: Fetching projects from URL: #{url}")
 
         response = faraday_client.get(url)
         JSON.parse(response.body, object_class: OpenStruct)
+      rescue JSON::ParserError
+        nil
       end
 
       def user(username)
@@ -60,6 +64,8 @@ module Hosts
 
         response = faraday_client.get(url)
         JSON.parse(response.body)
+      rescue JSON::ParserError
+        nil
       end
 
       def group(username, with_projects:)
@@ -68,6 +74,8 @@ module Hosts
 
         response = faraday_client.get(url)
         JSON.parse(response.body)
+      rescue JSON::ParserError
+        nil
       end
 
       def group_projects(username, per_page:, archived:, simple:, include_subgroups:)
@@ -76,6 +84,8 @@ module Hosts
 
         response = faraday_client.get(url)
         JSON.parse(response.body, object_class: OpenStruct)
+      rescue JSON::ParserError
+        nil
       end
 
       def get(path, options = {})
@@ -84,6 +94,8 @@ module Hosts
 
         response = faraday_client.get(url)
         JSON.parse(response.body)
+      rescue JSON::ParserError
+        nil
       end
 
       def method_missing(method, *args, &block)
