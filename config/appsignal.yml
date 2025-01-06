@@ -16,3 +16,4 @@ production:
     - Pagy::VariableError
     - Pagy::OverflowError
     - ActiveRecord::StatementInvalid
+    - Socket::ResolutionError
