@@ -22,7 +22,7 @@ RUN apk add --update \
 COPY Gemfile Gemfile.lock $APP_ROOT/
 
 RUN bundle config --global frozen 1 \
- && bundle config set without 'test' \
+ && bundle config set without 'development test' \
  && bundle install --jobs 2
 
 # ========================================================

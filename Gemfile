@@ -51,12 +51,12 @@ gem 'ostruct'
 # Translation
 gem 'http_accept_language'
 gem 'i18n'
-gem 'i18n-tasks'
 gem 'rails-i18n'
 gem 'enum_help'
 
 group :development do
   gem "web-console"
+  gem "i18n-tasks"
 end
 
 group :test do
