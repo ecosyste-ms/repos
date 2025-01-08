@@ -329,7 +329,7 @@ module Hosts
         user = search.first.to_hash
         id = user["id"]
         user_hash = api_client.user(id).to_hash
-
+        return nil if user_hash.nil?
         {
           uuid: "user-#{user_hash["id"]}",
           login: user_hash["username"],
@@ -342,6 +342,7 @@ module Hosts
         }
       else
         group = api_client.group(login, with_projects: false)
+        return nil if group.nil?
         {
           uuid: "organization-#{group["id"]}",
           login: group["path"],
