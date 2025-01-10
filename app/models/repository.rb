@@ -365,7 +365,7 @@ class Repository < ApplicationRecord
   end
 
   def funding_links
-    (owner_funding_links + repo_funding_links).uniq
+    (repo_funding_links + owner_funding_links).uniq
   end
 
   def owner_funding_links
