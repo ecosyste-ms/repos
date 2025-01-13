@@ -7,6 +7,7 @@ class Repository < ApplicationRecord
   has_many :releases
 
   has_many :repository_usages, dependent: :delete_all
+  has_many :_package_usages, through: :repository_usages, source: :package_usage
 
   scope :owner, ->(owner) { where(owner: owner) }
   scope :subgroup, ->(owner, subgroup) { where(owner: owner).where("lower(full_name) ilike ?", "#{owner}/#{subgroup}/%") }
