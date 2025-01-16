@@ -94,7 +94,7 @@ GEM
       popper_js (>= 2.11.8, < 3)
     builder (3.3.0)
     chartkick (5.1.2)
-    concurrent-ruby (1.3.4)
+    concurrent-ruby (1.3.5)
     connection_pool (2.5.0)
     counter_culture (3.8.2)
       activerecord (>= 4.2)
@@ -486,7 +486,7 @@ CHECKSUMS
   bootstrap (5.3.3) sha256=008a93c37c42f1490d59a67b1d13f6063951ef66bab44b43dfd3590b66f0d05c
   builder (3.3.0) sha256=497918d2f9dca528fdca4b88d84e4ef4387256d984b8154e9d5d3fe5a9c8835f
   chartkick (5.1.2) sha256=1bb981ebb567c6bc6d1f555fba3dc5b4a7d1e7d170ea7d6980b4badf0032305a
-  concurrent-ruby (1.3.4) sha256=d4aa926339b0a86b5b5054a0a8c580163e6f5dcbdfd0f4bb916b1a2570731c32
+  concurrent-ruby (1.3.5) sha256=813b3e37aca6df2a21a3b9f1d497f8cbab24a2b94cab325bffe65ee0f6cbebc6
   connection_pool (2.5.0) sha256=233b92f8d38e038c1349ccea65dd3772727d669d6d2e71f9897c8bf5cd53ebfc
   counter_culture (3.8.2) sha256=24d038740fc9e5546cda2b8a17e83e7778ab73bcc959b7a3bd807e4cf6250072
   crack (1.0.0) sha256=c83aefdb428cdc7b66c7f287e488c796f055c0839e6e545fec2c7047743c4a49
