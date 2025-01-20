@@ -253,7 +253,7 @@ class Repository < ApplicationRecord
       update_metadata_files
       download_tags
       parse_dependencies if dependency_job_id.present?
-      sync_commit_stats
+      # sync_commit_stats
     end
     update(files_changed: false)
   end
