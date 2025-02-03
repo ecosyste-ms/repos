@@ -73,7 +73,7 @@ module Dinum
         next
       end
 
-      return if host.url == "https://github.com" # Github is handled in a separate task
+      sync_host_repositories = sync_repositories && host.url != "https://github.com" # Github is handled in a separate task
 
       puts "Syncing #{host.name} with #{owners.size} owners"
 
@@ -87,7 +87,7 @@ module Dinum
         next if dry
         owner = host.sync_owner(owner_name)
         if owner
-          if sync_repositories
+          if sync_host_repositories
             host.sync_owner_repositories(owner)
             owner.update_repositories_count
             owner_without_repos.append owner if owner.repositories_count == 0
@@ -324,6 +324,8 @@ namespace :dinum do
         end
       end
     end
+    Repository.counter_culture_fix_counts
+    Owner.counter_culture_fix_counts
   end
 
   class GithubApiEstimator
@@ -379,6 +381,7 @@ namespace :dinum do
 
         puts "Finished syncing #{owner.name}, remaining api calls: #{remaining}, Syncing extra details"
         owner.repositories.each do |repo|
+          puts "Syncing extra details for #{repo.full_name}"
           repo.sync_extra_details(force: true)
         end
 
@@ -391,7 +394,7 @@ namespace :dinum do
         puts "Time elapsed: #{Time.now - started_at}"
         puts "Seconds per repository: #{(Time.now - started_at) / repositories_synced}"
 
-        if Time.now - started_at > 5.hours
+        if Time.now - started_at > 11.hours
           puts "Time limit reached, stopping"
           break
         end
@@ -399,6 +402,7 @@ namespace :dinum do
         puts "Error: #{e}"
         File.write("/var/log/github_synchro_error.log", "#{Time.now} #{owner.name} - #{e}\n", mode: "a")
       end
+    puts "Finished syncing github"
   end
 end
 
