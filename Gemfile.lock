@@ -400,7 +400,7 @@ GEM
       base64
       websocket-extensions (>= 0.1.0)
     websocket-extensions (0.1.5)
-    zeitwerk (2.7.1)
+    zeitwerk (2.7.2)
     zlib (3.2.1)
 
 PLATFORMS
@@ -631,7 +631,7 @@ CHECKSUMS
   webmock (3.25.0) sha256=573c23fc4887008c830f22da588db339ca38b6d59856fd57f5a068959474198e
   websocket-driver (0.7.7) sha256=056d99f2cd545712cfb1291650fde7478e4f2661dc1db6a0fa3b966231a146b4
   websocket-extensions (0.1.5) sha256=1c6ba63092cda343eb53fc657110c71c754c56484aad42578495227d717a8241
-  zeitwerk (2.7.1) sha256=0945986050e4907140895378e74df1fe882a2271ed087cc6c6d6b00d415a2756
+  zeitwerk (2.7.2) sha256=842e067cb11eb923d747249badfb5fcdc9652d6f20a1f06453317920fdcd4673
   zlib (3.2.1) sha256=6301546b5f108c358304c3095d20e45ddebb31d5079341f95e08e9049770aa6a
 
 RUBY VERSION
