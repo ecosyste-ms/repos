@@ -28,10 +28,18 @@ module ApplicationHelper
   end
 
   def meta_description
-    @meta_description || "An open API service providing repository metadata for many open source software ecosystems."
+    @meta_description || app_description
   end
 
   def meta_title
     [@meta_title, "Ecosyste.ms: Repos"].compact.join(" | ")
+  end
+
+  def app_name
+    "Repos"
+  end
+
+  def app_description
+    "An open API service providing repository metadata for many open source software ecosystems."
   end
 end
