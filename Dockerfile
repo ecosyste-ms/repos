@@ -16,6 +16,8 @@ RUN apk add --update \
     curl-dev \
     bash \
     libc6-compat \
+    yaml-dev \
+    libffi-dev \
  && rm -rf /var/cache/apk/* 
 
 # Will invalidate cache as soon as the Gemfile changes
