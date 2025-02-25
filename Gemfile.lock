@@ -121,7 +121,7 @@ GEM
       logger
     faraday-follow_redirects (0.3.0)
       faraday (>= 1, < 3)
-    faraday-gzip (3.0.2)
+    faraday-gzip (3.0.3)
       faraday (>= 2.0, < 3)
       zlib (~> 3.0)
     faraday-multipart (1.1.0)
@@ -515,7 +515,7 @@ CHECKSUMS
   execjs (2.10.0) sha256=6bcb8be8f0052ff9d370b65d1c080f2406656e150452a0abdb185a133048450d
   faraday (2.12.2) sha256=157339c25c7b8bcb739f5cf1207cb0cefe8fa1c65027266bcbc34c90c84b9ad6
   faraday-follow_redirects (0.3.0) sha256=d92d975635e2c7fe525dd494fcd4b9bb7f0a4a0ec0d5f4c15c729530fdb807f9
-  faraday-gzip (3.0.2) sha256=0ff92e8e4ebef09b38473ea3ff21490987831c9aa8d1c1496700105900594175
+  faraday-gzip (3.0.3) sha256=86cf68276af848eea6c7e664b85b2cf2b006f08cca11e3bd7e92afbaa4fc893a
   faraday-multipart (1.1.0) sha256=856b0f1c7316a4d6c052dd2eef5c42f887d56d93a171fe8880da1af064ca0751
   faraday-net_http (3.4.0) sha256=a1f1e4cd6a2cf21599c8221595e27582d9936819977bbd4089a601f24c64e54a
   faraday-net_http_persistent (2.3.0) sha256=33d4948cabe9f8148222c4ca19634c71e1f25595cccf9da2e02ace8d754f1bb1
