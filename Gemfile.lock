@@ -173,7 +173,7 @@ GEM
       multi_xml (>= 0.5.2)
     i18n (1.14.7)
       concurrent-ruby (~> 1.0)
-    i18n-tasks (1.0.14)
+    i18n-tasks (1.0.15)
       activesupport (>= 4.0.2)
       ast (>= 2.1.0)
       erubi
@@ -182,6 +182,7 @@ GEM
       parser (>= 3.2.2.1)
       rails-i18n
       rainbow (>= 2.2.2, < 4.0)
+      ruby-progressbar (~> 1.8, >= 1.8.1)
       terminal-table (>= 1.5.1)
     io-console (0.8.0)
     irb (1.15.1)
@@ -252,7 +253,7 @@ GEM
       ostruct (>= 0.2)
     ostruct (0.6.1)
     packageurl-ruby (0.1.0)
-    pagy (9.3.3)
+    pagy (9.3.4)
     parser (3.3.7.1)
       ast (~> 2.4.1)
       racc
@@ -341,6 +342,7 @@ GEM
     rswag-ui (2.16.0)
       actionpack (>= 5.2, < 8.1)
       railties (>= 5.2, < 8.1)
+    ruby-progressbar (1.13.0)
     ruby2_keywords (0.0.5)
     sanitize-url (0.1.4)
     sassc (2.4.0)
@@ -397,7 +399,7 @@ GEM
       activemodel (>= 6.0.0)
       bindex (>= 0.4.0)
       railties (>= 6.0.0)
-    webmock (3.25.0)
+    webmock (3.25.1)
       addressable (>= 2.8.0)
       crack (>= 0.3.2)
       hashdiff (>= 0.4.0, < 2.0.0)
@@ -540,7 +542,7 @@ CHECKSUMS
   http_accept_language (2.1.1) sha256=0043f0d55a148cf45b604dbdd197cb36437133e990016c68c892d49dbea31634
   httparty (0.22.0) sha256=78652a5c9471cf0093d3b2083c2295c9c8f12b44c65112f1846af2b71430fa6c
   i18n (1.14.7) sha256=ceba573f8138ff2c0915427f1fc5bdf4aa3ab8ae88c8ce255eb3ecf0a11a5d0f
-  i18n-tasks (1.0.14) sha256=3ad8daef2a3268d6dc2232aad2b12941b353d884cd30fd3b418a73e7001a03ec
+  i18n-tasks (1.0.15) sha256=74f3e9e0e2db5d757c58e659f4269ee698c7a7532ed29066a2aaffc9efbdfb56
   io-console (0.8.0) sha256=cd6a9facbc69871d69b2cb8b926fc6ea7ef06f06e505e81a64f14a470fddefa2
   irb (1.15.1) sha256=d9bca745ac4207a8b728a52b98b766ca909b86ff1a504bcde3d6f8c84faae890
   jbuilder (2.13.0) sha256=7200a38a1c0081aa81b7a9757e7a299db75bc58cf1fd45ca7919a91627d227d6
@@ -575,7 +577,7 @@ CHECKSUMS
   oj (3.16.10) sha256=7f26bed974e331e16d579b470b0865010757f6fe6ee30ea9b67df653fbe13d7c
   ostruct (0.6.1) sha256=09a3fb7ecc1fa4039f25418cc05ae9c82bd520472c5c6a6f515f03e4988cb817
   packageurl-ruby (0.1.0) sha256=3edfa1ce355200fde2a1d2cf625dafdf28d0cc9472eb99493325bf3d88e9daa3
-  pagy (9.3.3) sha256=4831418eb4ec7cc5658ea57de559cc3a960286db36f98d4c1c65e19db0e2bb60
+  pagy (9.3.4) sha256=b058e064bd02237e76d591e90fadc02c795426dd51f90d0c51089558bf3ab5f7
   parser (3.3.7.1) sha256=7dbe61618025519024ac72402a6677ead02099587a5538e84371b76659e6aca1
   pg (1.5.9) sha256=761efbdf73b66516f0c26fcbe6515dc7500c3f0aa1a1b853feae245433c64fdc
   pg_query (6.0.0) sha256=fbf09a4e900cee1d61e2bbfda1fefdbc35bc83c5f1c7ae1be1c6ffc5ae0f5c04
@@ -610,6 +612,7 @@ CHECKSUMS
   rexml (3.4.1) sha256=c74527a9a0a04b4ec31dbe0dc4ed6004b960af943d8db42e539edde3a871abca
   rswag-api (2.16.0) sha256=b653f7bd92e98be18b01ab4525d88950d7b0960e293a99f856b9efcee3ae6074
   rswag-ui (2.16.0) sha256=a1f49e927dceda92e6e6e7c1000f1e217ee66c565f69e28131dc98b33cd3a04f
+  ruby-progressbar (1.13.0) sha256=80fc9c47a9b640d6834e0dc7b3c94c9df37f08cb072b7761e4a71e22cff29b33
   ruby2_keywords (0.0.5) sha256=ffd13740c573b7301cf7a2e61fc857b2a8e3d3aff32545d6f8300d8bae10e3ef
   sanitize-url (0.1.4) sha256=2fbc735dfbc2ca8f6f111ac045e848b974a0de6767dde8e1202406be6a3eaf8a
   sassc (2.4.0) sha256=4c60a2b0a3b36685c83b80d5789401c2f678c1652e3288315a1551d811d9f83e
@@ -636,7 +639,7 @@ CHECKSUMS
   uri (1.0.3) sha256=e9f2244608eea2f7bc357d954c65c910ce0399ca5e18a7a29207ac22d8767011
   useragent (0.16.11) sha256=700e6413ad4bb954bb63547fa098dddf7b0ebe75b40cc6f93b8d54255b173844
   web-console (4.2.1) sha256=e7bcf37a10ea2b4ec4281649d1cee461b32232d0a447e82c786e6841fd22fe20
-  webmock (3.25.0) sha256=573c23fc4887008c830f22da588db339ca38b6d59856fd57f5a068959474198e
+  webmock (3.25.1) sha256=ab9d5d9353bcbe6322c83e1c60a7103988efc7b67cd72ffb9012629c3d396323
   websocket-driver (0.7.7) sha256=056d99f2cd545712cfb1291650fde7478e4f2661dc1db6a0fa3b966231a146b4
   websocket-extensions (0.1.5) sha256=1c6ba63092cda343eb53fc657110c71c754c56484aad42578495227d717a8241
   zeitwerk (2.7.2) sha256=842e067cb11eb923d747249badfb5fcdc9652d6f20a1f06453317920fdcd4673
