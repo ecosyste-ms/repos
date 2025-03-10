@@ -260,6 +260,11 @@ namespace :dinum do
     Dinum.hosts_list_sync_problem
   end
 
+  desc "Cleanup old data"
+  task cleanup: [:destroy_old_hosts, :destroy_old_owners] do
+  end
+
+
   desc "Destroy no longer used hosts"
   task destroy_old_hosts: :environment do
     urls = Dinum.accounts_data.map { |host_domain, data| "https://#{host_domain}" }
@@ -273,7 +278,31 @@ namespace :dinum do
       puts "No hosts to destroy"
     end
   end
+
+  desc "Destroy no longer used owners"
+  task destroy_old_owners: :environment do
+    Dinum.general_purpose_hosts.each do |host_domain, host_data|
+      host = Host.find_by(url: "https://#{host_domain}")
+      next unless host
+      logins = host_data["owners"].keys
+      owners = host.owners.where(Owner.arel_table.lower(Owner.arel_table[:login]).not_in(logins.map(&:downcase)))
+      if owners.any?
+        puts "!! Destroying #{owners.count}/#{host.owners.count} owners for #{host.name} (enter to continue) !!"
+        STDIN.gets
+        owners.destroy_all
+      end
+      repositories = host.repositories.where(Repository.arel_table.lower(Repository.arel_table[:owner]).not_in(logins.map(&:downcase)))
+      if repositories.any?
+        puts "!! Destroying #{repositories.count}/#{host.repositories.count} repositories for #{host.name} (enter to continue) !!"
+        STDIN.gets
+        while repositories.any?
+          puts repositories.count
+          repositories.limit(500).destroy_all
+        end
+      end
+    end
+  end
 end
 
-# To load in console : 
+# To load in console :
 # require 'rake'; Rails.application.load_tasks
