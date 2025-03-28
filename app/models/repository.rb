@@ -30,6 +30,8 @@ class Repository < ApplicationRecord
 
   scope :with_funding, -> { where("metadata->'funding' is not null") }
 
+  scope :with_metadata, -> { where("length(metadata::text) > 2") }
+
   self.record_timestamps = false
 
   def self.topics
