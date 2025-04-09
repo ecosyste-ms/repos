@@ -2,12 +2,12 @@ class PingWorker
   include Sidekiq::Worker
   sidekiq_options queue: :ping, lock: :until_executed, lock_expiration: 1.day.to_i
 
-  def perform(host_name, full_name)
+  def perform(host_name, full_name, force = false)
     host = Host.find_by_name(host_name)
     return unless host
     repository = host.find_repository(full_name.downcase)
     if repository
-      if repository.last_synced_at && repository.last_synced_at > 1.week.ago
+      if !force && repository.last_synced_at && repository.last_synced_at > 1.week.ago
         # if recently synced, schedule for syncing 1 day later
         delay = (repository.last_synced_at + 1.day) - Time.now
         UpdateRepositoryWorker.perform_in(delay, repository.id)

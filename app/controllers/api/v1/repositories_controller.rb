@@ -79,7 +79,12 @@ class Api::V1::RepositoriesController < Api::V1::ApplicationController
       @repository = @host.find_repository(path.downcase)
     end
     if @repository
-      @repository.sync_async unless @repository.last_synced_at.present? && @repository.last_synced_at > 1.hour.ago
+      force = params[:force].present?
+      if force
+        @repository.sync_async(true)
+      else
+        @repository.sync_async unless @repository.last_synced_at.present? && @repository.last_synced_at > 1.hour.ago
+      end
       render :show if stale?(@repository, public: true)
     else
       @host.sync_repository_async(path) if path.present?
@@ -88,7 +93,7 @@ class Api::V1::RepositoriesController < Api::V1::ApplicationController
   end
 
   def ping
-    PingWorker.perform_async(params[:host_id], params[:id])
+    PingWorker.perform_async(params[:host_id], params[:id], params[:force].present?)
     render json: { message: 'pong' }
   end
 end

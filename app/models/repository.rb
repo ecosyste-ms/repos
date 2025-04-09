@@ -125,8 +125,8 @@ class Repository < ApplicationRecord
     host.host_instance.update_from_host(self)
   end
 
-  def sync_async
-    UpdateRepositoryWorker.perform_async(id)
+  def sync_async(force = false)
+    UpdateRepositoryWorker.perform_async(id, force)
   end
 
   def html_url
