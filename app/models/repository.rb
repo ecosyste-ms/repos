@@ -115,8 +115,8 @@ class Repository < ApplicationRecord
     full_name.split("/")[1..-1].join("/")
   end
 
-  def sync
-    if last_synced_at && last_synced_at > 1.week.ago
+  def sync(force: false)
+    if !force && last_synced_at && last_synced_at > 1.week.ago
       # if recently synced, schedule for syncing 1 day later
       delay = (last_synced_at + 1.day) - Time.now
       UpdateRepositoryWorker.perform_in(delay, id)
