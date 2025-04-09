@@ -258,6 +258,7 @@ module Hosts
 
     def fetch_repository(full_name)
       project = api_client.project(full_name, license: true)
+      return nil if project.nil? || project.empty?
       return nil if project.visibility != "public"
 
       full_hash = project.to_h.with_indifferent_access
