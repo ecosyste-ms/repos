@@ -41,6 +41,7 @@ module Hosts
 
         response = faraday_client.get(url)
         project = JSON.parse(response.body, object_class: OpenStruct)
+        return nil if project.nil? || project.empty?
         project.visibility = "public" # We get it from a nonauthenticated public endpoint
         project
       rescue JSON::ParserError
