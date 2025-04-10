@@ -331,7 +331,8 @@ class Repository < ApplicationRecord
       authors: file_list.find { |file| file.match(/^AUTHORS/i) },
       dei: file_list.find { |file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?DEI/i) },
       publiccode: file_list.find { |file| file.match(/^publiccode.ya?ml/i) },
-      codemeta: file_list.find { |file| file.match(/^codemeta.json/i) }
+      codemeta: file_list.find { |file| file.match(/^codemeta.json/i) },
+      zenodo: file_list.find { |file| file.match(/^.zenodo.json/i) }
     }
   end
 
