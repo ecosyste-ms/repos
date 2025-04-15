@@ -1,7 +1,9 @@
 class OwnersController < ApplicationController
   def index
     @host = Host.find_by_name!(params[:host_id])
-    @pagy, @owners = pagy_countless(@host.owners.order('repositories_count DESC'))
+    scope = @host.owners.order('repositories_count DESC')
+    scope = scope.has_sponsors_listing if params[:has_sponsors_listing].present?
+    @pagy, @owners = pagy_countless(scope)
     expires_in 1.day, public: true
   end
 

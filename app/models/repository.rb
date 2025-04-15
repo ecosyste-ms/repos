@@ -30,6 +30,8 @@ class Repository < ApplicationRecord
 
   scope :with_funding, -> { where("metadata->'funding' is not null") }
 
+  scope :with_metadata, -> { where("length(metadata::text) > 2") }
+
   self.record_timestamps = false
 
   def self.topics
@@ -113,8 +115,8 @@ class Repository < ApplicationRecord
     full_name.split("/")[1..-1].join("/")
   end
 
-  def sync
-    if last_synced_at && last_synced_at > 1.week.ago
+  def sync(force: false)
+    if !force && last_synced_at && last_synced_at > 1.week.ago
       # if recently synced, schedule for syncing 1 day later
       delay = (last_synced_at + 1.day) - Time.now
       UpdateRepositoryWorker.perform_in(delay, id)
@@ -123,8 +125,8 @@ class Repository < ApplicationRecord
     host.host_instance.update_from_host(self)
   end
 
-  def sync_async
-    UpdateRepositoryWorker.perform_async(id)
+  def sync_async(force = false)
+    UpdateRepositoryWorker.perform_async(id, force)
   end
 
   def html_url
@@ -253,7 +255,7 @@ class Repository < ApplicationRecord
       update_metadata_files
       download_tags
       parse_dependencies if dependency_job_id.present?
-      sync_commit_stats
+      # sync_commit_stats
     end
     update(files_changed: false)
   end
@@ -315,7 +317,7 @@ class Repository < ApplicationRecord
       readme: file_list.find { |file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?README/i) },
       changelog: file_list.find { |file| file.match(/^CHANGE|^HISTORY|^NEWS/i) },
       contributing: file_list.find { |file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?CONTRIBUTING/i) },
-      funding: file_list.find { |file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?FUNDING.yml/i) },
+      funding: file_list.find { |file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?FUNDING\.ya?ml/i)},
       license: file_list.find { |file| file.match(/^LICENSE|^COPYING|^MIT-LICENSE/i) },
       code_of_conduct: file_list.find { |file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?CODE[-_]OF[-_]CONDUCT/i) },
       threat_model: file_list.find { |file| file.match(/^THREAT[-_]MODEL/i) },
@@ -328,8 +330,9 @@ class Repository < ApplicationRecord
       roadmap: file_list.find { |file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?ROADMAP/i) },
       authors: file_list.find { |file| file.match(/^AUTHORS/i) },
       dei: file_list.find { |file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?DEI/i) },
-      publiccode: file_list.find { |file| file.match(/^publiccode.yml/i) },
-      codemeta: file_list.find { |file| file.match(/^codemeta.json/i) }
+      publiccode: file_list.find { |file| file.match(/^publiccode.ya?ml/i) },
+      codemeta: file_list.find { |file| file.match(/^codemeta.json/i) },
+      zenodo: file_list.find { |file| file.match(/^.zenodo.json/i) }
     }
   end
 
@@ -365,7 +368,7 @@ class Repository < ApplicationRecord
   end
 
   def funding_links
-    (owner_funding_links + repo_funding_links).uniq
+    (repo_funding_links + owner_funding_links).uniq
   end
 
   def owner_funding_links
@@ -402,6 +405,8 @@ class Repository < ApplicationRecord
         "https://polar.sh/#{v}"
       when "buy_me_a_coffee"
         "https://buymeacoffee.com/#{v}"
+      when 'thanks_dev'
+        "https://thanks.dev/#{v}"
       else
         v
       end

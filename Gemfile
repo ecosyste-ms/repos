@@ -1,9 +1,9 @@
 source "https://rubygems.org"
 git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
-ruby "3.3.5"
+ruby '3.4.2'
 
-gem "rails", "~> 7.2.1"
+gem "rails", "~> 8.0.0"
 gem "sprockets-rails"
 gem "pg"
 gem "puma"
@@ -51,12 +51,12 @@ gem 'ostruct'
 # Translation
 gem 'http_accept_language'
 gem 'i18n'
-gem 'i18n-tasks'
 gem 'rails-i18n'
 gem 'enum_help'
 
 group :development do
   gem "web-console"
+  gem "i18n-tasks"
 end
 
 group :test do
@@ -66,3 +66,5 @@ group :test do
   gem "mocha"
   gem "rails-controller-testing"
 end
+
+gem "bootstrap-icons-helper", "~> 2.0"

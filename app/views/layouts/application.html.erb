@@ -8,43 +8,21 @@
       <%= meta_title %>
     </title>
     <meta name="description" content="<%= meta_description %>">
-    <meta name='archives_service' content="<%= ARCHIVES_DOMAIN %>">
     <%= csrf_meta_tags %>
     <%= stylesheet_link_tag "application", :media => "all" %>
     <%= javascript_include_tag "application" %>
-    <link rel="stylesheet" href="//unpkg.com/@highlightjs/cdn-assets@11.5.1/styles/github.min.css">
-    <script defer src="//unpkg.com/@highlightjs/cdn-assets@11.5.1/highlight.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    <%= yield :head %>
   </head>
   <body>
+		<%= render 'shared/header' %>
+		
     <div class="main">
-      <div class="px-4 container-sm pt-2 mt-5 text-center">
-        <h1 class="display-5 fw-bold">
-          <a href="/" class="text-decoration-hover link-dark">Ecosyste.ms: Repos</a>
-        </h1>
-        <div class="col-lg-6 mx-auto">
-          <p class="lead mb-4">
-            <%= t '.intro' %>
-          </p>
-        </div>
-      </div>
-
       <%= yield %>
     </div>
 
-    <footer class="py-5 container-sm text-muted text-center">
-      <%= link_to t('.about'), 'https://ecosyste.ms', class: 'link-dark', target: :_blank  %> — 
-      <%= link_to 'Blog', "https://blog.ecosyste.ms", class: 'link-dark', target: :_blank  %> — 
-      <%= link_to 'API', rswag_ui_path, class: 'link-dark', target: :_blank  %> — 
-      <%= link_to 'Open Data', exports_path, class: 'link-dark' %> — 
-      <%= link_to 'Status', 'https://ecosystems.appsignal-status.com/', class: 'link-dark', target: :_blank  %>
-      <br/>
-      <%= link_to 'GitHub', "https://github.com/ecosyste-ms/repos", class: 'link-dark', target: :_blank  %> —
-      <%= link_to 'Open Collective', "https://opencollective.com/ecosystems", class: 'link-dark', target: :_blank  %> —  
-      <%= link_to 'Twitter', "https://twitter.com/ecosyste_ms", class: 'link-dark', target: :_blank  %> —  
-      <%= link_to 'Mastodon', "https://mastodon.social/@ecosystems", class: 'link-dark', target: :_blank  %>
-      <br/>
-      Code: <%= link_to 'AGPL-3', 'https://github.com/ecosyste-ms/repos/blob/main/LICENSE', class: 'link-dark' %>  — 
-      Data: <%= link_to 'CC BY-SA 4.0', 'https://creativecommons.org/licenses/by-sa/4.0/', class: 'link-dark', target: :_blank %>
-    </footer>
+    <%= render 'shared/footer' %>
   </body>
 </html>

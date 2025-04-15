@@ -1,7 +1,7 @@
-FROM ruby:3.3.5-alpine
+FROM ruby:3.4.2-alpine
 
-ENV APP_ROOT /usr/src/app
-ENV DATABASE_PORT 5432
+ENV APP_ROOT=/usr/src/app
+ENV DATABASE_PORT=5432
 WORKDIR $APP_ROOT
 
 # * Setup system
@@ -16,13 +16,15 @@ RUN apk add --update \
     curl-dev \
     bash \
     libc6-compat \
+    yaml-dev \
+    libffi-dev \
  && rm -rf /var/cache/apk/* 
 
 # Will invalidate cache as soon as the Gemfile changes
 COPY Gemfile Gemfile.lock $APP_ROOT/
 
 RUN bundle config --global frozen 1 \
- && bundle config set without 'test' \
+ && bundle config set without 'development test' \
  && bundle install --jobs 2
 
 # ========================================================

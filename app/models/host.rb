@@ -269,6 +269,11 @@ class Host < ApplicationRecord
     if owner.nil?
       owner = owners.new(uuid: owner_hash[:id], login: owner_hash[:login])
     end
+
+    owner_hash.each do |key, value|
+      owner_hash[key] = value.gsub("\u0000", "") if value.is_a?(String)
+    end
+
     owner.assign_attributes(owner_hash)
     owner.last_synced_at = Time.now
     if owner.new_record?

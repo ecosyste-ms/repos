@@ -72,6 +72,7 @@
 
         <ul class="list-group list-group-flush">
           <% dependencies.each do |dependency| %>
+            <% next dependency.manifest.present? %>
             <li class='list-group-item ps-0'>
               <%= dependency.requirements %>
               <small class='text-muted'>

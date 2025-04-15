@@ -1,0 +1,815 @@
+/* Variables */
+
+/* Colors */
+$color-purple: #7878EF;
+$color-purple-light: #BBBBFF;
+$color-purple-dark: #5C5CCF;
+
+$color-orange: #FF807D;
+$color-orange-light: #FEBDB9;
+$color-orange-dark: #DE5858;
+
+$color-green: #45E56E;
+$color-green-light: #87F5AA;
+$color-green-dark: #2EAF6B;
+$color-green-darker: #189654;
+
+$color-black: #1D1D28;
+$color-white: #FFFFFF;
+$color-grey-light: #F5F5FF;
+$color-grey: #DCDCE0;
+$color-grey-dark: #4C4C61;
+
+/* Tokens to override bootstrap colours */
+$primary: $color-purple;
+$secondary: $color-grey;
+$success: $color-green-dark;
+$info: $color-purple-light;
+$warning: $color-orange-light;
+$danger: $color-orange-dark;
+$light: $color-grey-light;
+$dark: $color-black;
+
+/* Typography */
+$font-family-base: "Inter", sans-serif;
+$font-size-base: 1.125rem; //18px
+$font-size-small: 0.88889rem; //16px
+
+$line-height-base: 1.3334;
+$headings-line-height: 1.25;
+
+$h1-font-size: 2.9375rem; //47px
+$h2-font-size: 2.1875rem; //35px
+$h3-font-size: 1.625rem; //26px
+$h4-font-size: 1.25rem; //20px
+
+$body-font-weight: 400;
+$headings-font-weight: 700;
+$display-font-weight: 900;
+$lead-font-weight: 400;
+
+$link-color: $color-purple-dark;
+$link-hover-color: $color-purple;
+
+$transition-collapse: height .35s ease;
+
+$btn-padding-y: 0.5em;
+$btn-padding-x: 1em;
+$btn-font-weight: 600;
+$btn-color: $color-white;
+
+$badge-font-weight: 400;
+$badge-padding-y: 0.4em;
+
+@import "bootstrap"; 
+
+@mixin spesh-link (
+  $text-color: $color-black, 
+  $hover-color: $color-green, 
+  $transition-duration: 250ms
+  ) {
+    color: $text-color;
+    text-decoration: none !important;
+    box-shadow: inset 0 -0.3em 0 $hover-color;
+    transition: $transition-duration;
+
+  &:hover,
+  &:active,
+  &:focus {
+    box-shadow: inset 0 -1em 0 $hover-color;
+    color: $text-color;
+  }
+}
+
+/* Global selection style */
+::selection {
+  background-color: $color-purple-light;
+}
+
+::-moz-selection {
+  background-color: $color-purple-light;
+}
+
+[data-bs-toggle="tooltip"] {
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: linear-gradient(180deg, $color-purple 0%, $color-purple-dark 100%);
+  color: $color-white;
+  &:hover,
+  &:active,
+  &:focus {
+    color: $color-white;
+    background: linear-gradient(180deg, $color-purple 0%, $color-purple-dark 33%);
+  }
+}
+
+.btn-secondary {
+  background: linear-gradient(180deg, $color-grey-light 0%, $color-grey 100%);
+  &:hover,
+  &:active,
+  &:focus {
+    background: linear-gradient(180deg, $color-grey-light 0%, $color-grey 33%);
+  }
+}
+
+.btn-success {
+  background: linear-gradient(180deg, $color-green-dark 0%, $color-green-darker 100%);
+  color: $color-white;
+  &:hover,
+  &:active,
+  &:focus {
+    color: $color-white;
+    background: linear-gradient(180deg, $color-green-dark 0%, $color-green-darker 33%);
+  }
+}
+
+.btn-danger {
+  background: linear-gradient(180deg, $color-orange 0%, $color-orange-dark 100%);
+  color: $color-white;
+  &:hover,
+  &:active,
+  &:focus {
+    color: $color-white;
+    background: linear-gradient(180deg, $color-orange 0%, $color-orange-dark 33%);
+  }
+}
+
+.btn-warning {
+  background: linear-gradient(180deg, $color-orange-light 0%, $color-orange 100%);
+  &:hover,
+  &:active,
+  &:focus {
+    background: linear-gradient(180deg, $color-orange-light 0%, $color-orange 33%);
+
+  }
+}
+
+.btn-info {
+  background: linear-gradient(180deg, $color-grey-light 0%, $color-purple-light 100%);
+  &:hover,
+  &:active,
+  &:focus {
+    background: linear-gradient(180deg, $color-grey-light 0%, $color-purple-light 33%);
+  }
+}
+
+.btn-light {
+  background: linear-gradient(180deg, $color-grey-light 0%, $color-grey 100%);
+  &:hover,
+  &:active,
+  &:focus {
+    background: linear-gradient(180deg, $color-grey-light 0%, $color-grey 33%);
+  }
+}
+
+.btn-dark {
+  background: linear-gradient(180deg, $color-grey-dark 0%, $color-black 100%);
+  &:hover,
+  &:active,
+  &:focus {
+    background: linear-gradient(180deg, $color-grey-dark 0%, $color-black 33%);
+  }
+}
+
+.btn-primary,
+.btn-secondary,
+.btn-success,
+.btn-danger,
+.btn-warning,
+.btn-info,
+.btn-light,
+.btn-dark {
+  border: 0;
+  &:focus {
+    outline: 3px solid $color-orange;
+  }
+}
+
+.alert {
+  border: 0;
+}
+
+.alert-dark {
+  background-color: $color-grey-dark;
+  color: $color-white;
+	a {
+		color: $color-white;
+	}
+}
+
+hr {
+  border-top: 3px solid $color-purple-light;
+}
+
+.container {
+  @include media-breakpoint-down(md) {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+.text-decoration-hover {
+  text-decoration: none;
+  &:hover{
+    text-decoration: underline;
+  }
+}
+
+body {
+  font-optical-sizing: auto;
+}
+
+.header__global {
+  width: 100%;
+}
+
+.header__global__site-logo-wrapper {
+  h1 {
+    font-size: 0;
+    line-height: 0;
+    margin: 0;
+  }
+}
+
+.site-logo {
+  font-size: 0;
+  line-height: 0;
+  color: transparent;
+
+  background-image: asset-url('ecosystems-logo.svg');
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  display: inline-block;
+
+  width: 155px;
+  height: 30px;
+}
+
+.site-logo--white {
+	background-image: asset-url('ecosystems-logo-white.svg');
+  width: 246px;
+  height: 50px;
+}
+
+.site-name {
+  line-height: 50px;
+  display: inline-block;
+  vertical-align: middle;
+  font-size: 40px;
+  font-weight: 400;
+  color: $color-purple;
+  padding-top: 70px;
+}
+
+.header__global__menu-link {
+  @include spesh-link();
+  @include font-size(1rem);
+  .bi {
+    display: inline-block;
+    transition: transform 0.35s ease-out; //same time as bootstrap's animation
+    transform-origin: center;
+  }
+}
+
+.header__global__menu-link[aria-expanded="true"] {
+  .bi {
+    transform: rotateX(180deg);
+  }
+}
+
+.header__global__menu__category {
+  margin-bottom: 0.5rem;
+}
+
+.header__global__menu__category-title {
+  display: inline;
+  @include font-size(1rem);
+}
+
+.header__global__menu__category-links {
+  @include font-size(1rem);
+  display: inline;
+  padding-left: 1rem;
+  li {
+    display: inline;
+    margin-right: 1rem;
+  }
+  a {
+    color: $color-black;
+    &:hover,
+    &:active,
+    &:focus {
+      color: $color-purple-dark;
+    }
+    &.active {
+      text-decoration: none;
+      color: $color-purple-dark;
+    }
+  }
+}
+
+.header__local {
+  border-top: 1px solid $color-grey;
+  margin-top: 2rem;
+}
+
+.header__local__sitename {
+  color: $color-purple-dark;
+}
+
+.header__local__homelink {
+  color: $color-purple-dark;
+  text-decoration: none;
+  &:hover,
+  &:active,
+  &:focus {
+    color: $color-black;
+  }
+}
+
+.header__local__description {
+  @include font-size(1rem);
+}
+
+.header__local__navigation {
+  margin-left: -1rem;
+  @include media-breakpoint-up(lg) {
+    margin-left: 0;
+  }
+  a {
+    @include spesh-link();
+    padding: 0;
+  }
+  li {
+    padding: var(--bs-nav-link-padding-y) var(--bs-nav-link-padding-x);
+  }
+
+.nav {
+	@include media-breakpoint-up(lg) {
+	  justify-content: end;
+	}
+  }
+}
+
+.dark-section {
+  background-color: $color-purple-dark;
+  color: $color-white;
+  a {
+    color: $color-white;
+    &:hover,
+    &:active,
+    &:focus, 
+    &:visited {
+      color: $color-white;
+    }
+    
+  }
+}
+.extra-bold {
+  font-weight: 900;
+}
+
+.extra-small {
+  @include font-size(0.778rem);
+}
+
+.table a {
+  @include spesh-link();
+}
+
+/*  Header */
+.header {
+  padding: 2em 0;
+}
+
+/*  Footer */
+.footer {
+  padding: 2em 0;
+  margin-top: 4em;
+}
+
+.footer-links {
+  margin-top: 1rem;
+  @include media-breakpoint-up(md) {
+    text-align: right;
+  }
+  a {
+    text-decoration: none;
+  }
+  li {
+    margin-bottom: 0.25rem;
+  }
+}
+
+.footer-icons {
+  margin-top: 1em;
+  a {
+    margin: 0 0.5em;
+    text-decoration: none;
+  }
+}
+.lead {
+  @include font-size(1.625rem);
+}
+
+/* Hero */
+.hero {
+  .lead {
+    max-width: 42rem;
+    margin: 0 auto;
+  }
+}
+
+.spesh-link {
+  @include spesh-link();
+}
+
+.spesh-link--hover-only {
+  box-shadow: inset 0 -0.3em 0 transparentize($color-green, 1);
+}
+
+.label {
+  display: block;
+  @include font-size(0.875rem);
+}
+
+.grey-grad-bg  {
+  background: linear-gradient(180deg, #FFFFFF 0%, #F5F5FF 100%);
+}
+
+.block-link {
+  /* class to make cards fully clickable */
+  text-decoration: none;
+}
+
+.block-link--spesh {
+  .spesh-link {
+    display: inline-block;
+  }
+  /* if we have a .spesh-link in here, we need to attach the hover styles */
+  &:hover,
+  &:active,
+  &:focus {
+    .spesh-link {
+      box-shadow: inset 0 -1em 0 $color-green;
+    }
+  }
+}
+
+.stat-card {
+  display: inline-block;
+  margin-right: 1.3334rem;
+}
+
+.stat-card-title {
+  display: block;
+}
+
+.stat-card-text {
+  display: inline-block
+}
+
+.stat-card-text--small {
+  font-size: 1rem;
+}
+
+.stat-card-title {
+  @include font-size(2.1875rem);
+  font-weight: 800;
+}
+
+.stat-card-title--large {
+  font-size: $h1-font-size;
+}
+
+.stat-card-title--small {
+  font-size: $h3-font-size;
+}
+
+
+
+.well {
+  background-color: $color-grey-light;
+  border-radius: $border-radius;
+}
+
+.page-content {
+  h2, h3, h4, h5 {
+    margin-top: 2rem;
+    margin-bottom: 0.6667rem;
+  }
+
+	a {
+	@include spesh-link();
+	}
+}
+
+.page-content__title {
+  margin-bottom: 3rem;
+  
+}
+
+.page-content__title + .lead {
+  margin-top: -1rem;
+  margin-bottom: 1rem;
+}
+
+.ecosystems-pattern {
+  background-color: lighten($color-purple-light, 8%);
+  background-image: asset-url('ecosystems-pattern.svg');
+  background-repeat: repeat;
+  background-size: calc(696px/2) calc(238px/2);
+  background-attachment: fixed;
+}
+
+.purple-grad-bg  {
+  background-color: $color-purple-dark;
+  background: linear-gradient(0deg, $color-purple-dark 0%, $color-purple 50%);
+  color: $color-white;
+}
+
+
+/* Error pages */
+.error-bg {
+  margin-bottom: -4em;
+}
+
+.error {
+  padding: 4rem 0;
+}
+
+.error--has-background {
+  padding-top: 480px;
+  background-size: 440px;
+  background-position: center top;
+  background-repeat: no-repeat;
+  min-height: 440px;
+  @include media-breakpoint-up(lg) {
+    background-size: 660px;
+    min-height: 700px;
+    position: relative;
+    background-position: left top;
+  }
+}
+
+.error--404 {
+  background-image: asset-url('error-missing.png');
+}
+
+.error--409,
+.error--422,
+.error--429,
+.error--500 {
+  background-image: asset-url('error-breaking.png');
+}
+
+.error--400,
+.error--401,
+.error--403, 
+.error--503 {
+  background-image: asset-url('error-broken.png');
+}
+
+.error--has-background .error__content {
+  @include media-breakpoint-up(lg) {
+    position: absolute;
+    right: 90px;
+    top: 180px;
+  }
+}
+
+.error__content {
+  text-align: center;
+}
+
+.error__code {
+  font-size: clamp(16px, 20vw, 256px);
+  font-weight: 800;
+  box-shadow: inset 0 -0.1em 0 $color-green;
+  line-height: 1;
+  display: inline-block;
+  margin-bottom: 1.5rem;
+}
+
+.error__description {
+  max-width: 30em;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.table-wrapper {
+  /* Add a shadow to indicate there's more to see if you scroll */
+  background: 
+    linear-gradient(90deg, $color-white 20%, rgba(255, 255, 255, 0)),
+    linear-gradient(90deg, rgba(255, 255, 255, 0), $color-white 80%) 
+                    100% 0,
+    radial-gradient(farthest-side at 0 0%, $color-grey, rgba(0, 0, 0, 0)),
+    radial-gradient(farthest-side at 100% 0%, $color-grey, rgba(0, 0, 0, 0))
+                    100% 0;
+  background-repeat: no-repeat;
+  background-size: 20% 200%, 20% 200%, 8% 400%, 8% 400%;
+  background-attachment: local, local, scroll, scroll;
+  table {
+    --bs-table-bg: transparent;
+  }
+}
+
+.table {
+	tr {
+		vertical-align: middle;
+	}
+}
+
+.label-rejected {
+  background-color: $color-orange-dark; 
+}
+
+.label-accepted {
+  background-color: $color-green-dark; 
+}
+
+.label-pending {
+  background-color: $color-grey-dark
+}
+
+.label-deleted{
+  background-color: $color-grey;
+  color: $color-black !important;
+}
+
+.label-info {
+  background-color: $color-orange;
+  a {
+    // remove box shadow
+    box-shadow: none;
+  }
+}
+
+.tooltip {
+	max-width: 400px !important;
+	white-space: normal; 
+}
+  
+.tooltip-inner {
+	max-width: 400px !important; 
+	text-align: left; 
+}
+  
+.logo-grid {
+  img {
+    max-height: 60px; 
+    width: auto;
+    object-fit: contain;
+  }
+}
+  
+.logo-grid {
+	display: flex;
+	justify-content: space-around;
+	align-items: center; /* Align logos vertically */
+	flex-wrap: wrap;
+	gap: 2rem 2rem;
+	@include media-breakpoint-up(xl) { 
+	  flex-wrap: nowrap;
+	  justify-content: space-between; 
+	}
+	a {
+	  display: block;
+	}
+}
+  
+.logo-grid__logo {
+	max-width: 150px;
+}
+
+.bg-secondary {
+	color: $color-black;
+}
+
+.listing {
+	border: 0;
+	border-radius: 0;
+	border-bottom: 3px solid $color-purple-light;
+	padding: 0;
+}
+  
+  
+.listing__title {
+	@include font-size(1rem);
+	a {
+	  text-decoration: none;
+	  color: $color-black;
+    &:hover,
+    &:active,
+    &:focus {
+      color: $color-purple-dark;
+      text-decoration: underline;
+    }
+	}
+}
+  
+.listing__meta {
+  font-weight: normal;
+  color: $color-grey-dark;
+  @include font-size(0.875rem);
+}
+  
+.listing__details {
+	@include font-size(0.875rem);
+  .badge {
+    @include font-size(1em);
+  }
+}
+  
+.listing__time {
+	margin-top: 0.3888888889; //gross number but it aligns the baseline with the severity badge
+	@include font-size(0.7777777778rem);
+}
+  
+.listing-filters {
+	.list-group-item {
+	  @include font-size(0.875rem);
+	  border-color: $color-grey;
+	  word-break: break-word;
+	}
+}
+  
+.listing-controls {
+  background-color: $color-grey-light;
+  p {
+    line-height: 2.2222222222rem;
+  }
+	.dropdown-item.active,
+	.dropdown-item:active {
+	  background-color: $color-purple;
+	}
+}
+  
+.listing-header__meta__text {
+	@include font-size(1rem);
+	line-height: 1.4rem;
+}
+  
+.listing-header__title {
+	line-break: anywhere;
+}
+
+.rounded-input-group {
+	.form-control {
+		border-top-left-radius: 800px; //magic number, but it's consistent with bootstrap
+		border-bottom-left-radius: 800px;
+	}
+	.btn {
+		border-top-right-radius: 800px;
+		border-bottom-right-radius: 800px;
+	}
+}
+
+
+// Form validation
+.invalid-feedback {
+	color: $color-orange-dark;
+}
+
+.was-validated .form-control:valid,
+.form-control.is-valid {
+  border-color: $color-green-dark;
+}
+
+.valid-feedback {
+	color: $color-green-darker;
+}
+
+.sidebar {
+	background-color: $color-grey-light;
+	p { 
+		@include font-size(1rem);
+	}
+	h2 {
+		@include font-size(1.25rem);
+
+    border-top: 1px solid $color-purple-light;
+    padding-top: 1rem;
+    &:first-of-type {
+      border-top: 0;
+      padding-top: 0;
+    }
+	}
+
+	h3 {
+		@include font-size(1rem);
+    
+	}
+
+  code {
+    color: $color-purple-dark;
+  }
+
+  a {
+    @include spesh-link();
+    line-break: anywhere;
+  }
+}

@@ -26,6 +26,9 @@ class TopicsController < ApplicationController
     scope = scope.order('stargazers_count DESC NULLS LAST, pushed_at DESC NULLS LAST, full_name ASC NULLS LAST')
 
     @pagy, @repositories = pagy_countless(scope)
+
+    raise ActiveRecord::RecordNotFound if @repositories.empty?
+
     expires_in 1.day, public: true
   end
 end

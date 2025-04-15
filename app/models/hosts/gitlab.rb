@@ -41,16 +41,21 @@ module Hosts
 
         response = faraday_client.get(url)
         project = JSON.parse(response.body, object_class: OpenStruct)
+        return nil if project.nil? || project.empty?
         project.visibility = "public" # We get it from a nonauthenticated public endpoint
         project
+      rescue JSON::ParserError
+        nil
       end
 
-      def projects(per_page:, archived:, id_before:, simple:)
-        url = "#{@endpoint}/projects?per_page=#{per_page}&archived=#{archived}&id_before=#{id_before}&simple=#{simple}"
+      def projects(per_page:, archived:, id_before: nil, simple:, page: 1, order_by: nil)
+        url = "#{@endpoint}/projects?per_page=#{per_page}&archived=#{archived}&id_before=#{id_before}&simple=#{simple}&page=#{page}&order_by=#{order_by}"
         Rails.logger.debug("Gitlab[projects]: Fetching projects from URL: #{url}")
 
         response = faraday_client.get(url)
         JSON.parse(response.body, object_class: OpenStruct)
+      rescue JSON::ParserError
+        nil
       end
 
       def user(username)
@@ -60,6 +65,8 @@ module Hosts
 
         response = faraday_client.get(url)
         JSON.parse(response.body)
+      rescue JSON::ParserError
+        nil
       end
 
       def group(username, with_projects:)
@@ -68,6 +75,8 @@ module Hosts
 
         response = faraday_client.get(url)
         JSON.parse(response.body)
+      rescue JSON::ParserError
+        nil
       end
 
       def group_projects(username, per_page:, archived:, simple:, include_subgroups:)
@@ -76,6 +85,8 @@ module Hosts
 
         response = faraday_client.get(url)
         JSON.parse(response.body, object_class: OpenStruct)
+      rescue JSON::ParserError
+        nil
       end
 
       def get(path, options = {})
@@ -84,6 +95,8 @@ module Hosts
 
         response = faraday_client.get(url)
         JSON.parse(response.body)
+      rescue JSON::ParserError
+        nil
       end
 
       def method_missing(method, *args, &block)
@@ -245,6 +258,7 @@ module Hosts
 
     def fetch_repository(full_name)
       project = api_client.project(full_name, license: true)
+      return nil if project.nil? || project.empty?
       return nil if project.visibility != "public"
 
       full_hash = project.to_h.with_indifferent_access
@@ -281,7 +295,7 @@ module Hosts
     def crawl_repositories_async
       last_id = REDIS.get("gitlab_last_id:#{@host.id}")
       repos = api_client.projects(per_page: 100, archived: false, id_before: last_id, simple: true)
-      if repos.present?
+      if repos.present? && repos.any?
         repos.each { |repo| @host.sync_repository_async(repo["path_with_namespace"]) }
         REDIS.set("gitlab_last_id:#{@host.id}", repos.last["id"])
       end
@@ -292,8 +306,8 @@ module Hosts
     def crawl_repositories
       last_id = REDIS.get("gitlab_last_id:#{@host.id}")
       repos = api_client.projects(per_page: 100, archived: false, id_before: last_id, simple: true)
-      repos.reject! { |repo| repo.dig("namespace", "kind") == "user" } if ENV["SKIP_USER_REPOS"]
-      if repos.present?
+      if repos.present? && repos.any?
+        repos.reject! { |repo| repo.dig("namespace", "kind") == "user" } if ENV["SKIP_USER_REPOS"]
         repos.each { |repo| @host.sync_repository(repo["path_with_namespace"], uuid: repo["id"]) }
         REDIS.set("gitlab_last_id:#{@host.id}", repos.last["id"])
       end
@@ -317,7 +331,7 @@ module Hosts
         user = search.first.to_hash
         id = user["id"]
         user_hash = api_client.user(id).to_hash
-
+        return nil if user_hash.nil?
         {
           uuid: "user-#{user_hash["id"]}",
           login: user_hash["username"],
@@ -330,6 +344,7 @@ module Hosts
         }
       else
         group = api_client.group(login, with_projects: false)
+        return nil if group.nil?
         {
           uuid: "organization-#{group["id"]}",
           login: group["path"],
