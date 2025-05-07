@@ -1,6 +1,7 @@
 class Api::V1::HostsController < Api::V1::ApplicationController
   def index
-    @hosts = Host.all.order('repositories_count DESC')
+    scope = Host.all.order('repositories_count DESC')
+    @pagy, @hosts = pagy(scope)
     fresh_when @hosts, public: true
   end
 
