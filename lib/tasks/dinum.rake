@@ -134,6 +134,9 @@ module Dinum
       sleep 1
       break if host.reload.repositories_count == repo_count
     end
+    host.owners.each do |owner|
+      owner.update_repositories_count
+    end
   end
 
   # Method to perform a full synchronization for all pso hosts

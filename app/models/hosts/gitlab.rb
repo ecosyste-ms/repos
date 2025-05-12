@@ -48,8 +48,18 @@ module Hosts
         nil
       end
 
-      def projects(per_page:, archived:, id_before: nil, id_after: nil, simple:, page: 1, order_by: nil)
-        url = "#{@endpoint}/projects?per_page=#{per_page}&archived=#{archived}&id_before=#{id_before}&id_after=#{id_after}&simple=#{simple}&page=#{page}&order_by=#{order_by}"
+      def projects(per_page:, archived:, id_before: nil, id_after: nil, simple:, page: 1, order_by: nil, sort: nil)
+        if id_before
+          sort ||= "desc"
+          order_by ||= "id"
+        elsif id_after
+          sort ||= "asc"
+          order_by ||= "id"
+        else
+          sort ||= "desc"
+          order_by ||= "id"
+        end
+        url = "#{@endpoint}/projects?per_page=#{per_page}&archived=#{archived}&id_before=#{id_before}&id_after=#{id_after}&simple=#{simple}&page=#{page}&order_by=#{order_by}&sort=#{sort}"
         Rails.logger.debug("Gitlab[projects]: Fetching projects from URL: #{url}")
 
         response = faraday_client.get(url)
@@ -331,7 +341,7 @@ module Hosts
     def crawl_repositories_forward
       recent_id = REDIS.get("gitlab_recent_id:#{@host.id}")
       if recent_id.nil?
-        recent_id = @host.repositories.maximum(:id)
+        recent_id = @host.repositories.maximum(:uuid)
       end
       repos = api_client.projects(per_page: 100, archived: false, id_after: recent_id, simple: true)
       repos.reject! { |repo| repo.dig("namespace", "kind") == "user" } if ENV["SKIP_USER_REPOS"]
