@@ -335,7 +335,7 @@ module Hosts
       end
       repos = api_client.projects(per_page: 100, archived: false, id_after: recent_id, simple: true)
       repos.reject! { |repo| repo.dig("namespace", "kind") == "user" } if ENV["SKIP_USER_REPOS"]
-      if repos.present?
+      if repos.present? && repos.any?
         repos.each { |repo| @host.sync_repository(repo["path_with_namespace"], uuid: repo["id"]) }
         REDIS.set("gitlab_recent_id:#{@host.id}", repos.last["id"])
       end
