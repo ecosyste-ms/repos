@@ -130,9 +130,12 @@ module Dinum
     host_reset(host) if host.repositories_count == 0
     loop do
       repo_count = host.repositories_count
-      host.crawl_repositories
+      host.crawl_repositories_two_ways
       sleep 1
       break if host.reload.repositories_count == repo_count
+    end
+    host.owners.each do |owner|
+      owner.update_repositories_count
     end
   end
 
