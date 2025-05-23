@@ -8,108 +8,113 @@
     <%= @package_usage.name %>
   </h1>
 
-  <% if @package_usage.package %>
-    <p>
-      <small class='text-muted'>
-        <%= @package_usage.package['description'] %>
+  <p>Temporarily disabled due to scaling issues, this page will be back soon.</p>
 
-        <% if @package_usage.package['versions_count'] %>
-          <br/><%= pluralize number_with_delimiter(@package_usage.package['versions_count']), 'version' %>
-        <% end %>
+  <% if false # TODO renable this later %>
 
-        <% if @package_usage.package['latest_release_published_at'] %>
-          <br/><span title="<%= @package_usage.package['latest_release_published_at'] %>">Latest release: <%= time_ago_in_words @package_usage.package['latest_release_published_at'] %> ago</span>
-        <% end %>
-
-        <% if @package_usage.package['dependent_packages_count'] && @package_usage.package['dependent_packages_count'] > 0 %>
-          <br/><%= pluralize number_with_delimiter(@package_usage.package['dependent_packages_count']), 'dependent package' %>
-        <% end %>
-
-        <% if @package_usage.package['downloads'] %>
-          <br/><%= number_with_delimiter(@package_usage.package['downloads']) %> downloads <%= download_period(@package_usage.package['downloads_period']) %>
-        <% end %>
-      </small>
-    </p>
-
-    <% if @package_usage.registry %>
+    <% if @package_usage.package %>
       <p>
-        View more package details: <%= link_to @package_usage.packages_html_url, @package_usage.packages_html_url, target: :_blank %>
+        <small class='text-muted'>
+          <%= @package_usage.package['description'] %>
+
+          <% if @package_usage.package['versions_count'] %>
+            <br/><%= pluralize number_with_delimiter(@package_usage.package['versions_count']), 'version' %>
+          <% end %>
+
+          <% if @package_usage.package['latest_release_published_at'] %>
+            <br/><span title="<%= @package_usage.package['latest_release_published_at'] %>">Latest release: <%= time_ago_in_words @package_usage.package['latest_release_published_at'] %> ago</span>
+          <% end %>
+
+          <% if @package_usage.package['dependent_packages_count'] && @package_usage.package['dependent_packages_count'] > 0 %>
+            <br/><%= pluralize number_with_delimiter(@package_usage.package['dependent_packages_count']), 'dependent package' %>
+          <% end %>
+
+          <% if @package_usage.package['downloads'] %>
+            <br/><%= number_with_delimiter(@package_usage.package['downloads']) %> downloads <%= download_period(@package_usage.package['downloads_period']) %>
+          <% end %>
+        </small>
       </p>
-    <% end%>
 
-    <% if @package_usage.repository %>
-      <p>
-        View more repository details: <%= link_to host_repository_url(@package_usage.host, @package_usage.repository), host_repository_path(@package_usage.host, @package_usage.repository) %>
-      </p>
-    <% end%>
-  <% end %>
+      <% if @package_usage.registry %>
+        <p>
+          View more package details: <%= link_to @package_usage.packages_html_url, @package_usage.packages_html_url, target: :_blank %>
+        </p>
+      <% end%>
 
-  <h3>Dependent Repos <small class='text-muted'><%= number_with_delimiter @package_usage.dependents_count %></small></h3>
-  <% @repositories = @dependencies.group_by(&:repository) %>
-  <% @repositories.each do |repository, dependencies| %>
-    <% next if repository.nil? %>
-  
-    <div class="card mb-3 repository d-flex" id="repository_<%= repository.id %>">
-  <div class="card-body pb-1">
-    <div class="d-flex">
-      
-      <div class="flex-grow-1 ms-3 text-break">
-        <h5 class='card-title'>
-          <%= link_to repository, host_repository_path(repository.host, repository) %>
-          <% if repository.fork && repository.source_name %>
-          <small class='text-muted'><i>
-            Fork of <%= link_to repository.source_name, host_repository_path(host_id: repository.host, id: repository.source_name) %>
-          </i></small>
-          <% end %>
-          <% if repository.archived %>
-            <span title='Archived'>📦</span>
-          <% end %>
-        </h5>
-      
-        <span class="card-subtitle mb-2 text-muted">
-          <%= repository.description %>
-        </span>
+      <% if @package_usage.repository %>
+        <p>
+          View more repository details: <%= link_to host_repository_url(@package_usage.host, @package_usage.repository), host_repository_path(@package_usage.host, @package_usage.repository) %>
+        </p>
+      <% end%>
+    <% end %>
 
-        <ul class="list-group list-group-flush">
-          <% dependencies.each do |dependency| %>
-            <% next dependency.manifest.present? %>
-            <li class='list-group-item ps-0'>
-              <%= dependency.requirements %>
-              <small class='text-muted'>
-                <%= dependency.manifest.filepath %>
-              </small>
-            </li>
-          <% end %>
-        </ul>
+    <h3>Dependent Repos <small class='text-muted'><%= number_with_delimiter @package_usage.dependents_count %></small></h3>
+    <% @repositories = @dependencies.group_by(&:repository) %>
+    <% @repositories.each do |repository, dependencies| %>
+      <% next if repository.nil? %>
+    
+      <div class="card mb-3 repository d-flex" id="repository_<%= repository.id %>">
+    <div class="card-body pb-1">
+      <div class="d-flex">
+        
+        <div class="flex-grow-1 ms-3 text-break">
+          <h5 class='card-title'>
+            <%= link_to repository, host_repository_path(repository.host, repository) %>
+            <% if repository.fork && repository.source_name %>
+            <small class='text-muted'><i>
+              Fork of <%= link_to repository.source_name, host_repository_path(host_id: repository.host, id: repository.source_name) %>
+            </i></small>
+            <% end %>
+            <% if repository.archived %>
+              <span title='Archived'>📦</span>
+            <% end %>
+          </h5>
+        
+          <span class="card-subtitle mb-2 text-muted">
+            <%= repository.description %>
+          </span>
+
+          <ul class="list-group list-group-flush">
+            <% dependencies.each do |dependency| %>
+              <% next dependency.manifest.present? %>
+              <li class='list-group-item ps-0'>
+                <%= dependency.requirements %>
+                <small class='text-muted'>
+                  <%= dependency.manifest.filepath %>
+                </small>
+              </li>
+            <% end %>
+          </ul>
 
 
-        <p class="card-subtitle mb-2 text-muted"><i><small>
-          <% if repository.size %>
-            Size: <%= number_to_human_size repository.size*1000 %> 
-          <% end %>
-          <% if repository.size && repository.last_synced_at %>
-            - 
-          <% end %>  
-          <% if repository.last_synced_at %>
-              Last synced: <%= distance_of_time_in_words_to_now repository.last_synced_at %> ago
-          <% end %>
-          <% if repository.pushed_at && repository.last_synced_at %>
-            - 
-          <% end %>  
-          <% if repository.pushed_at %>
-              Pushed: <%= distance_of_time_in_words_to_now repository.pushed_at %> ago
-          <% end %>
-        </small></i></p>
+          <p class="card-subtitle mb-2 text-muted"><i><small>
+            <% if repository.size %>
+              Size: <%= number_to_human_size repository.size*1000 %> 
+            <% end %>
+            <% if repository.size && repository.last_synced_at %>
+              - 
+            <% end %>  
+            <% if repository.last_synced_at %>
+                Last synced: <%= distance_of_time_in_words_to_now repository.last_synced_at %> ago
+            <% end %>
+            <% if repository.pushed_at && repository.last_synced_at %>
+              - 
+            <% end %>  
+            <% if repository.pushed_at %>
+                Pushed: <%= distance_of_time_in_words_to_now repository.pushed_at %> ago
+            <% end %>
+          </small></i></p>
+        </div>
+        <div class="flex-shrink-0">
+          <img src="<%= repository.icon_url(40) %>" class="rounded" height='40' width='40' onerror="this.style.display='none'">
+        </div>  
       </div>
-      <div class="flex-shrink-0">
-        <img src="<%= repository.icon_url(40) %>" class="rounded" height='40' width='40' onerror="this.style.display='none'">
-      </div>  
     </div>
   </div>
-</div>
 
+    <% end %>
+    <%== pagy_bootstrap_nav(@pagy) if @pagy.pages && @pagy.pages > 1 %>  
   <% end %>
-  <%== pagy_bootstrap_nav(@pagy) if @pagy.pages && @pagy.pages > 1 %>  
 </div>
 
 

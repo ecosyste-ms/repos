@@ -7,6 +7,10 @@
     <%= @ecosystem %>
   </h1>
 
-  <%= render @package_usages %>
-  <%== pagy_bootstrap_nav(@pagy) if @pagy.pages > 1 %>  
+  <p>Temporarily disabled due to scaling issues, this page will be back soon.</p>
+
+  <% if false %>  
+    <%= render @package_usages %>
+    <%== pagy_bootstrap_nav(@pagy) if @pagy.pages > 1 %>  
+  <% end %>
 </div>

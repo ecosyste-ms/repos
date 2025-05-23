@@ -4,28 +4,32 @@
 <div class="container-sm">
   <h1 class='mb-3'>Package Usage</h1>
   
-  <% @ecosystems.each do |ecosystem, count| %>
-    <% registry = Registry.find_by_ecosystem(ecosystem) %>
-    <div class="card mb-3 host d-flex">
-      <div class="card-body pb-1">
-        <div class="d-flex">
-          
-          <div class="flex-grow-1 ms-3 text-break">
-            <h5 class='card-title'>
-              <%= link_to ecosystem, ecosystem_usage_path(ecosystem) %>
-            </h5>
-          
-            <p class="card-subtitle mb-2 text-muted">
-                <%= number_with_delimiter count %> packages
-            </p>
+  <p>Temporarily disabled due to scaling issues, this page will be back soon.</p>
+
+  <% if false %>
+    <% @ecosystems.each do |ecosystem, count| %>
+      <% registry = Registry.find_by_ecosystem(ecosystem) %>
+      <div class="card mb-3 host d-flex">
+        <div class="card-body pb-1">
+          <div class="d-flex">
+            
+            <div class="flex-grow-1 ms-3 text-break">
+              <h5 class='card-title'>
+                <%= link_to ecosystem, ecosystem_usage_path(ecosystem) %>
+              </h5>
+            
+              <p class="card-subtitle mb-2 text-muted">
+                  <%= number_with_delimiter count %> packages
+              </p>
+            </div>
+            <div class="flex-shrink-0">
+              <% if registry %>
+                <img src="https://github.com/<%= registry.github %>.png" class="rounded" height='40' width='40' onerror="this.style.display='none'">
+              <% end %>
+            </div>  
           </div>
-          <div class="flex-shrink-0">
-            <% if registry %>
-              <img src="https://github.com/<%= registry.github %>.png" class="rounded" height='40' width='40' onerror="this.style.display='none'">
-            <% end %>
-          </div>  
         </div>
       </div>
-    </div>
+    <% end %>
   <% end %>
 </div>
