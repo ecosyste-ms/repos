@@ -503,4 +503,42 @@ class Repository < ApplicationRecord
       releases.where(uuid: uuid).order("created_at desc").offset(1).each(&:destroy)
     end
   end
+  
+  def sbom
+    {
+      bomFormat: "CycloneDX",
+      specVersion: "1.5",
+      version: 1,
+      serialNumber: "urn:uuid:#{SecureRandom.uuid}",
+      metadata: {
+        timestamp: Time.now.utc.iso8601,
+        tools: [
+          {
+            vendor: "Ecosystems",
+            name: "Ecosystems SBOM Generator"
+          }
+        ],
+        component: {
+          type: "application",
+          name: full_name
+        }
+      },
+      components: manifests.includes(:dependencies).flat_map do |manifest|
+        manifest.dependencies.map do |dep|
+          {
+            type: "library",
+            name: dep.package_name,
+            version: dep.requirements,
+            purl: "pkg:#{dep.ecosystem}/#{dep.package_name}",
+            properties: [
+              {
+                name: "filePath",
+                value: manifest.filepath
+              }
+            ]
+          }.compact
+        end
+      end.uniq
+    }
+  end
 end

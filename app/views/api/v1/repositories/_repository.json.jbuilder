@@ -9,3 +9,4 @@ json.releases_url api_v1_host_repository_releases_url(repository.host, repositor
 json.manifests_url api_v1_host_repository_manifests_url(repository.host, repository)
 json.owner_url api_v1_host_owner_url(repository.host, repository.owner)
 json.download_url repository.download_url
+json.sbom_url sbom_api_v1_host_repository_url(repository.host, repository)

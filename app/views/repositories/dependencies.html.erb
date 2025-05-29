@@ -14,7 +14,11 @@
     <li class="nav-item">
       <a class="nav-link active" href="<%= dependencies_host_repository_path(@host, @repository) %>">Dependencies</a>
     </li>
+    <li class="nav-item ms-auto">
+      <%= link_to "Export SBOM", sbom_api_v1_host_repository_path(@host, @repository), class: "btn btn-secondary btn-sm", target: :blank %>
+    </li>
   </ul>
+
 
   <% if @repository.dependencies_parsed_at %>
     <% if @manifests.present? %>

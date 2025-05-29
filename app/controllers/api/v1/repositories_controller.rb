@@ -59,6 +59,18 @@ class Api::V1::RepositoriesController < Api::V1::ApplicationController
     end
   end
 
+  def sbom
+    @host = Host.find_by_name!(params[:host_id])
+    @repository = @host.find_repository(params[:id].downcase)
+    if @repository
+      if stale?(@repository, public: true)
+        render json: @repository.sbom, status: :ok
+      end
+    else
+      render json: { error: 'Repository not found' }, status: :not_found
+    end
+  end
+
   def lookup
     if params[:url].present?
       url = params[:url]

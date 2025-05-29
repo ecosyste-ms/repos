@@ -44,6 +44,7 @@ Rails.application.routes.draw do
           resources :releases
           resources :manifests, only: [:index]
           member do
+            get :sbom
             get :ping
           end
         end

@@ -825,6 +825,30 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Tag'
+  /hosts/{hostName}/repositories/{repositoryName}/sbom:
+    get:
+      summary: get a software bill of materials (SBOM) for a repository
+      operationId: getHostRepositorySbom
+      parameters:
+        - in: path
+          name: hostName
+          schema:
+            type: string
+          required: true
+          description: name of host
+        - in: path
+          name: repositoryName
+          schema:
+            type: string
+          required: true
+          description: name of repository
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
   /hosts/{hostName}/repositories/{repositoryName}/releases/{release}:
     get:
       summary: get a release for a repository
