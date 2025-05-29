@@ -504,6 +504,27 @@ class Repository < ApplicationRecord
     end
   end
   
+  def convert_purl_type(purl_type)
+    case purl_type
+    when "actions"
+      "githubactions"
+    when "elpa"
+      "melpa"
+    when "go"
+      "golang"
+    when "homebrew"
+      "brew"
+    when "packagist"
+      "composer"
+    when "rubygems"
+      "gem"
+    when "swiftpm"
+      "swift"
+    else
+      purl_type
+    end
+  end
+
   def sbom
     {
       bomFormat: "CycloneDX",
@@ -529,7 +550,7 @@ class Repository < ApplicationRecord
             type: "library",
             name: dep.package_name,
             version: dep.requirements,
-            purl: "pkg:#{dep.ecosystem}/#{dep.package_name}",
+            purl: "pkg:#{convert_purl_type(dep.ecosystem)}/#{dep.package_name}",
             properties: [
               {
                 name: "filePath",
