@@ -15,7 +15,8 @@
   <p><%= @repository.description %></p>
 
   <p>
-    JSON API: <%= link_to api_v1_host_repository_url(@host, @repository), api_v1_host_repository_url(@host, @repository), target: :_blank %>
+    JSON API: <%= link_to api_v1_host_repository_url(@host, @repository), api_v1_host_repository_url(@host, @repository), target: :_blank %><br/>
+    PURL: <code><%= @repository.purl %></code>
   </p>
 
   <div class="row">

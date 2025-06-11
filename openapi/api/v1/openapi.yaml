@@ -1021,6 +1021,8 @@ components:
           type: string
         download_url:
           type: string
+        purl:
+          type: string
         commit_stats:
           type: object
         host:
@@ -1109,6 +1111,8 @@ components:
           type: string
           format: date-time
         dependency_job_id:
+          type: string
+        purl:
           type: string
         tag_url:
           type: string

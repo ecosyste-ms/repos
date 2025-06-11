@@ -182,4 +182,13 @@ class Tag < ApplicationRecord
     end
     manifests.where.not(id: manifests.latest.map(&:id)).each(&:destroy)
   end
+
+  def purl
+    PackageURL.new(
+      type: repository.host.host_instance.purl_type,
+      namespace: repository.owner,
+      name: repository.project_slug,
+      version: name
+    ).to_s
+  end
 end

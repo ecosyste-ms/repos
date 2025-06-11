@@ -503,6 +503,14 @@ class Repository < ApplicationRecord
       releases.where(uuid: uuid).order("created_at desc").offset(1).each(&:destroy)
     end
   end
+
+  def purl
+    PackageURL.new(
+      type: host.host_instance.purl_type,
+      namespace: owner,
+      name: project_slug
+    ).to_s
+  end
   
   def convert_purl_type(purl_type)
     case purl_type

@@ -55,6 +55,10 @@ module Hosts
       nil
     end
 
+    def purl_type
+      @host.kind.downcase
+    end
+
     def url(repository)
       "#{@host.url}/#{repository.full_name}"
     end
