@@ -601,6 +601,45 @@ paths:
                 type: array
                 items:
                   type: string
+  /hosts/{hostName}/owners/names:
+    get:
+      summary: get a list of owner names from a host
+      operationId: getHostOwnerNames
+      parameters:
+        - in: path
+          name: hostName
+          schema:
+            type: string
+          required: true
+          description: name of host
+        - name: page
+          in: query
+          description: pagination page number 
+          required: false
+          schema:
+            type: integer
+        - name: per_page
+          in: query
+          description: Number of records to return 
+          required: false
+          schema:
+            type: integer
+        - name: kind
+          in: query
+          description: filter by owner kind
+          required: false
+          schema:
+            type: string
+            enum: [user, organization]
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
   /hosts/{hostName}/repositories/{repositoryName}:
     get:
       summary: get a repository by name

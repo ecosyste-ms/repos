@@ -2,7 +2,12 @@ require 'test_helper'
 
 class ApiV1HostsControllerTest < ActionDispatch::IntegrationTest
   setup do
-    @host = Host.create(name: 'GitHub', url: 'https://github.com', kind: 'github')
+    @host = Host.find_or_create_by(name: 'GitHub') do |h|
+      h.url = 'https://github.com'
+      h.kind = 'github'
+    end
+    @visible_owner = @host.owners.create!(login: 'visible-owner', kind: :user)
+    @hidden_owner = @host.owners.create!(login: 'hidden-owner', kind: :organization, hidden: true)
   end
 
   test 'lists hosts' do
@@ -24,4 +29,5 @@ class ApiV1HostsControllerTest < ActionDispatch::IntegrationTest
 
     assert_equal actual_response["name"], 'GitHub'
   end
+
 end

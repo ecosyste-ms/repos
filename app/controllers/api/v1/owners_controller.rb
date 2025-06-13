@@ -79,4 +79,16 @@ class Api::V1::OwnersController < Api::V1::ApplicationController
     @sponsors_logins = @host.owners.has_sponsors_listing.pluck(:login)
     render json: @sponsors_logins
   end
+
+  def names
+    @host = Host.find_by_name!(params[:host_id])
+    scope = @host.owners.visible.order(:id)
+
+    scope = scope.kind(params[:kind]) if params[:kind].present?
+
+    @pagy, @owners = pagy_countless(scope.select(:login), limit_max: 10000)
+    
+    expires_in 1.day, public: true
+    render json: @owners.pluck(:login)
+  end
 end

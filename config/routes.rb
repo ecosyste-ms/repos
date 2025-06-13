@@ -31,6 +31,7 @@ Rails.application.routes.draw do
           collection do
             get :lookup
             get :sponsors_logins
+            get :names
           end
           member do
             get :repositories
