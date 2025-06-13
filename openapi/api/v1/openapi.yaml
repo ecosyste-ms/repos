@@ -123,10 +123,11 @@ paths:
             type: string
         - name: purl
           in: query
-          description: package URL
+          description: "Package URL (PURL) of the repository to lookup. Supported types: github, gitlab, gitea, bitbucket, forgejo, sourcehut"
           required: false
           schema:
             type: string
+            example: "pkg:github/ecosyste-ms/repos"
       responses:
         200:
           description: OK
