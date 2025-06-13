@@ -47,6 +47,7 @@ class Api::V1::RepositoriesController < Api::V1::ApplicationController
     @host = Host.find_by_name!(params[:host_id])
     @repository = @host.find_repository(params[:id].downcase)
     if @repository
+      render json: { error: 'Repository not found' }, status: :not_found and return if @repository.owner_hidden?
       if stale?(@repository, public: true)
         if @repository.full_name.downcase != params[:id].downcase
           redirect_to api_v1_host_repository_path(@host, @repository.full_name), status: :moved_permanently
@@ -63,6 +64,7 @@ class Api::V1::RepositoriesController < Api::V1::ApplicationController
     @host = Host.find_by_name!(params[:host_id])
     @repository = @host.find_repository(params[:id].downcase)
     if @repository
+      render json: { error: 'Repository not found' }, status: :not_found and return if @repository.owner_hidden?
       if stale?(@repository, public: true)
         render json: @repository.sbom, status: :ok
       end
@@ -91,6 +93,7 @@ class Api::V1::RepositoriesController < Api::V1::ApplicationController
       @repository = @host.find_repository(path.downcase)
     end
     if @repository
+      render json: { error: 'Repository not found' }, status: :not_found and return if @repository.owner_hidden?
       force = params[:force].present?
       if force
         @repository.sync_async(true)

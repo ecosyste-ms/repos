@@ -570,4 +570,9 @@ class Repository < ApplicationRecord
       end.uniq
     }
   end
+
+  def owner_hidden?
+    return false if owner.blank?
+    owner_record&.hidden?
+  end
 end

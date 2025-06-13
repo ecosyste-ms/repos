@@ -11,6 +11,7 @@ class OwnersController < ApplicationController
     @host = Host.find_by_name!(params[:host_id])
     @owner = params[:id]
     @owner_record = @host.owners.find_by('lower(login) = ?', @owner.downcase)
+    raise ActiveRecord::RecordNotFound if @owner_record&.hidden?
     fresh_when(@owner_record, public: true)
     scope = @host.repositories.owner(@owner)
     

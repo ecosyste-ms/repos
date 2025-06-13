@@ -6,6 +6,8 @@ class Owner < ApplicationRecord
 
   scope :created_after, ->(date) { where('created_at > ?', date) }
   scope :updated_after, ->(date) { where('updated_at > ?', date) }
+  scope :hidden, -> { where(hidden: true) }
+  scope :visible, -> { where(hidden: [false, nil]) }
 
   scope :kind, ->(kind) { where(kind: kind) }
   enum :kind, {:user=>"user", :organization=>"organization"}

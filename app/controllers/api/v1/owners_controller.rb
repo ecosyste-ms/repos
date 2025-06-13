@@ -24,12 +24,14 @@ class Api::V1::OwnersController < Api::V1::ApplicationController
   def show
     @host = Host.find_by_name!(params[:host_id])
     @owner = @host.owners.find_by!('lower(login) = ?', params[:id].downcase)
+    raise ActiveRecord::RecordNotFound if @owner.hidden?
     fresh_when @owner, public: true
   end
 
   def repositories
     @host = Host.find_by_name!(params[:host_id])
     @owner = @host.owners.find_by!('lower(login) = ?', params[:id].downcase)
+    raise ActiveRecord::RecordNotFound if @owner.hidden?
     scope = @owner.repositories
     scope = scope.created_after(params[:created_after]) if params[:created_after].present?
     scope = scope.updated_after(params[:updated_after]) if params[:updated_after].present?

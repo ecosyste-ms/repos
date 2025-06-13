@@ -12,6 +12,8 @@ class RepositoriesController < ApplicationController
       @host.sync_repository_async(params[:id])
       raise ActiveRecord::RecordNotFound and return
     else
+      raise ActiveRecord::RecordNotFound if @repository.owner_hidden?
+      
       if @repository.full_name.downcase != params[:id].downcase
         redirect_to(host_repository_path(@host, @repository.full_name), status: :moved_permanently) and return
       end
@@ -27,6 +29,7 @@ class RepositoriesController < ApplicationController
     @repository = @host.find_repository(params[:id].downcase)
 
     raise ActiveRecord::RecordNotFound if @repository.nil?
+    raise ActiveRecord::RecordNotFound if @repository.owner_hidden?
 
     if @repository.full_name.downcase != params[:id].downcase
       redirect_to(host_repository_path(@host, @repository.full_name), status: :moved_permanently) and return
@@ -50,6 +53,7 @@ class RepositoriesController < ApplicationController
     @repository = @host.find_repository(params[:id].downcase)
     
     raise ActiveRecord::RecordNotFound if @repository.nil?
+    raise ActiveRecord::RecordNotFound if @repository.owner_hidden?
 
     if @repository.full_name.downcase != params[:id].downcase
       redirect_to(host_repository_path(@host, @repository.full_name), status: :moved_permanently) and return
