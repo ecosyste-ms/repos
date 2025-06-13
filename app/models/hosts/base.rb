@@ -100,6 +100,12 @@ module Hosts
       nil
     end
 
+    def download_url(repository, branch = nil, kind = "branch")
+      # For hosts that don't implement their own download_url, return nil
+      # as we don't know their archive URL format
+      nil
+    end
+
     def topic_url(topic)
       nil
     end
@@ -109,7 +115,7 @@ module Hosts
     end
 
     def avatar_url(repository, size = 60)
-      raise NotImplementedError
+      nil
     end
 
     def get_file_list(repository)

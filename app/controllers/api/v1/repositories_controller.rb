@@ -82,15 +82,19 @@ class Api::V1::RepositoriesController < Api::V1::ApplicationController
       path = parsed_url.path.delete_prefix('/').chomp('/')
       @repository = @host.find_repository(path.downcase)
     elsif params[:purl].present?
-      purl = PackageURL.parse(params[:purl])
-      if purl.qualifiers.present? && purl.qualifiers['repository_url'].present?
-        @host = Host.find_by_url(purl.qualifiers['repository_url'])
-      else
-        @host = Host.kind(purl.type).first # TODO gitlab and codeberg defaults 
+      begin
+        purl = PackageURL.parse(params[:purl])
+        if purl.qualifiers.present? && purl.qualifiers['repository_url'].present?
+          @host = Host.find_by_url(purl.qualifiers['repository_url'])
+        else
+          @host = Host.kind(purl.type).first # TODO gitlab and codeberg defaults 
+        end
+        raise ActiveRecord::RecordNotFound unless @host
+        path = [purl.namespace, purl.name].compact.join('/')
+        @repository = @host.find_repository(path.downcase)
+      rescue => e
+        raise ActiveRecord::RecordNotFound
       end
-      raise ActiveRecord::RecordNotFound unless @host
-      path = purl.namespace + '/' + purl.name
-      @repository = @host.find_repository(path.downcase)
     end
     if @repository
       render json: { error: 'Repository not found' }, status: :not_found and return if @repository.owner_hidden?

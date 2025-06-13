@@ -27,7 +27,8 @@ module Hosts
     end
 
     def download_url(repository, branch = nil, kind = 'branch')
-      sha ||= repository.default_branch
+      sha = branch || repository.default_branch
+      sha = "master" if sha.blank?
       "#{url(repository)}/get/#{CGI.escape(sha)}.zip"
     end
 

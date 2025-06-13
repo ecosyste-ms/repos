@@ -65,8 +65,10 @@ module Hosts
     def download_url(repository, branch = nil, kind = "branch")
       if kind == "branch"
         branch = repository.default_branch if branch.nil?
+        branch = "master" if branch.blank?
         "https://codeload.github.com/#{repository.full_name}/tar.gz/refs/heads/#{branch}"
       else
+        branch = "master" if branch.blank?
         "https://codeload.github.com/#{repository.full_name}/tar.gz/#{branch}"
       end
     end

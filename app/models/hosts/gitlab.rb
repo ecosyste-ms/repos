@@ -157,6 +157,7 @@ module Hosts
 
     def download_url(repository, branch = nil, kind = "branch")
       branch = repository.default_branch if branch.nil?
+      branch = "master" if branch.blank?
       name = repository.full_name.split("/").last
       "#{@host.url}/#{repository.full_name}/-/archive/#{branch}/#{name}-#{branch}.zip"
     end
