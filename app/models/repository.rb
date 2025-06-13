@@ -573,6 +573,6 @@ class Repository < ApplicationRecord
 
   def owner_hidden?
     return false if owner.blank?
-    owner_record&.hidden?
+    owner_record&.hidden? == true
   end
 end

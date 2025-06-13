@@ -19,6 +19,17 @@ class ApiV1RepositoriesControllerTest < ActionDispatch::IntegrationTest
     assert_equal actual_response.length, 2
   end
 
+  test 'get repository names for a host' do
+    get repository_names_api_v1_host_path(id: @host.name)
+    assert_response :success
+    
+    actual_response = JSON.parse(@response.body)
+
+    assert_equal actual_response.length, 2
+    assert_includes actual_response, 'ecosyste-ms/repos'
+    assert_includes actual_response, 'hidden-owner/repo'
+  end
+
   test 'get a repository for a host' do
     get api_v1_host_repository_path(host_id: @host.name, id: @repository.full_name)
     assert_response :success

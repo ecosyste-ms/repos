@@ -13,13 +13,13 @@ class OwnerTest < ActiveSupport::TestCase
       @nil_owner = Owner.create(login: 'nil', host: @host, hidden: nil)
     end
 
-    test 'hidden scope returns only hidden owners' do
+    should 'return only hidden owners for hidden scope' do
       assert_includes Owner.hidden, @hidden_owner
       assert_not_includes Owner.hidden, @visible_owner
       assert_not_includes Owner.hidden, @nil_owner
     end
 
-    test 'visible scope returns non-hidden owners' do
+    should 'return non-hidden owners for visible scope' do
       assert_includes Owner.visible, @visible_owner
       assert_includes Owner.visible, @nil_owner
       assert_not_includes Owner.visible, @hidden_owner
