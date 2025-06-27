@@ -77,7 +77,7 @@ GEM
     after_commit_action (1.1.0)
       activerecord (>= 3.0.0)
       activesupport (>= 3.0.0)
-    appsignal (4.5.15)
+    appsignal (4.5.16)
       logger
       rack (>= 2.0.0)
     ast (2.4.3)
@@ -501,7 +501,7 @@ CHECKSUMS
   activesupport (8.0.2) sha256=8565cddba31b900cdc17682fd66ecd020441e3eef320a9930285394e8c07a45e
   addressable (2.8.7) sha256=462986537cf3735ab5f3c0f557f14155d778f4b43ea4f485a9deb9c8f7c58232
   after_commit_action (1.1.0) sha256=28a4730735a042127ddee9246334a087fbbe1c20f28791509ddbdc8723017238
-  appsignal (4.5.15) sha256=9a60f135f17c0ad62ca29b06761566757fbe3355e2199415ce22a9590b253c2e
+  appsignal (4.5.16) sha256=ba13780b25f3f6a77826b53280afd98dec985374281a5c7f8ce22d29c471bd9d
   ast (2.4.3) sha256=954615157c1d6a382bc27d690d973195e79db7f55e9765ac7c481c60bdb4d383
   base64 (0.2.0) sha256=0f25e9b21a02a0cc0cea8ef92b2041035d39350946e8789c562b2d1a3da01507
   benchmark (0.4.1) sha256=d4ef40037bba27f03b28013e219b950b82bace296549ec15a78016552f8d2cce
