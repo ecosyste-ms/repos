@@ -1,5 +1,6 @@
 module Hosts
   class Base
+    include EcosystemApiClient
 
     def repository_columns
       [
@@ -119,7 +120,9 @@ module Hosts
     end
 
     def get_file_list(repository)
-      files_and_folders = JSON.parse(Faraday.get("#{ARCHIVES_DOMAIN}/api/v1/archives/list?url=#{CGI.escape(download_url(repository))}").body)
+      connection = ecosystem_connection(ARCHIVES_DOMAIN)
+      response = connection.get("/api/v1/archives/list?url=#{CGI.escape(download_url(repository))}")
+      files_and_folders = JSON.parse(response.body)
       files_and_folders.reject{|f| files_and_folders.any?{|ff| ff.starts_with?(f+'/')}}
     rescue
       []

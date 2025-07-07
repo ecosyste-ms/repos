@@ -399,9 +399,9 @@ module Hosts
     end
 
     def load_repos_with_tags(id = nil)
-      url = "#{TIMELINE_DOMAIN}/api/v1/events?per_page=100&event_type=ReleaseEvent&before=#{id}"
+      connection = ecosystem_connection(TIMELINE_DOMAIN)
       begin
-        resp = Faraday.get(url) do |req|
+        resp = connection.get("/api/v1/events?per_page=100&event_type=ReleaseEvent&before=#{id}") do |req|
           req.options.timeout = 5
         end
 
@@ -417,10 +417,11 @@ module Hosts
 
     def load_repo_names(id = nil)
       puts "loading repo names since #{id}"
-      url = "#{TIMELINE_DOMAIN}/api/v1/events/repository_names"
-      url = "#{url}?before=#{id}" if id.present?
+      connection = ecosystem_connection(TIMELINE_DOMAIN)
+      path = "/api/v1/events/repository_names"
+      path = "#{path}?before=#{id}" if id.present?
       begin
-        resp = Faraday.get(url) do |req|
+        resp = connection.get(path) do |req|
           req.options.timeout = 5
         end
 
@@ -435,11 +436,12 @@ module Hosts
     end
 
     def events_for_repo(full_name, event_type: nil, per_page: 100)
-      url = "#{TIMELINE_DOMAIN}/api/v1/events/#{full_name}?per_page=#{per_page}"
-      url = "#{url}&event_type=#{event_type}" if event_type.present?
+      connection = ecosystem_connection(TIMELINE_DOMAIN)
+      path = "/api/v1/events/#{full_name}?per_page=#{per_page}"
+      path = "#{path}&event_type=#{event_type}" if event_type.present?
 
       begin
-        resp = Faraday.get(url) do |req|
+        resp = connection.get(path) do |req|
           req.options.timeout = 5
         end
 

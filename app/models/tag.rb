@@ -1,4 +1,6 @@
 class Tag < ApplicationRecord
+  include EcosystemApiClient
+  
   belongs_to :repository
   counter_culture :repository, execute_after_commit: true
 
@@ -108,11 +110,7 @@ class Tag < ApplicationRecord
   end
 
   def parse_dependencies
-    connection = Faraday.new(url: "https://parser.ecosyste.ms") do |faraday|
-      faraday.use Faraday::FollowRedirects::Middleware
-    
-      faraday.adapter Faraday.default_adapter
-    end
+    connection = ecosystem_connection(PARSER_DOMAIN)
 
     if dependency_job_id
       res = connection.get("/api/v1/jobs/#{dependency_job_id}")

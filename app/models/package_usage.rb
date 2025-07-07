@@ -1,4 +1,5 @@
 class PackageUsage < ApplicationRecord
+  include EcosystemApiClient
 
   validates :ecosystem, presence: true
   validates :name, presence: true, format: { with: /\w/ }
@@ -39,7 +40,8 @@ class PackageUsage < ApplicationRecord
       update_repository_usages_count
       return
     end
-    response = Faraday.get(packages_api_url)
+    connection = ecosystem_connection(PACKAGES_DOMAIN)
+    response = connection.get("/api/v1/registries/#{registry.name.gsub(' ', '%20')}/packages/#{name}")
     if response.success?
       update_columns(package: JSON.parse(response.body), package_last_synced_at: Time.now)
     else

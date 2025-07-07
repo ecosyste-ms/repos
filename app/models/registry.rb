@@ -1,14 +1,12 @@
 class Registry < ApplicationRecord
+  extend EcosystemApiClient
+  
   def self.sync_all
-    conn = Faraday.new(PACKAGES_DOMAIN) do |f|
-      f.request :json
-      f.request :retry
-      f.response :json
-    end
+    conn = ecosystem_connection(PACKAGES_DOMAIN)
     
     response = conn.get('/api/v1/registries')
     return nil unless response.success?
-    json = response.body
+    json = JSON.parse(response.body)
 
     json.each do |registry|
       Registry.find_or_create_by(name: registry['name']).tap do |r|

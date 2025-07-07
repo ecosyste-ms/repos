@@ -1,4 +1,6 @@
 class Repository < ApplicationRecord
+  include EcosystemApiClient
+  
   belongs_to :host
   counter_culture :host, execute_after_commit: true
 
@@ -151,11 +153,7 @@ class Repository < ApplicationRecord
   end
 
   def parse_dependencies
-    connection = Faraday.new(url: PARSER_DOMAIN) do |faraday|
-      faraday.use Faraday::FollowRedirects::Middleware
-
-      faraday.adapter Faraday.default_adapter
-    end
+    connection = ecosystem_connection(PARSER_DOMAIN)
 
     res = if dependency_job_id
       connection.get("/api/v1/jobs/#{dependency_job_id}")
