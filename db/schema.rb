@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_06_13_094900) do
+ActiveRecord::Schema[8.0].define(version: 2025_07_09_143714) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -48,6 +48,20 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_13_094900) do
     t.string "org"
     t.integer "owners_count", default: 0
     t.string "version"
+  end
+
+  create_table "imports", force: :cascade do |t|
+    t.string "filename"
+    t.datetime "imported_at"
+    t.integer "push_events_count"
+    t.integer "release_events_count"
+    t.integer "repositories_synced_count"
+    t.integer "releases_synced_count"
+    t.boolean "success"
+    t.text "error_message"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["filename"], name: "index_imports_on_filename", unique: true
   end
 
   create_table "manifests", force: :cascade do |t|

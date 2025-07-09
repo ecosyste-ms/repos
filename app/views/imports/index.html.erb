@@ -1,0 +1,75 @@
+<div class="container">
+  <div class="row">
+    <div class="col-md-12">
+      <h2>GHArchive Imports</h2>
+      
+      <div class="row mb-4">
+        <div class="col-md-12">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Last 24 Hours</h5>
+              <div class="row">
+                <div class="col-md-3">
+                  <strong>Total Imports:</strong> <%= @recent_stats[:total] %><br>
+                  <strong>Successful:</strong> <%= @recent_stats[:successful] %><br>
+                  <strong>Failed:</strong> <%= @recent_stats[:failed] %>
+                </div>
+                <div class="col-md-3">
+                  <strong>Repositories Processed:</strong> <%= number_with_delimiter @recent_stats[:repositories_processed] %><br>
+                  <strong>With Releases:</strong> <%= number_with_delimiter @recent_stats[:repositories_with_releases] %>
+                </div>
+                <div class="col-md-3">
+                  <strong>Success Rate:</strong> 
+                  <% if @recent_stats[:total] > 0 %>
+                    <%= number_to_percentage(@recent_stats[:successful].to_f / @recent_stats[:total] * 100, precision: 1) %>
+                  <% else %>
+                    N/A
+                  <% end %>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Filename</th>
+            <th>Imported At</th>
+            <th>Status</th>
+            <th>Repos Processed</th>
+            <th>With Releases</th>
+            <th>Error</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @imports.each do |import| %>
+            <tr>
+              <td>
+                <%= link_to import.filename, import.url, target: '_blank', rel: 'noopener' %>
+              </td>
+              <td><%= import.imported_at.strftime('%Y-%m-%d %H:%M:%S UTC') if import.imported_at %></td>
+              <td>
+                <% if import.success? %>
+                  <span class="badge badge-success">Success</span>
+                <% else %>
+                  <span class="badge badge-danger">Failed</span>
+                <% end %>
+              </td>
+              <td><%= number_with_delimiter import.repositories_processed if import.repositories_processed %></td>
+              <td><%= number_with_delimiter import.repositories_with_releases if import.repositories_with_releases %></td>
+              <td>
+                <% if import.error_message.present? %>
+                  <small class="text-danger"><%= truncate(import.error_message, length: 100) %></small>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+      
+      <%== pagy_bootstrap_nav(@pagy) if @pagy.pages > 1 %>
+    </div>
+  </div>
+</div>

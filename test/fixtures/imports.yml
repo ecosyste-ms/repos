@@ -1,0 +1,21 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  filename: MyString
+  imported_at: 2025-07-09 15:37:14
+  push_events_count: 1
+  release_events_count: 1
+  repositories_synced_count: 1
+  releases_synced_count: 1
+  success: false
+  error_message: MyText
+
+two:
+  filename: MyString
+  imported_at: 2025-07-09 15:37:14
+  push_events_count: 1
+  release_events_count: 1
+  repositories_synced_count: 1
+  releases_synced_count: 1
+  success: false
+  error_message: MyText

@@ -99,6 +99,8 @@ Rails.application.routes.draw do
   resources :topics, only: [:index, :show], constraints: { id: /.*/ }, defaults: { format: :html }
 
   resources :exports, only: [:index], path: 'open-data'
+  
+  resources :imports, only: [:index]
 
   get '/404', to: 'errors#not_found'
   get '/422', to: 'errors#unprocessable'
