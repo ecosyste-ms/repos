@@ -111,39 +111,49 @@ class GharchiveImporter
     # Collect repositories for batch processing
     ping_jobs = []
     download_tags_jobs = []
+    additional_ping_jobs = []
     
-    repos_by_name.each do |repo_name, repo_events|
+    # DownloadTagsWorker jobs - process repos with releases first
+    repos_with_releases.each do |repo_name|
       repository = Repository.find_by(host: @host, full_name: repo_name)
       
       if repository
-        # Collect PingWorker jobs
-        ping_jobs << ["GitHub", repository.full_name]
-        
-        # Collect DownloadTagsWorker jobs for repositories with releases
-        if repos_with_releases.include?(repo_name)
+        download_tags_jobs << [repository.id]
+      else
+        # Try to find/create repo, then queue for pinging
+        repository = @host.find_repository(repo_name)
+        if repository
           download_tags_jobs << [repository.id]
+          additional_ping_jobs << ["GitHub", repo_name]
         end
       end
     end
     
-    # Enqueue jobs in batches of 1000
-    if ping_jobs.any?
-      Rails.logger.info "[GHArchive] Enqueuing #{ping_jobs.size} PingWorker jobs in batches of 1000"
-      ping_jobs.each_slice(1000) do |batch|
-        Sidekiq::Client.push_bulk(
-          'class' => 'PingWorker',
-          'queue' => 'ping',
-          'args' => batch
-        )
-      end
+    # PingWorker jobs - all repositories
+    repos_by_name.each do |repo_name, repo_events|
+      ping_jobs << ["GitHub", repo_name]
     end
     
+    # Enqueue DownloadTagsWorker jobs first (in batches of 1000)
     if download_tags_jobs.any?
       Rails.logger.info "[GHArchive] Enqueuing #{download_tags_jobs.size} DownloadTagsWorker jobs in batches of 1000"
       download_tags_jobs.each_slice(1000) do |batch|
         Sidekiq::Client.push_bulk(
           'class' => 'DownloadTagsWorker',
           'queue' => 'default',
+          'args' => batch
+        )
+      end
+    end
+    
+    # Enqueue PingWorker jobs (combine regular + additional, dedupe)
+    all_ping_jobs = (ping_jobs + additional_ping_jobs).uniq
+    if all_ping_jobs.any?
+      Rails.logger.info "[GHArchive] Enqueuing #{all_ping_jobs.size} PingWorker jobs in batches of 1000"
+      all_ping_jobs.each_slice(1000) do |batch|
+        Sidekiq::Client.push_bulk(
+          'class' => 'PingWorker',
+          'queue' => 'ping',
           'args' => batch
         )
       end
