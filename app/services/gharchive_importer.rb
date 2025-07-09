@@ -115,17 +115,11 @@ class GharchiveImporter
     
     # DownloadTagsWorker jobs - process repos with releases first
     repos_with_releases.each do |repo_name|
-      repository = Repository.find_by(host: @host, full_name: repo_name)
-      
+      repository = @host.find_repository(repo_name)
       if repository
         download_tags_jobs << [repository.id]
       else
-        # Try to find/create repo, then queue for pinging
-        repository = @host.find_repository(repo_name)
-        if repository
-          download_tags_jobs << [repository.id]
-          additional_ping_jobs << ["GitHub", repo_name]
-        end
+        additional_ping_jobs << ["GitHub", repo_name]
       end
     end
     
