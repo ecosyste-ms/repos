@@ -108,32 +108,50 @@ class GharchiveImporter
     
     Rails.logger.info "[GHArchive] Processing #{repos_by_name.size} repositories, #{repos_with_releases.size} with releases"
     
-    # Process each unique repository
+    # Collect repositories for batch processing
+    ping_jobs = []
+    download_tags_jobs = []
+    
     repos_by_name.each do |repo_name, repo_events|
-      process_repository(repo_name, repos_with_releases.include?(repo_name))
+      repository = Repository.find_by(host: @host, full_name: repo_name)
+      
+      if repository
+        # Collect PingWorker jobs
+        ping_jobs << ["GitHub", repository.full_name]
+        
+        # Collect DownloadTagsWorker jobs for repositories with releases
+        if repos_with_releases.include?(repo_name)
+          download_tags_jobs << [repository.id]
+        end
+      end
+    end
+    
+    # Enqueue jobs in batches of 1000
+    if ping_jobs.any?
+      Rails.logger.info "[GHArchive] Enqueuing #{ping_jobs.size} PingWorker jobs in batches of 1000"
+      ping_jobs.each_slice(1000) do |batch|
+        Sidekiq::Client.push_bulk(
+          'class' => 'PingWorker',
+          'queue' => 'ping',
+          'args' => batch
+        )
+      end
+    end
+    
+    if download_tags_jobs.any?
+      Rails.logger.info "[GHArchive] Enqueuing #{download_tags_jobs.size} DownloadTagsWorker jobs in batches of 1000"
+      download_tags_jobs.each_slice(1000) do |batch|
+        Sidekiq::Client.push_bulk(
+          'class' => 'DownloadTagsWorker',
+          'queue' => 'default',
+          'args' => batch
+        )
+      end
     end
     
     @import_stats[:repositories_processed] = repos_by_name.size
     @import_stats[:repositories_with_releases] = repos_with_releases.size
   end
 
-  def process_repository(repo_name, has_releases)
-    # Find existing repository
-    repository = Repository.find_by(host: @host, full_name: repo_name)
-    
-    if repository
-      Rails.logger.info "[GHArchive] Processing #{repo_name}#{has_releases ? ' (with releases)' : ''}"
-      
-      # Queue PingWorker for this repository
-      PingWorker.perform_async("GitHub", repository.full_name)
-      
-      # Queue download_tags_async if repository had release events
-      if has_releases
-        repository.download_tags_async
-      end
-    else
-      Rails.logger.debug "[GHArchive] Repository #{repo_name} not found, skipping"
-    end
-  end
 
 end
