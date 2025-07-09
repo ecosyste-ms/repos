@@ -1,6 +1,6 @@
 class ImportsController < ApplicationController
   def index
-    @pagy, @imports = pagy(Import.recent)
+    @pagy, @imports = pagy(Import.order(:filename))
     
     # Calculate stats for last 24 hours
     @recent_stats = {
