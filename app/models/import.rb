@@ -17,8 +17,8 @@ class Import < ApplicationRecord
     create!(
       filename: filename_for(date, hour),
       imported_at: Time.current,
-      repositories_processed: stats[:repositories_processed] || 0,
-      repositories_with_releases: stats[:repositories_with_releases] || 0,
+      repositories_synced_count: stats[:repositories_processed] || 0,
+      releases_synced_count: stats[:repositories_with_releases] || 0,
       success: true
     )
   end

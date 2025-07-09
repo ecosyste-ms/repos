@@ -57,8 +57,8 @@
                   <span class="badge badge-danger">Failed</span>
                 <% end %>
               </td>
-              <td><%= number_with_delimiter import.repositories_processed if import.repositories_processed %></td>
-              <td><%= number_with_delimiter import.repositories_with_releases if import.repositories_with_releases %></td>
+              <td><%= number_with_delimiter import.repositories_synced_count if import.repositories_synced_count %></td>
+              <td><%= number_with_delimiter import.releases_synced_count if import.releases_synced_count %></td>
               <td>
                 <% if import.error_message.present? %>
                   <small class="text-danger"><%= truncate(import.error_message, length: 100) %></small>

@@ -7,8 +7,8 @@ class ImportsController < ApplicationController
       total: Import.where('imported_at > ?', 24.hours.ago).count,
       successful: Import.successful.where('imported_at > ?', 24.hours.ago).count,
       failed: Import.failed.where('imported_at > ?', 24.hours.ago).count,
-      repositories_processed: Import.successful.where('imported_at > ?', 24.hours.ago).sum(:repositories_processed),
-      repositories_with_releases: Import.successful.where('imported_at > ?', 24.hours.ago).sum(:repositories_with_releases)
+      repositories_processed: Import.successful.where('imported_at > ?', 24.hours.ago).sum(:repositories_synced_count),
+      repositories_with_releases: Import.successful.where('imported_at > ?', 24.hours.ago).sum(:releases_synced_count)
     }
   end
 end
