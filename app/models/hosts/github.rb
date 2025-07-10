@@ -152,27 +152,63 @@ module Hosts
     end
 
     def download_tags(repository)
-      existing_tag_names = repository.tags.pluck(:name)
       tags = fetch_tags(repository)
-      # TODO upsert the whole array
-      Array(tags).each do |tag|
-        next if existing_tag_names.include?(tag[:name])
-        repository.tags.create(tag)
+      return unless tags.present?
+      
+      # Get existing tag names in one query
+      existing_names = repository.tags.pluck(:name).to_set
+      
+      # Filter out existing tags
+      new_tags = Array(tags).reject { |tag| existing_names.include?(tag[:name]) }
+      
+      if new_tags.any?
+        # Prepare records for bulk insert
+        tag_records = new_tags.map do |tag|
+          tag.merge(
+            repository_id: repository.id,
+            created_at: Time.current,
+            updated_at: Time.current
+          )
+        end
+        
+        # Bulk insert new tags only
+        Tag.insert_all(tag_records)
+        
+        # Update count incrementally
+        new_count = (repository.tags_count || 0) + new_tags.size
+        repository.update_columns(tags_last_synced_at: Time.current, tags_count: new_count)
+      else
+        # No new tags, just update sync time
+        repository.update_columns(tags_last_synced_at: Time.current)
       end
-      repository.update_columns(tags_last_synced_at: Time.now, tags_count: repository.tags.count)
     rescue *IGNORABLE_EXCEPTIONS, Octokit::NotFound, Octokit::RepositoryUnavailable, Octokit::UnavailableForLegalReasons
       nil
     end
 
     def download_releases(repository)
-      existing_releases_uuids = repository.releases.pluck(:uuid)
       releases = fetch_releases(repository)
-      # TODO upsert the whole array
-      releases.each do |release|
-        next if existing_releases_uuids.include?(release[:uuid].to_s)
-        puts release[:tag_name]
-        repository.releases.create(release)
+      return unless releases.present?
+      
+      # Get existing release UUIDs in one query
+      existing_uuids = repository.releases.pluck(:uuid).to_set
+      
+      # Filter out existing releases
+      new_releases = releases.reject { |release| existing_uuids.include?(release[:uuid].to_s) }
+      
+      if new_releases.any?
+        # Prepare records for bulk insert
+        release_records = new_releases.map do |release|
+          release.merge(
+            repository_id: repository.id,
+            created_at: Time.current,
+            updated_at: Time.current
+          )
+        end
+        
+        # Bulk insert new releases only
+        Release.insert_all(release_records)
       end
+      
       nil
     rescue *IGNORABLE_EXCEPTIONS, Octokit::NotFound, Octokit::RepositoryUnavailable, Octokit::UnavailableForLegalReasons
       nil
