@@ -32,42 +32,65 @@
         </div>
       </div>
       
-      <table class="table table-striped">
-        <thead>
-          <tr>
-            <th>Filename</th>
-            <th>Imported At</th>
-            <th>Status</th>
-            <th>Repos Processed</th>
-            <th>With Releases</th>
-            <th>Error</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% @imports.each do |import| %>
+      <div class="table-responsive">
+        <table class="table table-striped table-hover">
+          <thead class="table-dark">
             <tr>
-              <td>
-                <%= link_to import.filename, import.url, target: '_blank', rel: 'noopener' %>
-              </td>
-              <td><%= import.imported_at.strftime('%Y-%m-%d %H:%M:%S UTC') if import.imported_at %></td>
-              <td>
-                <% if import.success? %>
-                  <span class="badge badge-success">Success</span>
-                <% else %>
-                  <span class="badge badge-danger">Failed</span>
-                <% end %>
-              </td>
-              <td><%= number_with_delimiter import.repositories_synced_count if import.repositories_synced_count %></td>
-              <td><%= number_with_delimiter import.releases_synced_count if import.releases_synced_count %></td>
-              <td>
-                <% if import.error_message.present? %>
-                  <small class="text-danger"><%= truncate(import.error_message, length: 100) %></small>
-                <% end %>
-              </td>
+              <th>Filename</th>
+              <th>Imported At</th>
+              <th>Status</th>
+              <th>Repos Processed</th>
+              <th>With Releases</th>
+              <th>Error</th>
             </tr>
-          <% end %>
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            <% @imports.each do |import| %>
+              <tr>
+                <td>
+                  <%= link_to import.filename, import.url, target: '_blank', rel: 'noopener', class: 'text-decoration-none' %>
+                </td>
+                <td>
+                  <% if import.imported_at %>
+                    <small class="text-muted"><%= import.imported_at.strftime('%Y-%m-%d %H:%M:%S UTC') %></small>
+                  <% end %>
+                </td>
+                <td>
+                  <% if import.success? %>
+                    <span class="badge bg-success">
+                      <i class="bi bi-check-circle"></i> Success
+                    </span>
+                  <% else %>
+                    <span class="badge bg-danger">
+                      <i class="bi bi-x-circle"></i> Failed
+                    </span>
+                  <% end %>
+                </td>
+                <td>
+                  <% if import.repositories_synced_count %>
+                    <span class="badge bg-secondary"><%= number_with_delimiter import.repositories_synced_count %></span>
+                  <% end %>
+                </td>
+                <td>
+                  <% if import.releases_synced_count %>
+                    <span class="badge bg-info"><%= number_with_delimiter import.releases_synced_count %></span>
+                  <% end %>
+                </td>
+                <td>
+                  <% if import.error_message.present? %>
+                    <div class="alert alert-danger alert-sm p-2 mb-0" role="alert">
+                      <small>
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <%= truncate(import.error_message, length: 100) %>
+                      </small>
+                    </div>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
       
       <%== pagy_bootstrap_nav(@pagy) if @pagy.pages > 1 %>
     </div>
