@@ -1,5 +1,9 @@
-# require 'faraday/typhoeus'
 Faraday.default_adapter = :net_http_persistent
+Faraday.default_connection_options = {
+  headers: {
+    'User-Agent' => 'repos.ecosyste.ms'
+  }
+}
 
 Octokit.middleware = Faraday::RackBuilder.new do |builder|
   builder.use Octokit::Middleware::FollowRedirects
