@@ -1,8 +1,8 @@
 class ImportsController < ApplicationController
   def index
-    @pagy, @imports = pagy(Import.order(:filename))
+    @pagy, imports = pagy_countless(Import.order("filename DESC"))
+    @imports = imports.sort_by { |import| import.filename.scan(/\d+|[^\d]+/).map { |s| s =~ /\d/ ? s.to_i : s } }.reverse
     
-    # Calculate stats for last 24 hours
     @recent_stats = {
       total: Import.where('imported_at > ?', 24.hours.ago).count,
       successful: Import.successful.where('imported_at > ?', 24.hours.ago).count,
