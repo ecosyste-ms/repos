@@ -14,13 +14,15 @@ class Import < ApplicationRecord
   end
   
   def self.create_from_import(date, hour, stats = {})
-    create!(
-      filename: filename_for(date, hour),
+    import = find_or_initialize_by(filename: filename_for(date, hour))
+    import.update!(
       imported_at: Time.current,
       repositories_synced_count: stats[:repositories_processed] || 0,
       releases_synced_count: stats[:repositories_with_releases] || 0,
-      success: true
+      success: true,
+      error_message: nil # Clear any previous error
     )
+    import
   end
   
   def self.record_failure(date, hour, error_message)
