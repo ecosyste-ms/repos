@@ -77,9 +77,9 @@ class Host < ApplicationRecord
       ActiveRecord::Base.transaction do
         repo = repositories.find_by(uuid: repo_hash[:uuid]) if repo_hash[:uuid].present?
         repo = repositories.new(uuid: repo_hash[:id], full_name: repo_hash[:full_name]) if repo.nil?
-        repo.full_name = repo_hash[:full_name] if repo.full_name.downcase != repo_hash[:full_name].downcase
+        repo.full_name = repo_hash[:full_name] if repo.full_name&.downcase != repo_hash[:full_name]&.downcase
 
-        repo.previous_names = (repo.previous_names + [full_name.downcase]).uniq if repo.full_name_changed? || repo.full_name.downcase != full_name.downcase
+        repo.previous_names = (repo.previous_names + [full_name.downcase]).uniq if repo.full_name_changed? || repo.full_name&.downcase != full_name&.downcase
 
         repo.assign_attributes(repo_hash)
         repo_changed = repo.changed?
