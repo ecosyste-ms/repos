@@ -148,7 +148,7 @@ module Hosts
       {
         uuid: data['id'],
         full_name: data['full_name'],
-        owner: data['owner']['login'],
+        owner: data['owner']&.[]('login'),
         language: data['language'],
         archived: data['archived'],
         fork: data['fork'],
@@ -166,7 +166,7 @@ module Hosts
         private: data['private'],
         scm: 'git',
         pull_requests_enabled: data['has_pull_requests'],
-        logo_url: data['avatar_url'].presence || data['owner']['avatar_url'],
+        logo_url: data['avatar_url'].presence || data['owner']&.[]('avatar_url'),
         topics: fetch_topics(data['full_name']),
         created_at: data['created_at'],
         updated_at: data['updated_at'],
