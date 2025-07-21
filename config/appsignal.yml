@@ -18,3 +18,4 @@ production:
     - ActiveRecord::StatementInvalid
     - Socket::ResolutionError
     - Errno::ENETUNREACH
+    - ActionDispatch::RemoteIp::IpSpoofAttackError
