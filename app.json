@@ -41,6 +41,10 @@
       "schedule": "0 0 * * *"
     },
     {
+      "command": "bundle exec rake hosts:check_status",
+      "schedule": "0 2 * * *"
+    },
+    {
       "command": "bundle exec rake sitemap:refresh",
       "schedule": "0 6 * * *"
     },

@@ -9,4 +9,22 @@ namespace :hosts do
   task sync_owners: :environment do
     Owner.sync_least_recently_synced
   end
+
+  desc 'Check status of all hosts'
+  task check_status: :environment do
+    Host.find_each do |host|
+      host.check_status
+    rescue => e
+      # Silently continue on exceptions
+    end
+  end
+  
+  desc 'Check status of stale hosts only'
+  task check_stale_status: :environment do
+    Host.where('status_checked_at IS NULL OR status_checked_at < ?', 1.hour.ago).find_each do |host|
+      host.check_status
+    rescue => e
+      # Silently continue on exceptions
+    end
+  end
 end

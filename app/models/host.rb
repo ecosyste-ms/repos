@@ -336,4 +336,231 @@ class Host < ApplicationRecord
     version = host_instance.host_version
     update_columns(version: version) if version.present? 
   end
+
+  def check_status
+    return if url.blank?
+    
+    start_time = Time.current
+    
+    begin
+      response = Faraday.get(url) do |req|
+        req.options.timeout = 10
+        req.headers['User-Agent'] = ENV.fetch('USER_AGENT', 'repos.ecosyste.ms')
+      end
+      
+      end_time = Time.current
+      response_time_ms = ((end_time - start_time) * 1000).round
+      
+      if response.success?
+        update_columns(
+          status: 'online',
+          status_checked_at: Time.current,
+          response_time: response_time_ms,
+          last_error: nil
+        )
+        'online'
+      else
+        update_columns(
+          status: 'http_error',
+          status_checked_at: Time.current,
+          response_time: response_time_ms,
+          last_error: "HTTP #{response.status}: #{response.reason_phrase}"
+        )
+        'http_error'
+      end
+    rescue Faraday::ConnectionFailed => e
+      update_columns(
+        status: 'connection_failed',
+        status_checked_at: Time.current,
+        response_time: nil,
+        last_error: e.message
+      )
+      'connection_failed'
+    rescue Faraday::TimeoutError => e
+      update_columns(
+        status: 'timeout',
+        status_checked_at: Time.current,
+        response_time: nil,
+        last_error: e.message
+      )
+      'timeout'
+    rescue Faraday::SSLError => e
+      update_columns(
+        status: 'ssl_error',
+        status_checked_at: Time.current,
+        response_time: nil,
+        last_error: e.message
+      )
+      'ssl_error'
+    rescue => e
+      update_columns(
+        status: 'error',
+        status_checked_at: Time.current,
+        response_time: nil,
+        last_error: "#{e.class.name}: #{e.message}"
+      )
+      'error'
+    end
+  end
+
+  def status_stale?
+    status_checked_at.nil? || status_checked_at < 1.hour.ago
+  end
+
+  def online?
+    status == 'online'
+  end
+
+  def offline?
+    !online? && status.present?
+  end
+
+  def status_color
+    case status
+    when 'online'
+      'success'
+    when 'timeout', 'connection_failed'
+      'warning'
+    when 'http_error', 'ssl_error', 'error'
+      'danger'
+    else
+      'secondary'
+    end
+  end
+
+  def status_description
+    case status
+    when 'online'
+      "Online (#{response_time}ms)"
+    when 'timeout'
+      'Request timeout'
+    when 'connection_failed'
+      'Connection failed'
+    when 'http_error'
+      'HTTP error'
+    when 'ssl_error'
+      'SSL certificate error'
+    when 'error'
+      'Unknown error'
+    else
+      'Status unknown'
+    end
+  end
+
+  def robots_txt_url
+    "#{url.chomp('/')}/robots.txt"
+  end
+
+  def fetch_robots_txt
+    return if url.blank?
+    
+    begin
+      response = Faraday.get(robots_txt_url) do |req|
+        req.options.timeout = 10
+      end
+      
+      if response.success?
+        update_columns(
+          robots_txt_content: response.body,
+          robots_txt_updated_at: Time.current,
+          robots_txt_status: 'success'
+        )
+        true
+      elsif response.status == 404
+        update_columns(
+          robots_txt_content: nil,
+          robots_txt_updated_at: Time.current,
+          robots_txt_status: 'not_found'
+        )
+        true
+      else
+        update_columns(
+          robots_txt_content: nil,
+          robots_txt_updated_at: Time.current,
+          robots_txt_status: "error_#{response.status}"
+        )
+        false
+      end
+    rescue => e
+      update_columns(
+        robots_txt_content: nil,
+        robots_txt_updated_at: Time.current,
+        robots_txt_status: "error_#{e.class.name.downcase}"
+      )
+      false
+    end
+  end
+
+  def robots_txt_stale?
+    robots_txt_updated_at.nil? || robots_txt_updated_at < 1.day.ago
+  end
+
+  def can_crawl?(path, user_agent = nil)
+    user_agent ||= ENV.fetch('USER_AGENT', 'repos.ecosyste.ms')
+    RobotsTxtParser.new(robots_txt_content).can_crawl?(path, user_agent)
+  end
+
+  def can_crawl_api?(user_agent = nil)
+    user_agent ||= ENV.fetch('USER_AGENT', 'repos.ecosyste.ms')
+    return true if robots_txt_content.blank?
+    
+    parser = RobotsTxtParser.new(robots_txt_content)
+    
+    return false unless parser.can_crawl?('/', user_agent)
+    
+    api_paths = ['/api', '/api/']
+    api_paths.all? { |path| parser.can_crawl?(path, user_agent) }
+  end
+
+  def http_client(path = '/', user_agent = nil)
+    user_agent ||= ENV.fetch('USER_AGENT', 'repos.ecosyste.ms')
+    
+    if status_stale?
+      check_status
+    end
+    
+    if offline?
+      return nil
+    end
+    
+    if robots_txt_stale?
+      fetch_robots_txt
+    end
+    
+    unless can_crawl?(path, user_agent)
+      return nil
+    end
+    
+    Faraday.new(url: url) do |faraday|
+      faraday.use Faraday::FollowRedirects::Middleware
+      faraday.headers['User-Agent'] = user_agent
+      faraday.adapter Faraday.default_adapter
+    end
+  end
+
+  def api_client(user_agent = nil)
+    user_agent ||= ENV.fetch('USER_AGENT', 'repos.ecosyste.ms')
+    
+    if status_stale?
+      check_status
+    end
+    
+    if offline?
+      return nil
+    end
+    
+    if robots_txt_stale?
+      fetch_robots_txt
+    end
+    
+    unless can_crawl_api?(user_agent)
+      return nil
+    end
+    
+    Faraday.new(url: url) do |faraday|
+      faraday.use Faraday::FollowRedirects::Middleware
+      faraday.headers['User-Agent'] = user_agent
+      faraday.adapter Faraday.default_adapter
+    end
+  end
 end

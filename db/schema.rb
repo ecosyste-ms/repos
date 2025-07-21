@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_07_09_143714) do
+ActiveRecord::Schema[8.0].define(version: 2025_07_21_113058) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -48,6 +48,13 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_09_143714) do
     t.string "org"
     t.integer "owners_count", default: 0
     t.string "version"
+    t.text "robots_txt_content"
+    t.datetime "robots_txt_updated_at"
+    t.string "robots_txt_status"
+    t.string "status"
+    t.datetime "status_checked_at"
+    t.integer "response_time"
+    t.text "last_error"
   end
 
   create_table "imports", force: :cascade do |t|

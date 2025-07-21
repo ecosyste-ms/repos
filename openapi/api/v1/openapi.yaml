@@ -952,6 +952,40 @@ components:
         updated_at:
           type: string
           format: date-time
+        status:
+          type: string
+          enum: [online, timeout, connection_failed, http_error, ssl_error, error]
+          description: Current status of the host
+        status_checked_at:
+          type: string
+          format: date-time
+          description: Timestamp when status was last checked
+        response_time:
+          type: integer
+          description: Response time in milliseconds (null if host is offline)
+          nullable: true
+        last_error:
+          type: string
+          description: Last error message encountered
+          nullable: true
+        robots_txt_status:
+          type: string
+          enum: [success, not_found, error_404, error_500, error_timeout]
+          description: Status of robots.txt fetch
+        robots_txt_updated_at:
+          type: string
+          format: date-time
+          description: Timestamp when robots.txt was last fetched
+          nullable: true
+        robots_txt_url:
+          type: string
+          description: URL to the host's robots.txt file
+        online:
+          type: boolean
+          description: Whether the host is currently online
+        can_crawl_api:
+          type: boolean
+          description: Whether API crawling is allowed by robots.txt
     Repository:
       type: object
       properties:

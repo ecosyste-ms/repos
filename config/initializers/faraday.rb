@@ -1,7 +1,7 @@
 Faraday.default_adapter = :net_http_persistent
 Faraday.default_connection_options = {
   headers: {
-    'User-Agent' => 'repos.ecosyste.ms'
+    'User-Agent' => ENV.fetch('USER_AGENT', 'repos.ecosyste.ms')
   }
 }
 

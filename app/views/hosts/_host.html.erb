@@ -22,6 +22,35 @@
             <%= "#{number_with_delimiter host.repositories_count} #{Repository.model_name.human(count: host.repositories_count)}" %><br/>
             <%= "#{number_with_delimiter host.owners_count} #{Owner.model_name.human(count: host.owners_count)}" %>
           <% end %>
+          
+          <% if host.status.present? %>
+            <br/>
+            <small class="text-<%= host.status_color %>">
+              Status: <%= host.status_description %>
+            </small>
+          <% end %>
+          
+          <% if host.robots_txt_status.present? %>
+            <br/>
+            <small class="text-muted">
+              Robots.txt: 
+              <% case host.robots_txt_status %>
+              <% when 'success' %>
+                <span class="text-success">✓</span>
+                <% if host.can_crawl_api? %>
+                  API allowed
+                <% else %>
+                  API blocked
+                <% end %>
+              <% when 'not_found' %>
+                <span class="text-success">✓</span> No robots.txt (allowed)
+              <% when /^error_/ %>
+                <span class="text-warning">⚠</span> <%= host.robots_txt_status.humanize %>
+              <% else %>
+                <span class="text-muted">Unknown</span>
+              <% end %>
+            </small>
+          <% end %>
         </p>
       </div>
       <div class="flex-shrink-0">

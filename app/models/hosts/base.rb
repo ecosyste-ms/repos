@@ -128,6 +128,14 @@ module Hosts
       []
     end
 
+    def host_http_client(path = '/')
+      @host.http_client(path)
+    end
+
+    def host_api_client
+      @host.api_client
+    end
+
     def download_fork_source(token = nil)
       self.class.fetch_repository(repository.source_name, token) if download_fork_source?
     end

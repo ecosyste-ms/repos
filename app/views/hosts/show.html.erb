@@ -6,6 +6,66 @@
     <%= link_to @host, @host.url, target: :_blank %>
   </h1>
 
+  <% if @host.status.present? %>
+    <div class="alert alert-<%= @host.status_color %> mb-3" role="alert">
+      <h6 class="alert-heading">
+        <i class="fas fa-server"></i> Host Status
+      </h6>
+      <p class="mb-2">
+        <strong>Status:</strong> <%= @host.status_description %>
+        <% if @host.offline? && @host.last_error.present? %>
+          <br><strong>Error:</strong> <%= @host.last_error %>
+        <% end %>
+      </p>
+      <% if @host.status_checked_at.present? %>
+        <small class="text-muted">
+          Last checked: <%= time_ago_in_words(@host.status_checked_at) %> ago
+          <% if @host.status_stale? %>
+            <span class="badge bg-warning text-dark ms-1">Stale</span>
+          <% end %>
+        </small>
+      <% end %>
+    </div>
+  <% end %>
+
+  <% if @host.robots_txt_status.present? %>
+    <div class="alert alert-<%= case @host.robots_txt_status
+        when 'success' then @host.can_crawl_api? ? 'success' : 'warning'
+        when 'not_found' then 'info'
+        when /^error_/ then 'danger'
+        else 'secondary'
+        end %> mb-3" role="alert">
+      <h6 class="alert-heading">
+        <i class="fas fa-robot"></i> Robots.txt Status
+      </h6>
+      <p class="mb-2">
+        <% case @host.robots_txt_status %>
+        <% when 'success' %>
+          <strong>Found:</strong> <%= link_to 'robots.txt', @host.robots_txt_url, target: '_blank', class: 'alert-link' %>
+          <% if @host.can_crawl_api? %>
+            - API crawling is <strong>allowed</strong>
+          <% else %>
+            - API crawling is <strong>blocked</strong>
+          <% end %>
+        <% when 'not_found' %>
+          <strong>Not Found:</strong> No robots.txt file found - all crawling allowed by default
+        <% when /^error_/ %>
+          <strong>Error:</strong> Failed to fetch robots.txt (<%= @host.robots_txt_status.humanize %>)
+        <% else %>
+          <strong>Status:</strong> <%= @host.robots_txt_status.humanize %>
+        <% end %>
+      </p>
+      <% if @host.robots_txt_updated_at.present? %>
+        <small class="text-muted">
+          Last checked: <%= time_ago_in_words(@host.robots_txt_updated_at) %> ago
+          <% if @host.robots_txt_stale? %>
+            <span class="badge bg-warning text-dark ms-1">Stale</span>
+          <% end %>
+        </small>
+      <% end %>
+    </div>
+  <% end %>
+
   <ul class="nav nav-tabs my-3">
     <li class="nav-item">
       <a class="nav-link active" aria-current="page">
