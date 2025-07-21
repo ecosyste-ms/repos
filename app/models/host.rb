@@ -359,6 +359,15 @@ class Host < ApplicationRecord
           last_error: nil
         )
         'online'
+      elsif [301, 302, 303, 307, 308].include?(response.status)
+        # Redirects are considered normal/online
+        update_columns(
+          status: 'online',
+          status_checked_at: Time.current,
+          response_time: response_time_ms,
+          last_error: nil
+        )
+        'online'
       else
         update_columns(
           status: 'http_error',
