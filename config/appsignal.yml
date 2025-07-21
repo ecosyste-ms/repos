@@ -17,3 +17,4 @@ production:
     - Pagy::OverflowError
     - ActiveRecord::StatementInvalid
     - Socket::ResolutionError
+    - Errno::ENETUNREACH
