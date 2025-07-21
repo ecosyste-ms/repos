@@ -162,7 +162,7 @@ module Hosts
         has_issues: data['has_issues'],
         has_wiki: data['has_wiki'],
         mirror_url: data['mirror'],
-        source_name: data.fetch('parent',{}).try(:fetch, 'full_name', nil),
+        source_name: data['parent'].is_a?(Hash) ? data['parent']['full_name'] : nil,
         private: data['private'],
         scm: 'git',
         pull_requests_enabled: data['has_pull_requests'],
