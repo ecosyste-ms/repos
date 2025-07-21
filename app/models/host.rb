@@ -343,7 +343,12 @@ class Host < ApplicationRecord
     start_time = Time.current
     
     begin
-      response = Faraday.get(url) do |req|
+      connection = Faraday.new do |conn|
+        conn.use Faraday::FollowRedirects::Middleware
+        conn.adapter Faraday.default_adapter
+      end
+      
+      response = connection.get(url) do |req|
         req.options.timeout = 10
         req.headers['User-Agent'] = ENV.fetch('USER_AGENT', 'repos.ecosyste.ms')
       end
@@ -352,15 +357,6 @@ class Host < ApplicationRecord
       response_time_ms = ((end_time - start_time) * 1000).round
       
       if response.success?
-        update_columns(
-          status: 'online',
-          status_checked_at: Time.current,
-          response_time: response_time_ms,
-          last_error: nil
-        )
-        'online'
-      elsif [301, 302, 303, 307, 308].include?(response.status)
-        # Redirects are considered normal/online
         update_columns(
           status: 'online',
           status_checked_at: Time.current,

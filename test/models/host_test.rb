@@ -203,9 +203,10 @@ class HostTest < ActiveSupport::TestCase
       assert_nil @host.last_error
     end
 
-    should 'return online status for redirect responses' do
-      # Test 301 Moved Permanently
+    should 'return online status when redirects lead to successful response' do
+      # Test 301 redirect followed by successful response
       stub_request(:get, "https://example.com").to_return(status: 301, headers: {'Location' => 'https://www.example.com'})
+      stub_request(:get, "https://www.example.com").to_return(status: 200, body: "OK")
       
       status = @host.check_status
       assert_equal 'online', status
@@ -216,14 +217,16 @@ class HostTest < ActiveSupport::TestCase
       assert_nil @host.last_error
     end
 
-    should 'return online status for temporary redirect responses' do
-      # Test 302 Found (temporary redirect)
-      stub_request(:get, "https://example.com").to_return(status: 302, headers: {'Location' => 'https://www.example.com'})
+    should 'return http_error status when redirect leads to error' do
+      # Test 302 redirect followed by 404 error
+      stub_request(:get, "https://example.com").to_return(status: 302, headers: {'Location' => 'https://www.example.com/missing'})
+      stub_request(:get, "https://www.example.com/missing").to_return(status: 404, body: "Not Found")
       
       status = @host.check_status
-      assert_equal 'online', status
-      assert @host.online?
-      assert_nil @host.last_error
+      assert_equal 'http_error', status
+      assert_not @host.online?
+      assert @host.offline?
+      assert_includes @host.last_error, "HTTP 404"
     end
 
     should 'return http_error status for non-success non-redirect responses' do
