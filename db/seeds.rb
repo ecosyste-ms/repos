@@ -264,7 +264,6 @@ default_hosts = [
   {name: 'git.tdem.in', url: 'https://git.tdem.in', kind: 'gitea'},
   {name: 'matthewgall.codes', url: 'https://matthewgall.codes', kind: 'gitea'},
   {name: 'git.hugfreevikings.wtf', url: 'https://git.hugfreevikings.wtf', kind: 'gitea'},
-  {name: 'git.madhouse-project.org', url: 'https://git.madhouse-project.org', kind: 'forgejo'},
   {name: 'git.rayda.ir', url: 'https://git.rayda.ir', kind: 'gitea'},
   {name: 'gitea.ntv.one', url: 'https://gitea.ntv.one', kind: 'gitea'},
   {name: 'git.rootprojects.org', url: 'https://git.rootprojects.org', kind: 'gitea'},
