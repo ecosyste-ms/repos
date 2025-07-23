@@ -472,7 +472,6 @@ class Repository < ApplicationRecord
     host = Host.find_by_name("GitHub")
 
     repo_names.each do |repo_name|
-      puts repo_name
       repo = host.find_repository(repo_name)
       if repo.nil?
         host.sync_repository_async(repo_name)

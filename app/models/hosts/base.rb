@@ -168,7 +168,6 @@ module Hosts
     end
 
     def update_from_host(repository, token = nil, retrying_clash = nil)
-      puts "updating #{repository.full_name} (uuid: #{repository.uuid})"
       begin
         r = self.fetch_repository(repository_id_or_name(repository))
         return unless r.present?
@@ -176,7 +175,6 @@ module Hosts
         # Detect garbage data from scrapers - bail if essential fields are missing/nil
         essential_fields = [:full_name, :description, :created_at, :uuid, :id]
         if essential_fields.all? { |field| r[field].blank? }
-          puts "Skipping repository #{repository.full_name} - appears to be garbage data from scraper"
           return
         end
         

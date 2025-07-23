@@ -65,7 +65,6 @@ class Host < ApplicationRecord
     return if full_name.blank?
     # remove .git from the end of the full_name
     full_name = full_name.gsub(/\.git$/, '')
-    puts "syncing #{full_name}"
     repo = repositories.find_by('lower(full_name) = ?', full_name.downcase)
 
     if repo
@@ -77,7 +76,6 @@ class Host < ApplicationRecord
       # Detect garbage data from scrapers - bail if essential fields are missing/nil
       essential_fields = [:full_name, :description, :created_at, :uuid, :id]
       if essential_fields.all? { |field| repo_hash[field].blank? }
-        puts "Skipping repository #{full_name} - appears to be garbage data from scraper"
         return
       end
 
@@ -203,7 +201,6 @@ class Host < ApplicationRecord
     url = url + "&before=#{id}" if id
   
     begin
-      puts "loading #{url}"
       resp = Faraday.get(url) do |req|
         req.options.timeout = 30
       end
@@ -233,9 +230,6 @@ class Host < ApplicationRecord
   
       if repo.nil?
         repo = repositories.new(uuid: repo_hash[:id], full_name: repo_hash[:full_name])
-        puts "new repo: #{repo.full_name}"
-      else
-        puts "update:   #{repo.full_name}"
       end
   
       repo.assign_attributes(repo_hash)
@@ -249,7 +243,6 @@ class Host < ApplicationRecord
   
     if events.any?
       next_id = events.last['id']
-      puts "next id: #{next_id}" 
       REDIS.set('last_timeline_id', next_id)
       import_github_repos_from_timeline(next_id)
     end
