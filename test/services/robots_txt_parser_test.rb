@@ -107,4 +107,20 @@ class RobotsTxtParserTest < ActiveSupport::TestCase
     assert_not parser.can_crawl?('/private/file.txt', 'GOOGLEBOT')
     assert parser.can_crawl?('/public/file.txt', 'googlebot')
   end
+
+  should 'block all paths when Disallow: / is specified' do
+    robots_content = <<~ROBOTS
+      User-agent: *
+      Disallow: /
+    ROBOTS
+    
+    parser = RobotsTxtParser.new(robots_content)
+    
+    assert_not parser.can_crawl?('/')
+    assert_not parser.can_crawl?('/api')
+    assert_not parser.can_crawl?('/api/')
+    assert_not parser.can_crawl?('/anything/at/all')
+    assert_not parser.can_crawl?('/public/file.txt')
+    assert_not parser.can_crawl?('/private/file.txt')
+  end
 end

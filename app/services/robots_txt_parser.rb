@@ -64,7 +64,6 @@ class RobotsTxtParser
 
   def path_matches_pattern?(path, pattern)
     return false if pattern.blank?
-    return true if pattern == '/'
     
     if pattern.include?('*')
       regex_pattern = Regexp.escape(pattern).gsub('\*', '.*')

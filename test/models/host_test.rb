@@ -116,7 +116,7 @@ class HostTest < ActiveSupport::TestCase
         Disallow: /
       ROBOTS
       
-      @host.update(robots_txt_content: robots_content)
+      @host.update(robots_txt_content: robots_content, robots_txt_updated_at: 1.hour.ago)
       assert_not @host.can_crawl_api?
     end
 
