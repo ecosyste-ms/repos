@@ -94,4 +94,19 @@ class RepositoryTest < ActiveSupport::TestCase
       assert_equal false, repository.owner_hidden?
     end
   end
+
+  context 'sync method' do
+    should 'return early if host is nil' do
+      repository = Repository.new(
+        full_name: 'test/repo',
+        owner: 'test',
+        uuid: '456',
+        host: nil,
+        created_at: Time.now,
+        updated_at: Time.now
+      )
+      
+      assert_nil repository.sync
+    end
+  end
 end
