@@ -327,4 +327,59 @@ class HostTest < ActiveSupport::TestCase
       assert_nil client
     end
   end
+
+  context 'sync_repository method' do
+    setup do
+      @host = create(:host, url: 'https://example.com', kind: 'github')
+    end
+
+    should 'skip repository creation when API returns garbage data' do
+      # Stub the API call to return garbage data with nil essential fields
+      garbage_response = {
+        "id" => nil,
+        "name" => nil,
+        "full_name" => nil,
+        "description" => nil, 
+        "created_at" => nil,
+        "updated_at" => Time.current.iso8601,
+        "stargazers_count" => 0,
+        "owner" => nil,
+        "private" => false
+      }
+      
+      stub_request(:get, "https://api.github.com/repos/test/repo")
+        .to_return(status: 200, body: garbage_response.to_json, headers: {'Content-Type' => 'application/json'})
+      
+      result = @host.sync_repository('test/repo')
+      assert_nil result
+      assert_equal 0, @host.repositories.count
+    end
+
+    should 'process repository when API returns valid data with some fields present' do
+      # Test that repositories with some valid essential fields get processed
+      partial_valid_response = {
+        "id" => 123456,
+        "name" => "repo", 
+        "full_name" => "test/repo",
+        "description" => nil, # This is blank but not all essential fields
+        "created_at" => Time.current.iso8601,
+        "updated_at" => Time.current.iso8601,
+        "stargazers_count" => 10,
+        "owner" => {"login" => "test"},
+        "private" => false
+      }
+      
+      stub_request(:get, "https://api.github.com/repos/test/repo")
+        .to_return(status: 200, body: partial_valid_response.to_json, headers: {'Content-Type' => 'application/json'})
+      
+      # Stub the GraphQL owner sync request to prevent additional API calls
+      stub_request(:post, "https://api.github.com/graphql")
+        .to_return(status: 200, body: '{"data": {"repositoryOwner": null}}', headers: {'Content-Type' => 'application/json'})
+      
+      result = @host.sync_repository('test/repo')
+      assert_not_nil result
+      assert_equal 1, @host.repositories.count
+      assert_equal 'test/repo', result.full_name
+    end
+  end
 end

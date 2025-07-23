@@ -367,10 +367,12 @@ module Hosts
 
     def fetch_owner(login)
       search = api_client.get "/users?username=#{login}"
-      if search.present? && search.is_a?(Array)
+      if search.present? && search.is_a?(Array) && search.first.present?
         user = search.first.to_hash
         id = user["id"]
-        user_hash = api_client.user(id).to_hash
+        user_response = api_client.user(id)
+        return nil if user_response.nil?
+        user_hash = user_response.to_hash
         return nil if user_hash.nil?
         {
           uuid: "user-#{user_hash["id"]}",

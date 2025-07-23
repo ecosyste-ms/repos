@@ -172,9 +172,17 @@ module Hosts
       begin
         r = self.fetch_repository(repository_id_or_name(repository))
         return unless r.present?
+        
+        # Detect garbage data from scrapers - bail if essential fields are missing/nil
+        essential_fields = [:full_name, :description, :created_at, :uuid, :id]
+        if essential_fields.all? { |field| r[field].blank? }
+          puts "Skipping repository #{repository.full_name} - appears to be garbage data from scraper"
+          return
+        end
+        
         repository.uuid = r[:id] unless repository.uuid.to_s == r[:id].to_s
-        if repository.full_name.downcase != r[:full_name].downcase
-          clash = repository.host.repositories.find_by('lower(full_name) = ?', r[:full_name].downcase)
+        if repository.full_name&.downcase != r[:full_name]&.downcase
+          clash = repository.host.repositories.find_by('lower(full_name) = ?', r[:full_name]&.downcase)
           if clash && (!retrying_clash && !clash.host.host_instance.update_from_host(clash, nil, true) || clash.status == "Removed")
             clash.destroy
           end

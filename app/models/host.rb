@@ -74,11 +74,17 @@ class Host < ApplicationRecord
       repo_hash = host_instance.fetch_repository(uuid || full_name)
       return if repo_hash.blank?
 
+      # Detect garbage data from scrapers - bail if essential fields are missing/nil
+      essential_fields = [:full_name, :description, :created_at, :uuid, :id]
+      if essential_fields.all? { |field| repo_hash[field].blank? }
+        puts "Skipping repository #{full_name} - appears to be garbage data from scraper"
+        return
+      end
+
       ActiveRecord::Base.transaction do
         repo = repositories.find_by(uuid: repo_hash[:uuid]) if repo_hash[:uuid].present?
         if repo.nil?
           repo = repositories.new(uuid: repo_hash[:id], full_name: repo_hash[:full_name])
-          repo.created_at = Time.current
         end
         repo.full_name = repo_hash[:full_name] if repo.full_name&.downcase != repo_hash[:full_name]&.downcase
 

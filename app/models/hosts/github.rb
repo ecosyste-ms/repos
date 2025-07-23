@@ -109,7 +109,9 @@ module Hosts
 
     def fetch_repository(id_or_name)
       id_or_name = id_or_name.to_i if /\A\d+\Z/.match?(id_or_name)
-      hash = api_client.repo(id_or_name, accept: "application/vnd.github.drax-preview+json,application/vnd.github.mercy-preview+json").to_hash.with_indifferent_access
+      repo_response = api_client.repo(id_or_name, accept: "application/vnd.github.drax-preview+json,application/vnd.github.mercy-preview+json")
+      return nil if repo_response.nil?
+      hash = repo_response.to_hash.with_indifferent_access
       return nil if hash[:private]
       map_repository_data(hash)
     end
@@ -118,7 +120,7 @@ module Hosts
       hash[:scm] = "git"
       hash[:uuid] = hash[:id]
       hash[:license] = hash[:license][:key] if hash[:license]
-      hash[:owner] = hash[:owner][:login]
+      hash[:owner] = hash[:owner][:login] if hash[:owner]
       hash[:pull_requests_enabled] = true
       hash[:template] = hash[:is_template]
       hash[:template_full_name] = hash[:template_repository][:full_name] if hash[:template_repository]
