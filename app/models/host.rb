@@ -2,8 +2,8 @@ class Host < ApplicationRecord
   validates_presence_of :name, :url, :kind
   validates_uniqueness_of :name, :url
 
-  has_many :repositories
-  has_many :owners
+  has_many :repositories, dependent: :destroy
+  has_many :owners, dependent: :destroy
 
   scope :kind, ->(kind) { where(kind: kind) }
 

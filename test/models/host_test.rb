@@ -3,6 +3,33 @@ require "test_helper"
 class HostTest < ActiveSupport::TestCase
   context 'associations' do
     should have_many(:repositories)
+    should have_many(:owners)
+
+    should 'destroy repositories when host is destroyed' do
+      host = create(:host)
+      repo1 = create(:repository, host: host)
+      repo2 = create(:repository, host: host)
+      
+      assert_equal 2, host.repositories.count
+      
+      host.destroy
+      
+      assert_raises(ActiveRecord::RecordNotFound) { repo1.reload }
+      assert_raises(ActiveRecord::RecordNotFound) { repo2.reload }
+    end
+
+    should 'destroy owners when host is destroyed' do
+      host = create(:host)
+      owner1 = create(:owner, host: host)
+      owner2 = create(:owner, host: host)
+      
+      assert_equal 2, host.owners.count
+      
+      host.destroy
+      
+      assert_raises(ActiveRecord::RecordNotFound) { owner1.reload }
+      assert_raises(ActiveRecord::RecordNotFound) { owner2.reload }
+    end
   end
 
   context 'robots.txt functionality' do
