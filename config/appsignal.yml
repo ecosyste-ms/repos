@@ -19,3 +19,4 @@ production:
     - Socket::ResolutionError
     - Errno::ENETUNREACH
     - ActionDispatch::RemoteIp::IpSpoofAttackError
+    - Gitlab::Error::TooManyRequests
