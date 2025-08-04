@@ -5,8 +5,8 @@ class Repository < ApplicationRecord
   counter_culture :host, execute_after_commit: true
 
   has_many :manifests, dependent: :destroy
-  has_many :tags
-  has_many :releases
+  has_many :tags, dependent: :delete_all
+  has_many :releases, dependent: :delete_all
 
   has_many :repository_usages, dependent: :delete_all
 

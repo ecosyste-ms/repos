@@ -5,6 +5,31 @@ class RepositoryTest < ActiveSupport::TestCase
     should belong_to(:host)
     should have_many(:manifests)
     should have_many(:tags)
+    should have_many(:releases)
+
+    should 'delete_all tags when repository is destroyed' do
+      repository = create(:repository)
+      tag1 = create(:tag, repository: repository)
+      tag2 = create(:tag, repository: repository)
+      
+      assert_equal 2, repository.tags.count
+      
+      repository.destroy
+      
+      assert_equal 0, Tag.where(id: [tag1.id, tag2.id]).count
+    end
+
+    should 'delete_all releases when repository is destroyed' do
+      repository = create(:repository)
+      release1 = create(:release, repository: repository)
+      release2 = create(:release, repository: repository)
+      
+      assert_equal 2, repository.releases.count
+      
+      repository.destroy
+      
+      assert_equal 0, Release.where(id: [release1.id, release2.id]).count
+    end
   end
 
   context 'purl method' do
