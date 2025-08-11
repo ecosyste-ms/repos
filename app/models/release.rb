@@ -20,4 +20,32 @@ class Release < ApplicationRecord
   def related_tag
     repository.tags.find_by(name: tag_name)
   end
+
+  def semantic_version
+    @semantic_version ||= begin
+    Semantic::Version.new(clean_number)
+    rescue ArgumentError
+      nil
+    end
+  end
+
+  def parsed_number
+    @parsed_number ||= semantic_version || number
+  end
+
+  def clean_number
+    @clean_number ||= (SemanticRange.clean(number) || number)
+  end
+
+  def number
+    tag_name
+  end
+
+  def <=>(other)
+    if parsed_number.is_a?(String) || other.parsed_number.is_a?(String)
+      other.number <=> number
+    else
+      other.parsed_number <=> parsed_number
+    end
+  end
 end

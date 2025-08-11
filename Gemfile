@@ -41,6 +41,7 @@ gem 'jquery-rails'
 gem 'chartkick'
 gem 'google-protobuf'
 gem "sanitize-url"
+gem "commonmarker"
 gem 'appsignal'
 gem 'sitemap_generator'
 gem 'counter_culture'
@@ -69,6 +70,7 @@ group :test do
   gem "mocha"
   gem "rails-controller-testing"
   gem "factory_bot_rails"
+  gem "database_cleaner-active_record"
 end
 
 gem "bootstrap-icons-helper", "~> 2.0"

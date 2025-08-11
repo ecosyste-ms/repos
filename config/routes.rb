@@ -79,6 +79,7 @@ Rails.application.routes.draw do
         get :funding
         get :dependencies
         get :readme
+        get :releases
       end
     end
     resources :owners, only:[:index, :show] do
