@@ -178,6 +178,8 @@ module Hosts
           return
         end
         
+        return if r[:created_at].blank?
+        
         repository.uuid = r[:id] unless repository.uuid.to_s == r[:id].to_s
         if repository.full_name&.downcase != r[:full_name]&.downcase
           clash = repository.host.repositories.find_by('lower(full_name) = ?', r[:full_name]&.downcase)

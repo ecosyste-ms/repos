@@ -382,6 +382,28 @@ class HostTest < ActiveSupport::TestCase
       assert_equal 0, @host.repositories.count
     end
 
+    should 'skip repository creation when created_at is missing' do
+      # Test that repositories with missing created_at are skipped
+      response_without_created_at = {
+        "id" => 123456,
+        "name" => "repo",
+        "full_name" => "test/repo", 
+        "description" => "A test repository",
+        "created_at" => nil,
+        "updated_at" => Time.current.iso8601,
+        "stargazers_count" => 10,
+        "owner" => {"login" => "test"},
+        "private" => false
+      }
+      
+      stub_request(:get, "https://api.github.com/repos/test/repo")
+        .to_return(status: 200, body: response_without_created_at.to_json, headers: {'Content-Type' => 'application/json'})
+      
+      result = @host.sync_repository('test/repo')
+      assert_nil result
+      assert_equal 0, @host.repositories.count
+    end
+
     should 'process repository when API returns valid data with some fields present' do
       # Test that repositories with some valid essential fields get processed
       partial_valid_response = {

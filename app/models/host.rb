@@ -78,6 +78,7 @@ class Host < ApplicationRecord
       if essential_fields.all? { |field| repo_hash[field].blank? }
         return
       end
+      return if repo_hash[:created_at].blank?
 
       ActiveRecord::Base.transaction do
         repo = repositories.find_by(uuid: repo_hash[:uuid]) if repo_hash[:uuid].present?
