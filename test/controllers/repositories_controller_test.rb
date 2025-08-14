@@ -61,4 +61,55 @@ class RepositoriesControllerTest < ActionDispatch::IntegrationTest
     assert_match 'New Features</h3>', response.body
     assert_match '<ul>', response.body
   end
+
+  test 'get releases with prefix filter' do
+    v4_release = create(:release, repository: @repository, tag_name: 'v4.1.0', published_at: 1.day.ago)
+    v3_release = create(:release, repository: @repository, tag_name: 'v3.2.0', published_at: 2.days.ago)
+    ipfs_release = create(:release, repository: @repository, tag_name: 'ipfs-http-1.0.0', published_at: 3.days.ago)
+    other_release = create(:release, repository: @repository, tag_name: 'other-1.0.0', published_at: 4.days.ago)
+
+    get releases_host_repository_path(host_id: @host.name, id: @repository.full_name, prefix: 'v4')
+    assert_response :success
+    assert_includes assigns(:releases), v4_release
+    assert_not_includes assigns(:releases), v3_release
+    assert_not_includes assigns(:releases), ipfs_release
+    assert_not_includes assigns(:releases), other_release
+  end
+
+  test 'get releases with ipfs prefix filter' do
+    v4_release = create(:release, repository: @repository, tag_name: 'v4.1.0', published_at: 1.day.ago)
+    ipfs_release1 = create(:release, repository: @repository, tag_name: 'ipfs-http-1.0.0', published_at: 2.days.ago)
+    ipfs_release2 = create(:release, repository: @repository, tag_name: 'ipfs-http-2.0.0', published_at: 3.days.ago)
+    other_release = create(:release, repository: @repository, tag_name: 'other-1.0.0', published_at: 4.days.ago)
+
+    get releases_host_repository_path(host_id: @host.name, id: @repository.full_name, prefix: 'ipfs-http-')
+    assert_response :success
+    assert_not_includes assigns(:releases), v4_release
+    assert_includes assigns(:releases), ipfs_release1
+    assert_includes assigns(:releases), ipfs_release2
+    assert_not_includes assigns(:releases), other_release
+  end
+
+  test 'get releases with prefix filter and semver sorting' do
+    v4_release1 = create(:release, repository: @repository, tag_name: 'v4.1.0', published_at: 1.day.ago)
+    v4_release2 = create(:release, repository: @repository, tag_name: 'v4.2.0', published_at: 2.days.ago)
+    v3_release = create(:release, repository: @repository, tag_name: 'v3.2.0', published_at: 3.days.ago)
+
+    get releases_host_repository_path(host_id: @host.name, id: @repository.full_name, prefix: 'v4', sort: 'semver')
+    assert_response :success
+    assert_includes assigns(:releases), v4_release1
+    assert_includes assigns(:releases), v4_release2
+    assert_not_includes assigns(:releases), v3_release
+    assert_equal [v4_release2, v4_release1], assigns(:releases)
+  end
+
+  test 'prefix filter is case insensitive' do
+    v4_release = create(:release, repository: @repository, tag_name: 'V4.1.0', published_at: 1.day.ago)
+    other_release = create(:release, repository: @repository, tag_name: 'other-1.0.0', published_at: 2.days.ago)
+
+    get releases_host_repository_path(host_id: @host.name, id: @repository.full_name, prefix: 'v4')
+    assert_response :success
+    assert_includes assigns(:releases), v4_release
+    assert_not_includes assigns(:releases), other_release
+  end
 end

@@ -28,6 +28,10 @@ class RepositoriesController < ApplicationController
 
   def releases
     scope = @repository.releases
+    
+    if params[:prefix].present?
+      scope = scope.where("tag_name ILIKE ?", "#{params[:prefix]}%")
+    end
 
     if params[:sort] == 'semver'
       all_releases = scope.to_a.sort
@@ -37,6 +41,7 @@ class RepositoriesController < ApplicationController
     end
 
     @sort = params[:sort] || 'date'
+    @prefix = params[:prefix]
   end
 
   def funding

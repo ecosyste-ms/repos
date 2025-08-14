@@ -23,8 +23,8 @@
     <div class="card-header d-flex justify-content-between align-items-center">
       <h5 class="mb-0">Releases</h5>
       <div class="btn-group">
-        <%= link_to "Date", releases_host_repository_path(@host, @repository), class: "btn btn-sm #{'btn-primary' if @sort == 'date'} #{'btn-outline-secondary' if @sort != 'date'}" %>
-        <%= link_to "Semver", releases_host_repository_path(@host, @repository, sort: 'semver'), class: "btn btn-sm #{'btn-primary' if @sort == 'semver'} #{'btn-outline-secondary' if @sort != 'semver'}" %>
+        <%= link_to "Date", releases_host_repository_path(@host, @repository, prefix: @prefix), class: "btn btn-sm #{'btn-primary' if @sort == 'date'} #{'btn-outline-secondary' if @sort != 'date'}" %>
+        <%= link_to "Semver", releases_host_repository_path(@host, @repository, sort: 'semver', prefix: @prefix), class: "btn btn-sm #{'btn-primary' if @sort == 'semver'} #{'btn-outline-secondary' if @sort != 'semver'}" %>
       </div>
     </div>
     
