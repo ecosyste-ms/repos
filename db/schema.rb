@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_07_21_113058) do
+ActiveRecord::Schema[8.0].define(version: 2025_08_14_112830) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -224,6 +224,15 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_21_113058) do
     t.index ["repository_id"], name: "index_repository_usages_on_repository_id"
   end
 
+  create_table "scorecards", force: :cascade do |t|
+    t.json "data"
+    t.datetime "last_synced_at"
+    t.bigint "repository_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["repository_id"], name: "index_scorecards_on_repository_id"
+  end
+
   create_table "tags", force: :cascade do |t|
     t.integer "repository_id"
     t.string "name"
@@ -236,4 +245,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_21_113058) do
     t.string "dependency_job_id"
     t.index ["repository_id"], name: "index_tags_on_repository_id"
   end
+
+  add_foreign_key "scorecards", "repositories"
 end

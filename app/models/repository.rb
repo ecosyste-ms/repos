@@ -9,6 +9,7 @@ class Repository < ApplicationRecord
   has_many :releases, dependent: :delete_all
 
   has_many :repository_usages, dependent: :delete_all
+  has_one :scorecard, dependent: :destroy
 
   scope :owner, ->(owner) { where(owner: owner) }
   scope :subgroup, ->(owner, subgroup) { where(owner: owner).where("lower(full_name) ilike ?", "#{owner}/#{subgroup}/%") }
@@ -33,6 +34,7 @@ class Repository < ApplicationRecord
   scope :with_funding, -> { where("metadata->'funding' is not null") }
 
   scope :with_metadata, -> { where("length(metadata::text) > 2") }
+  scope :has_scorecard, -> { joins(:scorecard) }
 
   self.record_timestamps = false
 
@@ -255,6 +257,7 @@ class Repository < ApplicationRecord
       update_metadata_files
       download_tags
       parse_dependencies if dependency_job_id.present?
+      sync_scorecard_async
       # sync_commit_stats
     end
     update(files_changed: false)
@@ -573,5 +576,13 @@ class Repository < ApplicationRecord
   def owner_hidden?
     return false if owner.blank?
     owner_record&.hidden? == true
+  end
+
+  def sync_scorecard
+    Scorecard.lookup(self)
+  end
+
+  def sync_scorecard_async
+    SyncScorecardWorker.perform_async(id)
   end
 end

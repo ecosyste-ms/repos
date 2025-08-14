@@ -1099,6 +1099,10 @@ components:
           type: string
         commit_stats:
           type: object
+        scorecard:
+          type: object
+          nullable: true
+          $ref: '#/components/schemas/Scorecard'
         host:
           type: object
           $ref: '#/components/schemas/Host'
@@ -1330,3 +1334,23 @@ components:
           type: string
         html_url:
           type: string
+    Scorecard:
+      type: object
+      properties:
+        id:
+          type: integer
+        data:
+          type: object
+          description: Raw scorecard data from the API
+        last_synced_at:
+          type: string
+          format: date-time
+          nullable: true
+        repository_id:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time

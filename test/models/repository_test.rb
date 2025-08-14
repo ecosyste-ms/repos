@@ -6,6 +6,7 @@ class RepositoryTest < ActiveSupport::TestCase
     should have_many(:manifests)
     should have_many(:tags)
     should have_many(:releases)
+    should have_one(:scorecard)
 
     should 'delete_all tags when repository is destroyed' do
       repository = create(:repository)
@@ -132,6 +133,47 @@ class RepositoryTest < ActiveSupport::TestCase
       )
       
       assert_nil repository.sync
+    end
+  end
+
+  context 'sync_scorecard method' do
+    should 'call Scorecard.lookup with self' do
+      host = create(:host)
+      repository = create(:repository, host: host)
+      
+      stub_request(:get, "https://api.scorecard.dev/projects/#{repository.html_url.gsub(%r{http(s)?://}, '')}")
+        .to_return(status: 200, body: { score: 8.0, repo: { name: repository.full_name } }.to_json)
+      
+      scorecard = repository.sync_scorecard
+      
+      assert_not_nil scorecard
+      assert_equal repository, scorecard.repository
+      assert_equal 8.0, scorecard.score
+    end
+  end
+
+  context 'sync_scorecard_async method' do
+    should 'call SyncScorecardWorker.perform_async' do
+      host = create(:host)
+      repository = create(:repository, host: host)
+      
+      SyncScorecardWorker.expects(:perform_async).with(repository.id).once
+      
+      repository.sync_scorecard_async
+    end
+  end
+
+  context 'has_scorecard scope' do
+    should 'return repositories with scorecards' do
+      host = create(:host)
+      repo_with_scorecard = create(:repository, host: host)
+      repo_without_scorecard = create(:repository, host: host)
+      create(:scorecard, repository: repo_with_scorecard)
+      
+      repositories_with_scorecards = Repository.has_scorecard
+      
+      assert_includes repositories_with_scorecards, repo_with_scorecard
+      assert_not_includes repositories_with_scorecards, repo_without_scorecard
     end
   end
 end

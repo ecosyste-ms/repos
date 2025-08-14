@@ -1,0 +1,11 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  url: MyString
+  data: 
+  last_synced_at: 2025-08-14 12:28:30
+
+two:
+  url: MyString
+  data: 
+  last_synced_at: 2025-08-14 12:28:30
