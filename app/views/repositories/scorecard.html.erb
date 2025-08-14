@@ -1,0 +1,154 @@
+<% @meta_title = "OpenSSF Scorecard report | #{@repository.full_name} | #{@host}" %>
+<% @meta_description = "OpenSSF Scorecard report for #{@repository.full_name}" %>
+
+<div class="container-sm">
+  <%= render 'overview' %>
+
+  <ul class="nav nav-tabs mt-3">
+    <li class="nav-item">
+      <a class="nav-link" href="<%= host_repository_path(@host, @repository) %>">Files</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="<%= readme_host_repository_path(@host, @repository) %>">Readme</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="<%= dependencies_host_repository_path(@host, @repository) %>">Dependencies</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="<%= releases_host_repository_path(@host, @repository) %>">Releases</a>
+    </li>
+    <% if @repository.has_scorecard? %>
+      <li class="nav-item">
+        <a class="nav-link active" href="<%= scorecard_host_repository_path(@host, @repository) %>">Scorecard</a>
+      </li>
+    <% end %>
+  </ul>
+
+  <% if @scorecard %>
+    <div class="card mt-3">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">OpenSSF Scorecard report</h5>
+      </div>
+      
+      <div class="card-body">
+        <div class="row mb-4">
+          <div class="col-md-3">
+            <div class="text-center">
+              <h2 class="display-4 mb-0 <%= @scorecard.score >= 7 ? 'text-success' : @scorecard.score >= 4 ? 'text-warning' : 'text-danger' %>">
+                <%= @scorecard.score %>
+              </h2>
+              <p class="text-muted mb-0">Overall Score</p>
+            </div>
+          </div>
+          <div class="col-md-9">
+            <% summary = @scorecard.risk_summary %>
+            <div class="row">
+              <div class="col-12 mb-2">
+                <div class="d-flex align-items-center">
+                  <div class="badge bg-dark me-2" style="width: 12px; height: 12px;"></div>
+                  <span><strong class="text-dark"><%= summary[:critical] %></strong> Critical Risk</span>
+                </div>
+              </div>
+              <div class="col-12 mb-2">
+                <div class="d-flex align-items-center">
+                  <div class="badge bg-danger me-2" style="width: 12px; height: 12px;"></div>
+                  <span><strong class="text-danger"><%= summary[:high] %></strong> High Risk</span>
+                </div>
+              </div>
+              <div class="col-12 mb-2">
+                <div class="d-flex align-items-center">
+                  <div class="badge bg-warning me-2" style="width: 12px; height: 12px;"></div>
+                  <span><strong class="text-warning"><%= summary[:medium] %></strong> Medium Risk</span>
+                </div>
+              </div>
+              <div class="col-12 mb-2">
+                <div class="d-flex align-items-center">
+                  <div class="badge bg-success me-2" style="width: 12px; height: 12px;"></div>
+                  <span><strong class="text-success"><%= summary[:low] %></strong> Low Risk</span>
+                </div>
+              </div>
+              <div class="col-12 mb-2">
+                <div class="d-flex align-items-center">
+                  <div class="badge bg-secondary me-2" style="width: 12px; height: 12px;"></div>
+                  <span><strong class="text-secondary"><%= summary[:not_applicable] %></strong> Not Applicable</span>
+                </div>
+              </div>
+            </div>
+            <div class="mt-2">
+              <small class="text-muted">
+                Generated on <%= Date.parse(@scorecard.generated_at).strftime("%B %d, %Y") %> 
+                | Scorecard v<%= @scorecard.scorecard_version %>
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mt-3">
+      <div class="card-header">
+        <h6 class="mb-0">Security Checks</h6>
+      </div>
+      <div class="list-group list-group-flush">
+        <% @scorecard.checks.sort_by { |c| [-c['score'], c['name']] }.each do |check| %>
+          <div class="list-group-item">
+            <div class="d-flex w-100 justify-content-between align-items-start">
+              <div class="flex-grow-1">
+                <div class="d-flex align-items-center mb-2">
+                  <% if check['score'] == -1 %>
+                    <span class="badge bg-secondary me-2">N/A</span>
+                  <% else %>
+                    <span class="badge <%= check['score'] >= 8 ? 'bg-success' : check['score'] >= 4 ? 'bg-warning' : 'bg-danger' %> me-2">
+                      <%= check['score'] %>/10
+                    </span>
+                  <% end %>
+                  <h6 class="mb-0 me-2"><%= check['name'] %></h6>
+                  <% if check['documentation'] && check['documentation']['url'] %>
+                    <a href="<%= check['documentation']['url'] %>" target="_blank" class="text-muted" title="View documentation">
+                      <i class="fas fa-external-link-alt"></i>
+                    </a>
+                  <% end %>
+                </div>
+              </div>
+              <div class="text-end">
+                <% impact_level = @scorecard.risk_level_badge_for_check(check) %>
+                <span class="badge <%= impact_level[:class] %> text-white">
+                  <%= impact_level[:text] %>
+                </span>
+              </div>
+            </div>
+            <p class="mb-1 text-muted"><%= check['reason'] %></p>
+            <% if check['documentation'] && check['documentation']['short'] %>
+              <p class="mb-1"><small class="text-muted"><%= check['documentation']['short'] %></small></p>
+            <% end %>
+            <% if check['details'] && check['details'].any? %>
+              <details class="mt-2">
+                <summary class="btn btn-link btn-sm p-0 border-0 text-start">Show details</summary>
+                <div class="mt-2">
+                  <% check['details'].each do |detail| %>
+                    <div class="small text-muted mb-1">
+                      <% if detail.start_with?('Warn:') %>
+                        <span class="text-warning">⚠️</span>
+                      <% elsif detail.start_with?('Info:') %>
+                        <span class="text-info">ℹ️</span>
+                      <% else %>
+                        <span>•</span>
+                      <% end %>
+                      <%= detail %>
+                    </div>
+                  <% end %>
+                </div>
+              </details>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% else %>
+    <div class="card mt-3">
+      <div class="card-body text-center text-muted">
+        <p class="mb-0">No scorecard data available for this repository.</p>
+      </div>
+    </div>
+  <% end %>
+</div>

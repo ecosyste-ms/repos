@@ -80,6 +80,7 @@ Rails.application.routes.draw do
         get :dependencies
         get :readme
         get :releases
+        get :scorecard
       end
     end
     resources :owners, only:[:index, :show] do

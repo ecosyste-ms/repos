@@ -17,6 +17,11 @@
     <li class="nav-item">
       <a class="nav-link active" href="<%= releases_host_repository_path(@host, @repository) %>">Releases</a>
     </li>
+    <% if @repository.has_scorecard? %>
+      <li class="nav-item">
+        <a class="nav-link" href="<%= scorecard_host_repository_path(@host, @repository) %>">Scorecard</a>
+      </li>
+    <% end %>
   </ul>
 
   <div class="card mt-3">

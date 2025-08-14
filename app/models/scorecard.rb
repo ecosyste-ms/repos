@@ -103,4 +103,63 @@ class Scorecard < ApplicationRecord
   def html_url
     "https://scorecard.dev/viewer/?uri=#{repository_name}"
   end
+
+  def self.risk_levels
+    {
+      'Binary-Artifacts' => 'High',
+      'Branch-Protection' => 'High',
+      'CI-Tests' => 'Low',
+      'CII-Best-Practices' => 'Low',
+      'Code-Review' => 'High',
+      'Contributors' => 'Low',
+      'Dangerous-Workflow' => 'Critical',
+      'Dependency-Update-Tool' => 'High',
+      'Fuzzing' => 'Medium',
+      'License' => 'Low',
+      'Maintained' => 'High',
+      'Packaging' => 'Medium',
+      'Pinned-Dependencies' => 'Medium',
+      'SAST' => 'Medium',
+      'SBOM' => 'Medium',
+      'Security-Policy' => 'Medium',
+      'Signed-Releases' => 'High',
+      'Token-Permissions' => 'High',
+      'Vulnerabilities' => 'High'
+    }.freeze
+  end
+
+  def risk_level_for_check(check_name)
+    self.class.risk_levels[check_name] || 'Unknown'
+  end
+
+  def risk_summary
+    return {} unless checks.present?
+
+    {
+      critical: checks.count { |c| risk_level_for_check(c['name']) == 'Critical' },
+      high: checks.count { |c| risk_level_for_check(c['name']) == 'High' },
+      medium: checks.count { |c| risk_level_for_check(c['name']) == 'Medium' },
+      low: checks.count { |c| risk_level_for_check(c['name']) == 'Low' },
+      not_applicable: checks.count { |c| c['score'] == -1 }
+    }
+  end
+
+  def risk_level_badge_for_check(check)
+    risk_level = risk_level_for_check(check['name'])
+    
+    return { text: 'Not Applicable', class: 'bg-secondary' } if check['score'] == -1
+    
+    case risk_level
+    when 'Critical'
+      { text: 'Critical Risk', class: 'bg-dark' }
+    when 'High'
+      { text: 'High Risk', class: 'bg-danger' }
+    when 'Medium'
+      { text: 'Medium Risk', class: 'bg-warning' }
+    when 'Low'
+      { text: 'Low Risk', class: 'bg-success' }
+    else
+      { text: 'Unknown Risk', class: 'bg-secondary' }
+    end
+  end
 end

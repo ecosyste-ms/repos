@@ -44,6 +44,10 @@ class RepositoriesController < ApplicationController
     @prefix = params[:prefix]
   end
 
+  def scorecard
+    @scorecard = @repository.scorecard
+  end
+
   def funding
     # disabled
   end
@@ -70,6 +74,8 @@ class RepositoriesController < ApplicationController
         readme_host_repository_path(@host, @repository.full_name)
       when 'releases'
         releases_host_repository_path(@host, @repository.full_name)
+      when 'scorecard'
+        scorecard_host_repository_path(@host, @repository.full_name)
       end
       redirect_to(redirect_path, status: :moved_permanently) and return
     end

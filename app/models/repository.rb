@@ -86,6 +86,10 @@ class Repository < ApplicationRecord
     host.sync_owner_async(owner) if owner_record.nil?
   end
 
+  def has_scorecard?
+    Scorecard.exists?(repository_id: id)
+  end
+
   def owner_record
     @owner_record ||= host.owners.find_by("lower(login) = ?", owner.downcase)
   end

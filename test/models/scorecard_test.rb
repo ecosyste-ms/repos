@@ -75,4 +75,52 @@ class ScorecardTest < ActiveSupport::TestCase
       assert_equal 'https://scorecard.dev/viewer/?uri=rails/rails', scorecard.html_url
     end
   end
+
+  context 'risk level methods' do
+    setup do
+      @scorecard = create(:scorecard)
+    end
+
+    should 'return correct risk level for check' do
+      assert_equal 'High', @scorecard.risk_level_for_check('Maintained')
+      assert_equal 'High', @scorecard.risk_level_for_check('Code-Review')
+      assert_equal 'Critical', @scorecard.risk_level_for_check('Dangerous-Workflow')
+      assert_equal 'Medium', @scorecard.risk_level_for_check('Packaging')
+      assert_equal 'Unknown', @scorecard.risk_level_for_check('NonExistent')
+    end
+
+    should 'return correct risk summary counts' do
+      summary = @scorecard.risk_summary
+      
+      assert_equal 1, summary[:critical]  # Dangerous-Workflow
+      assert_equal 3, summary[:high]      # Maintained, Code-Review, Branch-Protection
+      assert_equal 1, summary[:medium]    # Packaging
+      assert_equal 0, summary[:low]       # none in our test data
+      assert_equal 1, summary[:not_applicable]  # Packaging has score -1
+    end
+
+    should 'return correct badge info for checks' do
+      maintained_check = @scorecard.checks.find { |c| c['name'] == 'Maintained' }
+      badge = @scorecard.risk_level_badge_for_check(maintained_check)
+      assert_equal 'High Risk', badge[:text]
+      assert_equal 'bg-danger', badge[:class]
+
+      dangerous_check = @scorecard.checks.find { |c| c['name'] == 'Dangerous-Workflow' }
+      badge = @scorecard.risk_level_badge_for_check(dangerous_check)
+      assert_equal 'Critical Risk', badge[:text]
+      assert_equal 'bg-dark', badge[:class]
+
+      packaging_check = @scorecard.checks.find { |c| c['name'] == 'Packaging' }
+      badge = @scorecard.risk_level_badge_for_check(packaging_check)
+      assert_equal 'Not Applicable', badge[:text]
+      assert_equal 'bg-secondary', badge[:class]
+    end
+
+    should 'have frozen risk levels hash' do
+      risk_levels = Scorecard.risk_levels
+      assert risk_levels.frozen?
+      assert_equal 'Critical', risk_levels['Dangerous-Workflow']
+      assert_equal 'High', risk_levels['Maintained']
+    end
+  end
 end

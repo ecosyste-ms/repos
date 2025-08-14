@@ -112,4 +112,37 @@ class RepositoriesControllerTest < ActionDispatch::IntegrationTest
     assert_includes assigns(:releases), v4_release
     assert_not_includes assigns(:releases), other_release
   end
+
+  test 'get scorecard for a repository' do
+    scorecard = create(:scorecard, repository: @repository)
+    get scorecard_host_repository_path(host_id: @host.name, id: @repository.full_name)
+    assert_response :success
+    assert_template 'repositories/scorecard', file: 'repositories/scorecard.html.erb'
+    assert_equal scorecard, assigns(:scorecard)
+  end
+
+  test 'get scorecard for repository without scorecard' do
+    get scorecard_host_repository_path(host_id: @host.name, id: @repository.full_name)
+    assert_response :success
+    assert_template 'repositories/scorecard', file: 'repositories/scorecard.html.erb'
+    assert_nil assigns(:scorecard)
+  end
+
+  test 'get scorecard for repository with hidden owner returns 404' do
+    get scorecard_host_repository_path(host_id: @host.name, id: @hidden_repository.full_name)
+    assert_response :not_found
+  end
+
+  test 'scorecard tab appears in navigation when scorecard exists' do
+    create(:scorecard, repository: @repository)
+    get host_repository_path(host_id: @host.name, id: @repository.full_name)
+    assert_response :success
+    assert_match /href="[^"]*scorecard[^"]*">Scorecard<\/a>/, response.body
+  end
+
+  test 'scorecard tab does not appear in navigation when no scorecard exists' do
+    get host_repository_path(host_id: @host.name, id: @repository.full_name)
+    assert_response :success
+    assert_no_match /href="[^"]*scorecard[^"]*">Scorecard<\/a>/, response.body
+  end
 end

@@ -52,6 +52,19 @@ class RepositoryTest < ActiveSupport::TestCase
     end
   end
 
+  context 'scorecard' do
+    should 'return true for has_scorecard? when scorecard exists' do
+      repository = create(:repository)
+      create(:scorecard, repository: repository)
+      assert repository.has_scorecard?
+    end
+
+    should 'return false for has_scorecard? when no scorecard exists' do
+      repository = create(:repository)
+      assert_not repository.has_scorecard?
+    end
+  end
+
   context 'owner_hidden? method' do
     setup do
       @host = Host.create!(name: 'GitHub', url: 'https://github.com', kind: 'github')
