@@ -73,7 +73,7 @@ class RepositoriesController < ApplicationController
     raise ActiveRecord::RecordNotFound if @repository.owner_hidden?
 
     if @repository.full_name.downcase != params[:id].downcase
-      redirect_to(host_repository_releases_path(@host, @repository.full_name), status: :moved_permanently) and return
+      redirect_to(releases_host_repository_path(@host, @repository.full_name), status: :moved_permanently) and return
     end
 
     fresh_when(@repository, public: true)
