@@ -135,13 +135,39 @@ class Scorecard < ApplicationRecord
   def risk_summary
     return {} unless checks.present?
 
-    {
-      critical: checks.count { |c| risk_level_for_check(c['name']) == 'Critical' },
-      high: checks.count { |c| risk_level_for_check(c['name']) == 'High' },
-      medium: checks.count { |c| risk_level_for_check(c['name']) == 'Medium' },
-      low: checks.count { |c| risk_level_for_check(c['name']) == 'Low' },
-      not_applicable: checks.count { |c| c['score'] == -1 }
+    summary = {
+      critical: { achieved: 0, total: 0 },
+      high: { achieved: 0, total: 0 },
+      medium: { achieved: 0, total: 0 },
+      low: { achieved: 0, total: 0 },
+      not_applicable: 0
     }
+
+    checks.each do |check|
+      risk_level = risk_level_for_check(check['name'])
+      score = check['score']
+      
+      if score == -1
+        summary[:not_applicable] += 1
+      else
+        case risk_level
+        when 'Critical'
+          summary[:critical][:achieved] += score
+          summary[:critical][:total] += 10
+        when 'High'
+          summary[:high][:achieved] += score
+          summary[:high][:total] += 10
+        when 'Medium'
+          summary[:medium][:achieved] += score
+          summary[:medium][:total] += 10
+        when 'Low'
+          summary[:low][:achieved] += score
+          summary[:low][:total] += 10
+        end
+      end
+    end
+
+    summary
   end
 
   def risk_level_badge_for_check(check)

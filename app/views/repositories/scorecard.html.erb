@@ -43,36 +43,38 @@
           <div class="col-md-9">
             <% summary = @scorecard.risk_summary %>
             <div class="row">
-              <div class="col-12 mb-2">
-                <div class="d-flex align-items-center">
-                  <div class="badge bg-dark me-2" style="width: 12px; height: 12px;"></div>
-                  <span><strong class="text-dark"><%= summary[:critical] %></strong> Critical Risk</span>
+              <% if summary[:critical][:total] > 0 %>
+                <div class="col-12 mb-2">
+                  <div class="d-flex align-items-center">
+                    <div class="badge bg-dark me-2" style="width: 12px; height: 12px;"></div>
+                    <span><strong class="text-dark"><%= summary[:critical][:achieved] %>/<%= summary[:critical][:total] %></strong> Critical Risk</span>
+                  </div>
                 </div>
-              </div>
-              <div class="col-12 mb-2">
-                <div class="d-flex align-items-center">
-                  <div class="badge bg-danger me-2" style="width: 12px; height: 12px;"></div>
-                  <span><strong class="text-danger"><%= summary[:high] %></strong> High Risk</span>
+              <% end %>
+              <% if summary[:high][:total] > 0 %>
+                <div class="col-12 mb-2">
+                  <div class="d-flex align-items-center">
+                    <div class="badge bg-danger me-2" style="width: 12px; height: 12px;"></div>
+                    <span><strong class="text-danger"><%= summary[:high][:achieved] %>/<%= summary[:high][:total] %></strong> High Risk</span>
+                  </div>
                 </div>
-              </div>
-              <div class="col-12 mb-2">
-                <div class="d-flex align-items-center">
-                  <div class="badge bg-warning me-2" style="width: 12px; height: 12px;"></div>
-                  <span><strong class="text-warning"><%= summary[:medium] %></strong> Medium Risk</span>
+              <% end %>
+              <% if summary[:medium][:total] > 0 %>
+                <div class="col-12 mb-2">
+                  <div class="d-flex align-items-center">
+                    <div class="badge bg-warning me-2" style="width: 12px; height: 12px;"></div>
+                    <span><strong class="text-warning"><%= summary[:medium][:achieved] %>/<%= summary[:medium][:total] %></strong> Medium Risk</span>
+                  </div>
                 </div>
-              </div>
-              <div class="col-12 mb-2">
-                <div class="d-flex align-items-center">
-                  <div class="badge bg-success me-2" style="width: 12px; height: 12px;"></div>
-                  <span><strong class="text-success"><%= summary[:low] %></strong> Low Risk</span>
+              <% end %>
+              <% if summary[:low][:total] > 0 %>
+                <div class="col-12 mb-2">
+                  <div class="d-flex align-items-center">
+                    <div class="badge bg-success me-2" style="width: 12px; height: 12px;"></div>
+                    <span><strong class="text-success"><%= summary[:low][:achieved] %>/<%= summary[:low][:total] %></strong> Low Risk</span>
+                  </div>
                 </div>
-              </div>
-              <div class="col-12 mb-2">
-                <div class="d-flex align-items-center">
-                  <div class="badge bg-secondary me-2" style="width: 12px; height: 12px;"></div>
-                  <span><strong class="text-secondary"><%= summary[:not_applicable] %></strong> Not Applicable</span>
-                </div>
-              </div>
+              <% end %>
             </div>
             <div class="mt-2">
               <small class="text-muted">

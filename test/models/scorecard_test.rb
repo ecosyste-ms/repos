@@ -89,14 +89,27 @@ class ScorecardTest < ActiveSupport::TestCase
       assert_equal 'Unknown', @scorecard.risk_level_for_check('NonExistent')
     end
 
-    should 'return correct risk summary counts' do
+    should 'return correct risk summary with achieved/total scores' do
       summary = @scorecard.risk_summary
       
-      assert_equal 1, summary[:critical]  # Dangerous-Workflow
-      assert_equal 3, summary[:high]      # Maintained, Code-Review, Branch-Protection
-      assert_equal 1, summary[:medium]    # Packaging
-      assert_equal 0, summary[:low]       # none in our test data
-      assert_equal 1, summary[:not_applicable]  # Packaging has score -1
+      # Dangerous-Workflow (Critical): score 0, total 10
+      assert_equal 0, summary[:critical][:achieved]
+      assert_equal 10, summary[:critical][:total]
+      
+      # Maintained (High): score 10, Code-Review (High): score 9, Branch-Protection (High): score 0
+      assert_equal 19, summary[:high][:achieved]  # 10 + 9 + 0
+      assert_equal 30, summary[:high][:total]     # 10 + 10 + 10
+      
+      # Packaging (Medium): score -1 (not applicable, so no medium scores)
+      assert_equal 0, summary[:medium][:achieved]
+      assert_equal 0, summary[:medium][:total]
+      
+      # No low risk checks in test data
+      assert_equal 0, summary[:low][:achieved]
+      assert_equal 0, summary[:low][:total]
+      
+      # Packaging has score -1
+      assert_equal 1, summary[:not_applicable]
     end
 
     should 'return correct badge info for checks' do
