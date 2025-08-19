@@ -431,4 +431,40 @@ class HostTest < ActiveSupport::TestCase
       assert_equal 'test/repo', result.full_name
     end
   end
+
+  context 'GitLab host specific functionality' do
+    setup do
+      @gitlab_host = create(:gitlab_host)
+    end
+
+    should 'handle nil API response in load_owner_repos_names for user' do
+      user_owner = create(:gitlab_owner, host: @gitlab_host, kind: 'user')
+      
+      gitlab_instance = @gitlab_host.host_instance
+      gitlab_instance.expects(:api_client).returns(mock('api_client').tap { |m| m.expects(:user_projects).returns(nil) })
+      
+      result = gitlab_instance.load_owner_repos_names(user_owner)
+      assert_equal [], result
+    end
+
+    should 'handle nil API response in load_owner_repos_names for organization' do
+      org_owner = create(:gitlab_owner, host: @gitlab_host, kind: 'organization')
+      
+      gitlab_instance = @gitlab_host.host_instance
+      gitlab_instance.expects(:api_client).returns(mock('api_client').tap { |m| m.expects(:group_projects).returns(nil) })
+      
+      result = gitlab_instance.load_owner_repos_names(org_owner)
+      assert_equal [], result
+    end
+
+    should 'return empty array when API client returns empty response' do
+      user_owner = create(:gitlab_owner, host: @gitlab_host, kind: 'user')
+      
+      gitlab_instance = @gitlab_host.host_instance
+      gitlab_instance.expects(:api_client).returns(mock('api_client').tap { |m| m.expects(:user_projects).returns([]) })
+      
+      result = gitlab_instance.load_owner_repos_names(user_owner)
+      assert_equal [], result
+    end
+  end
 end

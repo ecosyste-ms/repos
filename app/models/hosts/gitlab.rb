@@ -356,13 +356,17 @@ module Hosts
 
 
     def load_owner_repos_names(owner)
-      if owner.user?
-        api_client.user_projects(owner.login, per_page: 100, archived: false, simple: true).map { |repo| repo["path_with_namespace"] }
+      repos = if owner.user?
+        api_client.user_projects(owner.login, per_page: 100, archived: false, simple: true)
       else
-        api_client.group_projects(owner.login, per_page: 100, archived: false, simple: true, include_subgroups: true).map { |repo| repo["path_with_namespace"] }
+        api_client.group_projects(owner.login, per_page: 100, archived: false, simple: true, include_subgroups: true)
       end
-      # rescue *IGNORABLE_EXCEPTIONS
-      #   []
+      
+      return [] unless repos.present?
+      
+      repos.map { |repo| repo["path_with_namespace"] }
+    rescue *IGNORABLE_EXCEPTIONS
+      []
     end
 
     def fetch_owner(login)
