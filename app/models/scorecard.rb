@@ -77,27 +77,27 @@ class Scorecard < ApplicationRecord
   end
 
   def repository_name
-    data['repo']['name']
+    data&.dig('repo', 'name')
   end
 
   def score
-    data['score']
+    data&.dig('score')
   end
 
   def commit
-    data['repo']['commit']
+    data&.dig('repo', 'commit')
   end
 
   def generated_at
-    data['date']
+    data&.dig('date')
   end
 
   def scorecard_version
-    data['scorecard']['version']
+    data&.dig('scorecard', 'version')
   end
 
   def checks
-    data['checks']
+    data&.dig('checks') || []
   end
 
   def html_url

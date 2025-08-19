@@ -135,5 +135,12 @@ class ScorecardTest < ActiveSupport::TestCase
       assert_equal 'Critical', risk_levels['Dangerous-Workflow']
       assert_equal 'High', risk_levels['Maintained']
     end
+
+    should 'return empty hash for risk_summary when no checks present' do
+      scorecard = Scorecard.new(data: { 'score' => 5.0 })
+      summary = scorecard.risk_summary
+      
+      assert_equal({}, summary)
+    end
   end
 end

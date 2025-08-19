@@ -145,4 +145,12 @@ class RepositoriesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_no_match /href="[^"]*scorecard[^"]*">Scorecard<\/a>/, response.body
   end
+
+  test 'get scorecard with no checks data does not crash' do
+    scorecard = create(:scorecard, repository: @repository, data: { 'score' => 5.0, 'checks' => [] })
+    get scorecard_host_repository_path(host_id: @host.name, id: @repository.full_name)
+    assert_response :success
+    assert_template 'repositories/scorecard', file: 'repositories/scorecard.html.erb'
+    assert_equal scorecard, assigns(:scorecard)
+  end
 end

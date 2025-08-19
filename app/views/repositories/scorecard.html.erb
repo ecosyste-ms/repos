@@ -43,7 +43,7 @@
           <div class="col-md-9">
             <% summary = @scorecard.risk_summary %>
             <div class="row">
-              <% if summary[:critical][:total] > 0 %>
+              <% if summary[:critical] && summary[:critical][:total] > 0 %>
                 <div class="col-12 mb-2">
                   <div class="d-flex align-items-center">
                     <div class="badge bg-dark me-2" style="width: 12px; height: 12px;"></div>
@@ -51,7 +51,7 @@
                   </div>
                 </div>
               <% end %>
-              <% if summary[:high][:total] > 0 %>
+              <% if summary[:high] && summary[:high][:total] > 0 %>
                 <div class="col-12 mb-2">
                   <div class="d-flex align-items-center">
                     <div class="badge bg-danger me-2" style="width: 12px; height: 12px;"></div>
@@ -59,7 +59,7 @@
                   </div>
                 </div>
               <% end %>
-              <% if summary[:medium][:total] > 0 %>
+              <% if summary[:medium] && summary[:medium][:total] > 0 %>
                 <div class="col-12 mb-2">
                   <div class="d-flex align-items-center">
                     <div class="badge bg-warning me-2" style="width: 12px; height: 12px;"></div>
@@ -67,7 +67,7 @@
                   </div>
                 </div>
               <% end %>
-              <% if summary[:low][:total] > 0 %>
+              <% if summary[:low] && summary[:low][:total] > 0 %>
                 <div class="col-12 mb-2">
                   <div class="d-flex align-items-center">
                     <div class="badge bg-success me-2" style="width: 12px; height: 12px;"></div>
@@ -78,8 +78,12 @@
             </div>
             <div class="mt-2">
               <small class="text-muted">
-                Generated on <%= Date.parse(@scorecard.generated_at).strftime("%B %d, %Y") %> 
-                | Scorecard v<%= @scorecard.scorecard_version %>
+                <% if @scorecard.generated_at.present? %>
+                  Generated on <%= Date.parse(@scorecard.generated_at).strftime("%B %d, %Y") %>
+                <% end %>
+                <% if @scorecard.scorecard_version.present? %>
+                  <%= '|' if @scorecard.generated_at.present? %> Scorecard v<%= @scorecard.scorecard_version %>
+                <% end %>
               </small>
             </div>
           </div>
