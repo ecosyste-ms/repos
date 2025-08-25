@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_08_14_112830) do
+ActiveRecord::Schema[8.0].define(version: 2025_08_25_130829) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -227,7 +227,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_14_112830) do
   create_table "scorecards", force: :cascade do |t|
     t.json "data"
     t.datetime "last_synced_at"
-    t.bigint "repository_id", null: false
+    t.bigint "repository_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["repository_id"], name: "index_scorecards_on_repository_id"
