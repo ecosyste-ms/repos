@@ -1,6 +1,9 @@
 class Scorecard < ApplicationRecord
   belongs_to :repository, optional: true
 
+  scope :with_repository, -> { where.not(repository_id: nil) }
+  scope :without_repository, -> { where(repository_id: nil) }
+
   def self.sync_least_recently_synced
     Scorecard.where(last_synced_at: nil).each(&:fetch_scorecard_async)
     Scorecard.where('last_synced_at < ?', 1.day.ago).each(&:fetch_scorecard_async)
@@ -32,6 +35,28 @@ class Scorecard < ApplicationRecord
       
     json = JSON.parse(response.body)
     create(repository: repository, data: json, last_synced_at: Time.now)
+  rescue
+    nil
+  end
+
+  def self.fetch_and_create_from_url(url)
+    return nil if url.blank?
+    
+    url_without_protocol = url.gsub(%r{http(s)?://}, '')
+    scorecard_url = "https://api.scorecard.dev/projects/#{url_without_protocol}"
+
+    connection = Faraday.new do |builder|
+      builder.use Faraday::FollowRedirects::Middleware
+      builder.request :instrumentation
+      builder.request :retry, max: 3, interval: 0.05, interval_randomness: 0.5, backoff_factor: 2
+      builder.adapter Faraday.default_adapter
+    end
+
+    response = connection.get(scorecard_url)
+    return nil unless response.success?
+      
+    json = JSON.parse(response.body)
+    create(data: json, last_synced_at: Time.now)
   rescue
     nil
   end
