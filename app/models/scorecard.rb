@@ -1,5 +1,5 @@
 class Scorecard < ApplicationRecord
-  belongs_to :repository
+  belongs_to :repository, optional: true
 
   def self.sync_least_recently_synced
     Scorecard.where(last_synced_at: nil).each(&:fetch_scorecard_async)
@@ -187,5 +187,29 @@ class Scorecard < ApplicationRecord
     else
       { text: 'Unknown Risk', class: 'bg-secondary' }
     end
+  end
+
+  def find_repository
+    return nil if repository_id.present?
+    repo_name = repository_name
+    return nil if repo_name.blank?
+
+    # Build URL from repo name (assumes github.com if no protocol)
+    url = repo_name.start_with?('http') ? repo_name : "https://github.com/#{repo_name}"
+    
+    parsed_url = Addressable::URI.parse(url)
+    host = Host.find_by_domain(parsed_url.host)
+    return nil if host.nil?
+
+    path = parsed_url.path.delete_prefix('/').chomp('/')
+    repo = host.find_repository(path.downcase)
+    if repo
+      update(repository: repo)
+      repo
+    else
+      nil
+    end
+  rescue
+    nil
   end
 end
