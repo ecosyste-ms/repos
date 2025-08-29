@@ -339,7 +339,13 @@ class Repository < ApplicationRecord
       dei: file_list.find { |file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?DEI/i) },
       publiccode: file_list.find { |file| file.match(/^publiccode.ya?ml/i) },
       codemeta: file_list.find { |file| file.match(/^codemeta.json/i) },
-      zenodo: file_list.find { |file| file.match(/^.zenodo.json/i) }
+      zenodo: file_list.find { |file| file.match(/^.zenodo.json/i) },
+      notice: file_list.find { |file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?NOTICE(?:\.(md|txt))?$/i) },
+      maintainers: file_list.find { |file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?MAINTAINERS(?:\.(md|txt))?$/i) },
+      copyright: file_list.find { |file| file.match(/^COPYRIGHT(?:\.(md|txt))?$/i) },
+      agents: file_list.find { |file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?AGENTS\.md$/i) },
+      dco: file_list.find { |file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?DCO(?:\.(md|txt))?$/i) },
+      cla: file_list.find { |file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?(CLA|CONTRIBUTOR[-_ ]LICENSE[-_ ]AGREEMENT)(?:\.(md|txt))?$/i) }
     }
   end
 

@@ -189,4 +189,435 @@ class RepositoryTest < ActiveSupport::TestCase
       assert_not_includes repositories_with_scorecards, repo_without_scorecard
     end
   end
+
+  context 'fetch_metadata_files_list method' do
+    setup do
+      @host = create(:host)
+      @repository = create(:repository, host: @host)
+    end
+
+    should 'return nil when file list is blank' do
+      @repository.stubs(:get_file_list).returns(nil)
+      assert_nil @repository.fetch_metadata_files_list
+      
+      @repository.stubs(:get_file_list).returns([])
+      assert_nil @repository.fetch_metadata_files_list
+    end
+
+    should 'find readme files in various locations' do
+      file_list = [
+        'README.md',
+        'docs/README.txt',
+        '.github/README.rst',
+        '.gitlab/README',
+        'readme.markdown',
+        'other.txt'
+      ]
+      @repository.stubs(:get_file_list).returns(file_list)
+      
+      result = @repository.fetch_metadata_files_list
+      assert_equal 'README.md', result[:readme]
+    end
+
+    should 'find changelog files' do
+      file_list = [
+        'CHANGELOG.md',
+        'HISTORY.txt',
+        'NEWS.rst',
+        'changes.md',
+        'other.txt'
+      ]
+      @repository.stubs(:get_file_list).returns(file_list)
+      
+      result = @repository.fetch_metadata_files_list
+      assert_equal 'CHANGELOG.md', result[:changelog]
+    end
+
+    should 'find contributing files in various locations' do
+      file_list = [
+        'CONTRIBUTING.md',
+        'docs/CONTRIBUTING.txt',
+        '.github/CONTRIBUTING.rst',
+        '.gitlab/CONTRIBUTING',
+        'contributing.markdown',
+        'other.txt'
+      ]
+      @repository.stubs(:get_file_list).returns(file_list)
+      
+      result = @repository.fetch_metadata_files_list
+      assert_equal 'CONTRIBUTING.md', result[:contributing]
+    end
+
+    should 'find funding files' do
+      file_list = [
+        'FUNDING.yml',
+        '.github/FUNDING.yaml',
+        'docs/FUNDING.yml',
+        '.gitlab/FUNDING.yaml',
+        'funding.txt',
+        'other.txt'
+      ]
+      @repository.stubs(:get_file_list).returns(file_list)
+      
+      result = @repository.fetch_metadata_files_list
+      assert_equal 'FUNDING.yml', result[:funding]
+    end
+
+    should 'find license files' do
+      file_list = [
+        'LICENSE',
+        'COPYING',
+        'MIT-LICENSE',
+        'license.txt',
+        'other.txt'
+      ]
+      @repository.stubs(:get_file_list).returns(file_list)
+      
+      result = @repository.fetch_metadata_files_list
+      assert_equal 'LICENSE', result[:license]
+    end
+
+    should 'find code of conduct files' do
+      file_list = [
+        'CODE_OF_CONDUCT.md',
+        'CODE-OF-CONDUCT.txt',
+        '.github/CODE_OF_CONDUCT.rst',
+        'docs/CODE-OF-CONDUCT',
+        '.gitlab/CODE_OF_CONDUCT.md',
+        'code_of_conduct.lowercase',
+        'other.txt'
+      ]
+      @repository.stubs(:get_file_list).returns(file_list)
+      
+      result = @repository.fetch_metadata_files_list
+      assert_equal 'CODE_OF_CONDUCT.md', result[:code_of_conduct]
+    end
+
+    should 'find threat model files' do
+      file_list = [
+        'THREAT_MODEL.md',
+        'THREAT-MODEL.txt',
+        'threat_model.lowercase',
+        'other.txt'
+      ]
+      @repository.stubs(:get_file_list).returns(file_list)
+      
+      result = @repository.fetch_metadata_files_list
+      assert_equal 'THREAT_MODEL.md', result[:threat_model]
+    end
+
+    should 'find audit files' do
+      file_list = [
+        'AUDIT.md',
+        'audit.txt',
+        'other.txt'
+      ]
+      @repository.stubs(:get_file_list).returns(file_list)
+      
+      result = @repository.fetch_metadata_files_list
+      assert_equal 'AUDIT.md', result[:audit]
+    end
+
+    should 'find citation files' do
+      file_list = [
+        'CITATION.cff',
+        'citation.md',
+        'other.txt'
+      ]
+      @repository.stubs(:get_file_list).returns(file_list)
+      
+      result = @repository.fetch_metadata_files_list
+      assert_equal 'CITATION.cff', result[:citation]
+    end
+
+    should 'find codeowners files in various locations' do
+      file_list = [
+        'CODEOWNERS',
+        '.github/CODEOWNERS',
+        'docs/CODEOWNERS',
+        '.gitlab/CODEOWNERS',
+        'codeowners.txt',
+        'other.txt'
+      ]
+      @repository.stubs(:get_file_list).returns(file_list)
+      
+      result = @repository.fetch_metadata_files_list
+      assert_equal 'CODEOWNERS', result[:codeowners]
+    end
+
+    should 'find security files in various locations' do
+      file_list = [
+        'SECURITY.md',
+        '.github/SECURITY.txt',
+        'docs/SECURITY.rst',
+        '.gitlab/SECURITY',
+        'security.lowercase',
+        'other.txt'
+      ]
+      @repository.stubs(:get_file_list).returns(file_list)
+      
+      result = @repository.fetch_metadata_files_list
+      assert_equal 'SECURITY.md', result[:security]
+    end
+
+    should 'find support files in various locations' do
+      file_list = [
+        'SUPPORT.md',
+        '.github/SUPPORT.txt',
+        'docs/SUPPORT.rst',
+        '.gitlab/SUPPORT',
+        'support.lowercase',
+        'other.txt'
+      ]
+      @repository.stubs(:get_file_list).returns(file_list)
+      
+      result = @repository.fetch_metadata_files_list
+      assert_equal 'SUPPORT.md', result[:support]
+    end
+
+    should 'find governance files in various locations' do
+      file_list = [
+        'GOVERNANCE.md',
+        '.github/GOVERNANCE.txt',
+        'docs/GOVERNANCE.rst',
+        '.gitlab/GOVERNANCE',
+        'governance.lowercase',
+        'other.txt'
+      ]
+      @repository.stubs(:get_file_list).returns(file_list)
+      
+      result = @repository.fetch_metadata_files_list
+      assert_equal 'GOVERNANCE.md', result[:governance]
+    end
+
+    should 'find roadmap files in various locations' do
+      file_list = [
+        'ROADMAP.md',
+        '.github/ROADMAP.txt',
+        'docs/ROADMAP.rst',
+        '.gitlab/ROADMAP',
+        'roadmap.lowercase',
+        'other.txt'
+      ]
+      @repository.stubs(:get_file_list).returns(file_list)
+      
+      result = @repository.fetch_metadata_files_list
+      assert_equal 'ROADMAP.md', result[:roadmap]
+    end
+
+    should 'find authors files' do
+      file_list = [
+        'AUTHORS',
+        'AUTHORS.md',
+        'authors.txt',
+        'other.txt'
+      ]
+      @repository.stubs(:get_file_list).returns(file_list)
+      
+      result = @repository.fetch_metadata_files_list
+      assert_equal 'AUTHORS', result[:authors]
+    end
+
+    should 'find dei files in various locations' do
+      file_list = [
+        'DEI.md',
+        '.github/DEI.txt',
+        'docs/DEI.rst',
+        '.gitlab/DEI',
+        'dei.lowercase',
+        'other.txt'
+      ]
+      @repository.stubs(:get_file_list).returns(file_list)
+      
+      result = @repository.fetch_metadata_files_list
+      assert_equal 'DEI.md', result[:dei]
+    end
+
+    should 'find publiccode files' do
+      file_list = [
+        'publiccode.yml',
+        'publiccode.yaml',
+        'publiccode.txt',
+        'other.txt'
+      ]
+      @repository.stubs(:get_file_list).returns(file_list)
+      
+      result = @repository.fetch_metadata_files_list
+      assert_equal 'publiccode.yml', result[:publiccode]
+    end
+
+    should 'find codemeta files' do
+      file_list = [
+        'codemeta.json',
+        'codemeta.txt',
+        'other.txt'
+      ]
+      @repository.stubs(:get_file_list).returns(file_list)
+      
+      result = @repository.fetch_metadata_files_list
+      assert_equal 'codemeta.json', result[:codemeta]
+    end
+
+    should 'find zenodo files' do
+      file_list = [
+        '.zenodo.json',
+        'zenodo.json',
+        'other.txt'
+      ]
+      @repository.stubs(:get_file_list).returns(file_list)
+      
+      result = @repository.fetch_metadata_files_list
+      assert_equal '.zenodo.json', result[:zenodo]
+    end
+
+    should 'find notice files with various extensions' do
+      file_list = [
+        'NOTICE',
+        'NOTICE.md',
+        'NOTICE.txt',
+        '.github/NOTICE',
+        'docs/NOTICE.md',
+        '.gitlab/NOTICE.txt',
+        'notice.lowercase',
+        'other.txt'
+      ]
+      @repository.stubs(:get_file_list).returns(file_list)
+      
+      result = @repository.fetch_metadata_files_list
+      assert_equal 'NOTICE', result[:notice]
+    end
+
+    should 'find maintainers files with various extensions' do
+      file_list = [
+        'MAINTAINERS',
+        'MAINTAINERS.md',
+        'MAINTAINERS.txt',
+        '.github/MAINTAINERS',
+        'docs/MAINTAINERS.md',
+        '.gitlab/MAINTAINERS.txt',
+        'maintainers.lowercase',
+        'other.txt'
+      ]
+      @repository.stubs(:get_file_list).returns(file_list)
+      
+      result = @repository.fetch_metadata_files_list
+      assert_equal 'MAINTAINERS', result[:maintainers]
+    end
+
+    should 'find copyright files with various extensions' do
+      file_list = [
+        'COPYRIGHT',
+        'COPYRIGHT.md',
+        'COPYRIGHT.txt',
+        'copyright.lowercase',
+        'other.txt'
+      ]
+      @repository.stubs(:get_file_list).returns(file_list)
+      
+      result = @repository.fetch_metadata_files_list
+      assert_equal 'COPYRIGHT', result[:copyright]
+    end
+
+    should 'find agents files' do
+      file_list = [
+        'AGENTS.md',
+        '.github/AGENTS.md',
+        'docs/AGENTS.md',
+        '.gitlab/AGENTS.md',
+        'agents.txt',
+        'other.txt'
+      ]
+      @repository.stubs(:get_file_list).returns(file_list)
+      
+      result = @repository.fetch_metadata_files_list
+      assert_equal 'AGENTS.md', result[:agents]
+    end
+
+    should 'find dco files with various extensions' do
+      file_list = [
+        'DCO',
+        'DCO.md',
+        'DCO.txt',
+        '.github/DCO',
+        'docs/DCO.md',
+        '.gitlab/DCO.txt',
+        'dco.lowercase',
+        'other.txt'
+      ]
+      @repository.stubs(:get_file_list).returns(file_list)
+      
+      result = @repository.fetch_metadata_files_list
+      assert_equal 'DCO', result[:dco]
+    end
+
+    should 'find cla files with various names and extensions' do
+      file_list = [
+        'CLA',
+        'CLA.md',
+        'CLA.txt',
+        'CONTRIBUTOR_LICENSE_AGREEMENT',
+        'CONTRIBUTOR-LICENSE-AGREEMENT.md',
+        'CONTRIBUTOR LICENSE AGREEMENT.txt',
+        '.github/CLA.md',
+        'docs/CONTRIBUTOR_LICENSE_AGREEMENT',
+        '.gitlab/CONTRIBUTOR-LICENSE-AGREEMENT.txt',
+        'cla.lowercase',
+        'other.txt'
+      ]
+      @repository.stubs(:get_file_list).returns(file_list)
+      
+      result = @repository.fetch_metadata_files_list
+      assert_equal 'CLA', result[:cla]
+    end
+
+    should 'return hash with all keys even when no files match' do
+      file_list = ['unrelated.txt', 'random.file']
+      @repository.stubs(:get_file_list).returns(file_list)
+      
+      result = @repository.fetch_metadata_files_list
+      
+      assert_instance_of Hash, result
+      assert_nil result[:readme]
+      assert_nil result[:changelog]
+      assert_nil result[:contributing]
+      assert_nil result[:funding]
+      assert_nil result[:license]
+      assert_nil result[:code_of_conduct]
+      assert_nil result[:threat_model]
+      assert_nil result[:audit]
+      assert_nil result[:citation]
+      assert_nil result[:codeowners]
+      assert_nil result[:security]
+      assert_nil result[:support]
+      assert_nil result[:governance]
+      assert_nil result[:roadmap]
+      assert_nil result[:authors]
+      assert_nil result[:dei]
+      assert_nil result[:publiccode]
+      assert_nil result[:codemeta]
+      assert_nil result[:zenodo]
+      assert_nil result[:notice]
+      assert_nil result[:maintainers]
+      assert_nil result[:copyright]
+      assert_nil result[:agents]
+      assert_nil result[:dco]
+      assert_nil result[:cla]
+    end
+
+    should 'handle mixed case and find first matching file' do
+      file_list = [
+        'readme.md',
+        'README.MD',
+        'ReadMe.txt',
+        'LICENSE.txt',
+        'License',
+        'LICENCE'
+      ]
+      @repository.stubs(:get_file_list).returns(file_list)
+      
+      result = @repository.fetch_metadata_files_list
+      assert_equal 'readme.md', result[:readme]
+      assert_equal 'LICENSE.txt', result[:license]
+    end
+  end
 end
