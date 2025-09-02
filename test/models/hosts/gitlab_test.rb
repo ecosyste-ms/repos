@@ -48,24 +48,23 @@ class Hosts::GitlabTest < ActiveSupport::TestCase
       assert_equal ["user/repo1", "user/repo2", "user/repo3"], result
     end
 
-    should 'handle pagination correctly' do
+    should 'handle pagination correctly and stop on empty page' do
       recent_time = 30.minutes.ago
+      older_time = 45.minutes.ago
+      old_time = 2.hours.ago
       
       page1 = [
         { "path_with_namespace" => "user/repo1", "last_activity_at" => recent_time },
-        { "path_with_namespace" => "user/repo2", "last_activity_at" => recent_time }
+        { "path_with_namespace" => "user/repo2", "last_activity_at" => older_time }
       ]
       
       page2 = [
-        { "path_with_namespace" => "user/repo3", "last_activity_at" => recent_time },
-        { "path_with_namespace" => "user/repo4", "last_activity_at" => recent_time }
+        { "path_with_namespace" => "user/repo3", "last_activity_at" => older_time },
+        { "path_with_namespace" => "user/repo4", "last_activity_at" => old_time }
       ]
-      
-      page3 = []
       
       @gitlab_instance.stubs(:load_repo_names).with(1, "updated_at").returns(page1)
       @gitlab_instance.stubs(:load_repo_names).with(2, "updated_at").returns(page2)
-      @gitlab_instance.stubs(:load_repo_names).with(3, "updated_at").returns(page3)
       
       result = @gitlab_instance.recently_changed_repo_names(1.hour)
       
@@ -74,13 +73,19 @@ class Hosts::GitlabTest < ActiveSupport::TestCase
 
     should 'remove duplicate repo names' do
       recent_time = 30.minutes.ago
+      old_time = 2.hours.ago
       
-      repos = [
+      page1 = [
         { "path_with_namespace" => "user/repo1", "last_activity_at" => recent_time },
         { "path_with_namespace" => "user/repo1", "last_activity_at" => recent_time }
       ]
       
-      @gitlab_instance.stubs(:load_repo_names).returns(repos)
+      page2 = [
+        { "path_with_namespace" => "user/repo1", "last_activity_at" => old_time }
+      ]
+      
+      @gitlab_instance.stubs(:load_repo_names).with(1, "updated_at").returns(page1)
+      @gitlab_instance.stubs(:load_repo_names).with(2, "updated_at").returns(page2)
       
       result = @gitlab_instance.recently_changed_repo_names
       
