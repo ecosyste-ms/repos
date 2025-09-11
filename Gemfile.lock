@@ -119,7 +119,7 @@ GEM
     database_cleaner-core (2.0.1)
     date (3.4.1)
     drb (2.2.3)
-    enum_help (0.0.19)
+    enum_help (0.0.20)
       activesupport (>= 3.0.0)
     erb (5.0.2)
     erubi (1.13.1)
@@ -552,7 +552,7 @@ CHECKSUMS
   database_cleaner-core (2.0.1) sha256=8646574c32162e59ed7b5258a97a208d3c44551b854e510994f24683865d846c
   date (3.4.1) sha256=bf268e14ef7158009bfeaec40b5fa3c7271906e88b196d958a89d4b408abe64f
   drb (2.2.3) sha256=0b00d6fdb50995fe4a45dea13663493c841112e4068656854646f418fda13373
-  enum_help (0.0.19) sha256=253d0a7173ebf51453b1e5a1e9fed90b04f1ce4d766e90c8fc909fe2cd68bc15
+  enum_help (0.0.20) sha256=c3cdac74971b84af5ecfc2de72d3a5f0ab08216156dae0d6976b9885d706b98a
   erb (5.0.2) sha256=d30f258143d4300fb4ecf430042ac12970c9bb4b33c974a545b8f58c1ec26c0f
   erubi (1.13.1) sha256=a082103b0885dbc5ecf1172fede897f9ebdb745a4b97a5e8dc63953db1ee4ad9
   factory_bot (6.5.5) sha256=ce59295daee1b4704dab8a2fee6816f513d467c6aa3bc587860767d74a66efbe
