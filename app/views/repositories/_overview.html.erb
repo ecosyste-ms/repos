@@ -75,7 +75,7 @@
     <p><small class='text-muted'>
     <%= t 'virtual.models.topic.other' %>: 
     <% if @repository.host.host_instance.topic_url('test') %>
-      <% @repository.topics.reject(&:blank?).uniq.each_with_index do |k, i| %><%= ', ' if i > 0 %><%= link_to k, topic_host_path(@repository.host.name, k), target: :_blank %><% end %>
+      <% @repository.topics.reject(&:blank?).uniq.each_with_index do |k, i| %><%= ', ' if i > 0 %><%= link_to k, topic_host_path(id: @repository.host.name, topic: k), target: :_blank %><% end %>
     <% else %>
       <%= @repository.topics.join(', ') %>
     <% end %>

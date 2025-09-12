@@ -90,7 +90,7 @@ Rails.application.routes.draw do
     end
     member do
       get :topics
-      get "topics/:topic", to: 'hosts#topic', as: :topic, constraints: { topic: /[^\/]+/ }, defaults: { format: :html }
+      get "topics/*topic", to: 'hosts#topic', as: :topic, format: false
     end
 
     collection do
