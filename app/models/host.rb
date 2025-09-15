@@ -65,6 +65,12 @@ class Host < ApplicationRecord
     return if full_name.blank?
     # remove .git from the end of the full_name
     full_name = full_name.gsub(/\.git$/, '')
+
+    # Check if owner is hidden
+    owner_login = full_name.split('/').first
+    owner = owners.find_by('lower(login) = ?', owner_login.downcase) if owner_login.present?
+    return if owner&.hidden?
+
     repo = repositories.find_by('lower(full_name) = ?', full_name.downcase)
 
     if repo
@@ -126,6 +132,7 @@ class Host < ApplicationRecord
   end 
 
   def sync_owner_repositories_async(owner)
+    return if owner.hidden?
     names = host_instance.load_owner_repos_names(owner)
     names.each do |full_name|
       sync_repository_async(full_name)
@@ -133,6 +140,7 @@ class Host < ApplicationRecord
   end
 
   def sync_owner_repositories(owner)
+    return if owner.hidden?
     names = host_instance.load_owner_repos_names(owner)
     names.each do |full_name|
       sync_repository(full_name)
@@ -284,7 +292,7 @@ class Host < ApplicationRecord
       owner.total_stars = owner.fetch_total_stars
     end
     owner.save!
-    owner.sync_repositories
+    owner.sync_repositories unless owner.hidden?
     owner
   rescue ActiveRecord::RecordNotUnique
     sync_owner_async(login) if owner.try(:destroy)

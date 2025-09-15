@@ -467,4 +467,123 @@ class HostTest < ActiveSupport::TestCase
       assert_equal [], result
     end
   end
+
+  context 'sync_owner_repositories methods' do
+    setup do
+      @host = FactoryBot.create(:github_host)
+      @visible_owner = FactoryBot.create(:owner, host: @host, hidden: false)
+      @hidden_owner = FactoryBot.create(:hidden_owner, host: @host)
+    end
+
+    should 'not sync repositories for hidden owners in sync_owner_repositories' do
+      @host.host_instance.expects(:load_owner_repos_names).never
+      @host.sync_owner_repositories(@hidden_owner)
+    end
+
+    should 'sync repositories for visible owners in sync_owner_repositories' do
+      @host.stubs(:host_instance).returns(mock('host_instance').tap do |m|
+        m.expects(:load_owner_repos_names).with(@visible_owner).returns(['owner/repo1', 'owner/repo2'])
+      end)
+      @host.expects(:sync_repository).with('owner/repo1').once
+      @host.expects(:sync_repository).with('owner/repo2').once
+      @host.sync_owner_repositories(@visible_owner)
+    end
+
+    should 'not sync repositories for hidden owners in sync_owner_repositories_async' do
+      @host.host_instance.expects(:load_owner_repos_names).never
+      @host.sync_owner_repositories_async(@hidden_owner)
+    end
+
+    should 'sync repositories for visible owners in sync_owner_repositories_async' do
+      @host.stubs(:host_instance).returns(mock('host_instance').tap do |m|
+        m.expects(:load_owner_repos_names).with(@visible_owner).returns(['owner/repo1', 'owner/repo2'])
+      end)
+      @host.expects(:sync_repository_async).with('owner/repo1').once
+      @host.expects(:sync_repository_async).with('owner/repo2').once
+      @host.sync_owner_repositories_async(@visible_owner)
+    end
+  end
+
+  context 'sync_repository method' do
+    setup do
+      @host = FactoryBot.create(:github_host)
+      @visible_owner = FactoryBot.create(:owner, host: @host, login: 'visible', hidden: false)
+      @hidden_owner = FactoryBot.create(:hidden_owner, host: @host, login: 'hidden')
+    end
+
+    should 'not sync repository when owner is hidden' do
+      result = @host.sync_repository('hidden/repo')
+      assert_nil result
+    end
+
+    should 'sync repository when owner is visible' do
+      @host.stubs(:host_instance).returns(mock('host_instance').tap do |m|
+        m.expects(:fetch_repository).with('visible/repo').returns({
+          uuid: '12345',
+          id: '12345',
+          full_name: 'visible/repo',
+          description: 'Test repo',
+          created_at: 1.week.ago,
+          updated_at: 1.day.ago,
+          owner: 'visible'
+        })
+      end)
+
+      repository = @host.sync_repository('visible/repo')
+      assert_equal 'visible/repo', repository.full_name
+    end
+
+    should 'sync existing repository when owner is visible' do
+      existing_repo = FactoryBot.create(:repository, host: @host, full_name: 'visible/repo', owner: 'visible')
+
+      @host.stubs(:host_instance).returns(mock('host_instance').tap do |m|
+        m.expects(:update_from_host).with(existing_repo).once
+      end)
+
+      @host.sync_repository('visible/repo')
+    end
+  end
+
+  context 'sync_owner method' do
+    setup do
+      @host = FactoryBot.create(:github_host)
+    end
+
+    should 'not sync repositories for hidden owners' do
+      hidden_owner = FactoryBot.create(:hidden_owner, host: @host, login: 'hiddenuser', last_synced_at: 2.weeks.ago)
+
+      @host.stubs(:host_instance).returns(mock('host_instance').tap do |m|
+        m.expects(:fetch_owner).with('hiddenuser').returns({
+          uuid: '12345',
+          login: 'hiddenuser',
+          name: 'Hidden User',
+          hidden: true
+        })
+      end)
+
+      result = @host.sync_owner('hiddenuser')
+      assert_equal 'hiddenuser', result.login
+      assert_equal true, result.hidden
+    end
+
+    should 'sync repositories for visible owners' do
+      visible_owner = FactoryBot.create(:owner, host: @host, login: 'visibleuser', last_synced_at: 2.weeks.ago, hidden: false)
+
+      @host.stubs(:host_instance).returns(mock('host_instance').tap do |m|
+        m.expects(:fetch_owner).with('visibleuser').returns({
+          uuid: '67890',
+          login: 'visibleuser',
+          name: 'Visible User',
+          hidden: false
+        })
+        m.expects(:load_owner_repos_names).with(visible_owner).returns(['visibleuser/repo1'])
+      end)
+
+      @host.expects(:sync_repository_async).with('visibleuser/repo1').once
+
+      result = @host.sync_owner('visibleuser')
+      assert_equal 'visibleuser', result.login
+      assert_equal false, result.hidden
+    end
+  end
 end

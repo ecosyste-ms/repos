@@ -79,10 +79,12 @@ class Repository < ApplicationRecord
   end
 
   def sync_owner
+    return if owner_record&.hidden?
     host.sync_owner(owner) if owner_record.nil?
   end
 
   def sync_owner_async
+    return if owner_record&.hidden?
     host.sync_owner_async(owner) if owner_record.nil?
   end
 
@@ -125,7 +127,8 @@ class Repository < ApplicationRecord
 
   def sync(force: false)
     return if host.nil?
-    
+    return if owner_record&.hidden?
+
     if !force && last_synced_at && last_synced_at > 1.week.ago
       # if recently synced, schedule for syncing 1 day later
       delay = (last_synced_at + 1.day) - Time.now
@@ -254,6 +257,7 @@ class Repository < ApplicationRecord
   end
 
   def sync_extra_details(force: false)
+    return if owner_record&.hidden?
     return if fork? && !force
     return unless files_changed? || force
     if pushed_at.present? || force

@@ -620,4 +620,50 @@ class RepositoryTest < ActiveSupport::TestCase
       assert_equal 'LICENSE.txt', result[:license]
     end
   end
+
+  context 'sync methods with hidden owners' do
+    setup do
+      @host = FactoryBot.create(:github_host)
+      @visible_owner = FactoryBot.create(:owner, host: @host, login: 'visible', hidden: false)
+      @hidden_owner = FactoryBot.create(:hidden_owner, host: @host, login: 'hidden')
+      @visible_repo = FactoryBot.create(:repository, host: @host, full_name: 'visible/repo', owner: 'visible')
+      @hidden_repo = FactoryBot.create(:repository, host: @host, full_name: 'hidden/repo', owner: 'hidden')
+    end
+
+    should 'not sync repository with hidden owner' do
+      @host.expects(:host_instance).never
+      @hidden_repo.sync
+    end
+
+    should 'sync repository with visible owner' do
+      @host.stubs(:host_instance).returns(mock('host_instance').tap do |m|
+        m.expects(:update_from_host).with(@visible_repo).once
+      end)
+      @visible_repo.sync
+    end
+
+    should 'not sync_owner for repository with hidden owner' do
+      @host.expects(:sync_owner).never
+      @hidden_repo.sync_owner
+    end
+
+    should 'not sync_owner_async for repository with hidden owner' do
+      @host.expects(:sync_owner_async).never
+      @hidden_repo.sync_owner_async
+    end
+
+    should 'not sync_extra_details for repository with hidden owner' do
+      @hidden_repo.expects(:parse_dependencies).never
+      @hidden_repo.expects(:update_metadata_files).never
+      @hidden_repo.sync_extra_details(force: true)
+    end
+
+    should 'sync_extra_details for repository with visible owner' do
+      @visible_repo.update(files_changed: true, pushed_at: 1.day.ago)
+      @visible_repo.expects(:parse_dependencies).at_least_once
+      @visible_repo.expects(:update_metadata_files).once
+      @visible_repo.expects(:download_tags).once
+      @visible_repo.sync_extra_details
+    end
+  end
 end

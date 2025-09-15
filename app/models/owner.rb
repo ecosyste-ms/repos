@@ -31,6 +31,7 @@ class Owner < ApplicationRecord
   end
   
   def sync
+    return self if hidden?
     host.sync_owner(login)
   end
 
@@ -117,6 +118,7 @@ class Owner < ApplicationRecord
   end
 
   def sync_repositories
+    return if hidden?
     host.sync_owner_repositories_async(self)
   end
 
