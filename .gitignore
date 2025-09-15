@@ -37,3 +37,5 @@ data/
 
 .irb_history
 .irbrc
+.env
+.env.*
