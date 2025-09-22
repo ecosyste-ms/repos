@@ -435,7 +435,7 @@ class Repository < ApplicationRecord
   end
 
   def ping_packages
-    Faraday.get("#{PACKAGES_DOMAIN}/api/v1/packages/ping?repository_url=#{html_url}")
+    ecosystem_connection(PACKAGES_DOMAIN).get("/api/v1/packages/ping?repository_url=#{html_url}")
   end
 
   def commits_url
@@ -447,7 +447,8 @@ class Repository < ApplicationRecord
   end
 
   def sync_commit_stats
-    response = Faraday.get(commits_api_url)
+    url_path = commits_api_url.gsub(COMMITS_DOMAIN, '')
+    response = ecosystem_connection(COMMITS_DOMAIN).get(url_path)
     return if response.status != 200
     stats = Oj.load(response.body)
     return if stats.blank?
@@ -461,11 +462,7 @@ class Repository < ApplicationRecord
   end
 
   def self.parse_dependencies_for_github_actions_tags
-    conn = Faraday.new(PACKAGES_DOMAIN) do |f|
-      f.request :json
-      f.request :retry
-      f.response :json
-    end
+    conn = ecosystem_connection(PACKAGES_DOMAIN)
 
     repo_names = Set.new
 
@@ -481,7 +478,7 @@ class Repository < ApplicationRecord
         repo_names << package["name"]
       end
 
-      response = conn.get(links["next"])
+      response = conn.get(links["next"].gsub(PACKAGES_DOMAIN, ''))
       return nil unless response.success?
       links = parse_link_header(response.headers)
     end
