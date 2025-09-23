@@ -357,7 +357,7 @@ GEM
       psych (>= 4.0.0)
     redis (5.4.1)
       redis-client (>= 0.22.0)
-    redis-client (0.25.3)
+    redis-client (0.26.0)
       connection_pool
     reline (0.6.2)
       io-console (~> 0.5)
@@ -657,7 +657,7 @@ CHECKSUMS
   rb_sys (0.9.117) sha256=755feaf6c640baceca7a9362dfb0ae87ff4ff16e3566d9ef86533896eb85cb59
   rdoc (6.14.2) sha256=9fdd44df130f856ae70cc9a264dfd659b9b40de369b16581f4ab746e42439226
   redis (5.4.1) sha256=b5e675b57ad22b15c9bcc765d5ac26f60b675408af916d31527af9bd5a81faae
-  redis-client (0.25.3) sha256=bff579db68dd7c59be8f9575a5825d8fb2a23944438f6e5e7e57e7ffddd34e50
+  redis-client (0.26.0) sha256=71e048d75650eb23b8387c71c620a49edb6d2ffc48a565734aa81efca34e90ae
   reline (0.6.2) sha256=1dad26a6008872d59c8e05244b119347c9f2ddaf4a53dce97856cd5f30a02846
   rexml (3.4.4) sha256=19e0a2c3425dfbf2d4fc1189747bdb2f849b6c5e74180401b15734bc97b5d142
   rswag-api (2.16.0) sha256=b653f7bd92e98be18b01ab4525d88950d7b0960e293a99f856b9efcee3ae6074
