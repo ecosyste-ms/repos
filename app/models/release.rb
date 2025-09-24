@@ -34,7 +34,10 @@ class Release < ApplicationRecord
   end
 
   def clean_number
-    @clean_number ||= (SemanticRange.clean(number) || number)
+    @clean_number ||= begin
+      cleaned = SemanticRange.clean(number) || number
+      cleaned.gsub(/(\.|^)0+([1-9]\d*)/, '\1\2') # Remove leading zeros
+    end
   end
 
   def number

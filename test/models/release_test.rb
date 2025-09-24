@@ -23,8 +23,21 @@ class ReleaseTest < ActiveSupport::TestCase
   test 'non-semver tags fall back to string comparison' do
     release1 = create(:release, repository: @repository, tag_name: 'latest')
     release2 = create(:release, repository: @repository, tag_name: 'main')
-    
+
     sorted = [release1, release2].sort
     assert_equal 2, sorted.length
+  end
+
+  test 'handles versions with leading zeros' do
+    release = create(:release, repository: @repository, tag_name: 'v1.09.0')
+    assert_not_nil release.clean_number
+    assert_nothing_raised { release.semantic_version }
+  end
+
+  test 'comparison with leading zeros works' do
+    release1 = create(:release, repository: @repository, tag_name: 'v1.09.0')
+    release2 = create(:release, repository: @repository, tag_name: 'v1.10.0')
+
+    assert_equal 1, (release1 <=> release2)
   end
 end
