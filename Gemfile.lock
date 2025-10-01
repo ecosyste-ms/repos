@@ -96,13 +96,12 @@ GEM
       rails (>= 7.1)
     builder (3.3.0)
     chartkick (5.2.0)
-    commonmarker (2.4.0)
+    commonmarker (2.4.1)
       rb_sys (~> 0.9)
-    commonmarker (2.4.0-aarch64-linux-musl)
-    commonmarker (2.4.0-arm64-darwin)
-    commonmarker (2.4.0-x86_64-darwin)
-    commonmarker (2.4.0-x86_64-linux)
-    commonmarker (2.4.0-x86_64-linux-musl)
+    commonmarker (2.4.1-aarch64-linux-musl)
+    commonmarker (2.4.1-x86_64-darwin)
+    commonmarker (2.4.1-x86_64-linux)
+    commonmarker (2.4.1-x86_64-linux-musl)
     concurrent-ruby (1.3.5)
     connection_pool (2.5.4)
     counter_culture (3.11.2)
@@ -536,12 +535,11 @@ CHECKSUMS
   bootstrap-icons-helper (2.0.3) sha256=b021ed92708ccda4912418862d12a0ce8bea4a1945e21e5fe52e265dde0a93b5
   builder (3.3.0) sha256=497918d2f9dca528fdca4b88d84e4ef4387256d984b8154e9d5d3fe5a9c8835f
   chartkick (5.2.0) sha256=75273928d7a4a93301d23647885a1041359104550071699222e0923d2d38f576
-  commonmarker (2.4.0) sha256=e483a7160fd18ac6626a1149ceb4ef650a15bad0645bd8b0ab3c90810b2c6d3d
-  commonmarker (2.4.0-aarch64-linux-musl) sha256=90b240555cda1ba2e10ed576d81907b30f86c73e4e587ea889681620058082a9
-  commonmarker (2.4.0-arm64-darwin) sha256=c5172463d52d0f92d519a22e281c53a86b23132a26e2b022bb32e47b85966f77
-  commonmarker (2.4.0-x86_64-darwin) sha256=e827891c9eddb82101fca8506fb2d5647fefb32d9f90f70ab6fd3f086084ac3d
-  commonmarker (2.4.0-x86_64-linux) sha256=e6a1ddc58e216ecf721277336eb3864347f6fc73197159e100ae937711c9ab1e
-  commonmarker (2.4.0-x86_64-linux-musl) sha256=e1160fd721b867d7541f91d7979d5667633a60ffbca55ca3e25b013310d5e565
+  commonmarker (2.4.1) sha256=d38096f9c6f7ea94761f24cd74b43e638d3fc91d1bea4be15056ab14849ae3f7
+  commonmarker (2.4.1-aarch64-linux-musl) sha256=22854e0cd23bcb12598ccf0c5f0b49ff6ea91610fd3f0c6c9d1c7318d172e72c
+  commonmarker (2.4.1-x86_64-darwin) sha256=c21bb6f335018600ea0066e7fd1bb2f27fcc3259b4f9149bfdd03ad18a380d4b
+  commonmarker (2.4.1-x86_64-linux) sha256=33328ca07e8cb82e3d8298db0136e0119526be6afc346a53e9c66c00cef5e21b
+  commonmarker (2.4.1-x86_64-linux-musl) sha256=5b6f9d3e736cbb3f4f2299121e7e48593f3ebb238a2bfc99179398faaf646815
   concurrent-ruby (1.3.5) sha256=813b3e37aca6df2a21a3b9f1d497f8cbab24a2b94cab325bffe65ee0f6cbebc6
   connection_pool (2.5.4) sha256=e9e1922327416091f3f6542f5f4446c2a20745276b9aa796dd0bb2fd0ea1e70a
   counter_culture (3.11.2) sha256=10f62d78f9f6e042640124847902761af8cc37aa96d3c40bdc253805b6efe33d
