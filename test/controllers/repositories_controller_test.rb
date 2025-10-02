@@ -153,4 +153,44 @@ class RepositoriesControllerTest < ActionDispatch::IntegrationTest
     assert_template 'repositories/scorecard', file: 'repositories/scorecard.html.erb'
     assert_equal scorecard, assigns(:scorecard)
   end
+
+  test 'get a repository with blocked topic returns 404' do
+    blocked_repo = create(:repository, host: @host, full_name: 'test/blocked-repo', owner: @owner.login, topics: ['malwarebytes-unlocked-version'])
+    ENV['BLOCKED_TOPICS'] = 'malwarebytes-unlocked-version,premiere-crack-2023'
+    get host_repository_path(host_id: @host.name, id: blocked_repo.full_name)
+    assert_response :not_found
+    ENV.delete('BLOCKED_TOPICS')
+  end
+
+  test 'get dependencies for repository with blocked topic returns 404' do
+    blocked_repo = create(:repository, host: @host, full_name: 'test/blocked-repo', owner: @owner.login, topics: ['premiere-crack-2023'])
+    ENV['BLOCKED_TOPICS'] = 'malwarebytes-unlocked-version,premiere-crack-2023'
+    get dependencies_host_repository_path(host_id: @host.name, id: blocked_repo.full_name)
+    assert_response :not_found
+    ENV.delete('BLOCKED_TOPICS')
+  end
+
+  test 'get readme for repository with blocked topic returns 404' do
+    blocked_repo = create(:repository, host: @host, full_name: 'test/blocked-repo', owner: @owner.login, topics: ['download-free-dxo-photolab'])
+    ENV['BLOCKED_TOPICS'] = 'download-free-dxo-photolab'
+    get readme_host_repository_path(host_id: @host.name, id: blocked_repo.full_name)
+    assert_response :not_found
+    ENV.delete('BLOCKED_TOPICS')
+  end
+
+  test 'get releases for repository with blocked topic returns 404' do
+    blocked_repo = create(:repository, host: @host, full_name: 'test/blocked-repo', owner: @owner.login, topics: ['malwarebytes-unlocked-version'])
+    ENV['BLOCKED_TOPICS'] = 'malwarebytes-unlocked-version'
+    get releases_host_repository_path(host_id: @host.name, id: blocked_repo.full_name)
+    assert_response :not_found
+    ENV.delete('BLOCKED_TOPICS')
+  end
+
+  test 'get scorecard for repository with blocked topic returns 404' do
+    blocked_repo = create(:repository, host: @host, full_name: 'test/blocked-repo', owner: @owner.login, topics: ['premiere-crack-2023'])
+    ENV['BLOCKED_TOPICS'] = 'premiere-crack-2023'
+    get scorecard_host_repository_path(host_id: @host.name, id: blocked_repo.full_name)
+    assert_response :not_found
+    ENV.delete('BLOCKED_TOPICS')
+  end
 end

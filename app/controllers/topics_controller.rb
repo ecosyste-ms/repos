@@ -7,12 +7,16 @@ class TopicsController < ApplicationController
       @topics = Repository.topics
     end
 
+    @topics = @topics.reject { |topic| Repository.blocked_topics.include?(topic[0]) }
+
     @pagy, @topics = pagy_array(@topics)
     expires_in 1.day, public: true
   end
 
   def show
     @topic = params[:id]
+
+    raise ActiveRecord::RecordNotFound if Repository.blocked_topics.include?(@topic)
 
     if params[:host_id]
       @host = Host.find_by_name(params[:host_id])

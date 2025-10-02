@@ -621,6 +621,86 @@ class RepositoryTest < ActiveSupport::TestCase
     end
   end
 
+  context 'has_blocked_topic? method' do
+    setup do
+      @host = Host.create!(name: 'GitHub', url: 'https://github.com', kind: 'github')
+    end
+
+    should 'return false when topics are blank' do
+      repository = Repository.create!(
+        full_name: 'test/repo',
+        owner: 'test',
+        uuid: '123',
+        host: @host,
+        topics: nil,
+        created_at: Time.now,
+        updated_at: Time.now
+      )
+      ENV['BLOCKED_TOPICS'] = 'bad-topic'
+      assert_equal false, repository.has_blocked_topic?
+      ENV.delete('BLOCKED_TOPICS')
+    end
+
+    should 'return false when BLOCKED_TOPICS env var is not set' do
+      repository = Repository.create!(
+        full_name: 'test/repo',
+        owner: 'test',
+        uuid: '123',
+        host: @host,
+        topics: ['good-topic'],
+        created_at: Time.now,
+        updated_at: Time.now
+      )
+      ENV.delete('BLOCKED_TOPICS')
+      assert_equal false, repository.has_blocked_topic?
+    end
+
+    should 'return true when repository has a blocked topic' do
+      repository = Repository.create!(
+        full_name: 'test/repo',
+        owner: 'test',
+        uuid: '123',
+        host: @host,
+        topics: ['good-topic', 'malwarebytes-unlocked-version', 'another-topic'],
+        created_at: Time.now,
+        updated_at: Time.now
+      )
+      ENV['BLOCKED_TOPICS'] = 'malwarebytes-unlocked-version,premiere-crack-2023'
+      assert_equal true, repository.has_blocked_topic?
+      ENV.delete('BLOCKED_TOPICS')
+    end
+
+    should 'return false when repository has no blocked topics' do
+      repository = Repository.create!(
+        full_name: 'test/repo',
+        owner: 'test',
+        uuid: '123',
+        host: @host,
+        topics: ['good-topic', 'another-good-topic'],
+        created_at: Time.now,
+        updated_at: Time.now
+      )
+      ENV['BLOCKED_TOPICS'] = 'malwarebytes-unlocked-version,premiere-crack-2023'
+      assert_equal false, repository.has_blocked_topic?
+      ENV.delete('BLOCKED_TOPICS')
+    end
+
+    should 'handle comma separated list with spaces' do
+      repository = Repository.create!(
+        full_name: 'test/repo',
+        owner: 'test',
+        uuid: '123',
+        host: @host,
+        topics: ['download-free-dxo-photolab'],
+        created_at: Time.now,
+        updated_at: Time.now
+      )
+      ENV['BLOCKED_TOPICS'] = 'malwarebytes-unlocked-version, download-free-dxo-photolab , premiere-crack-2023'
+      assert_equal true, repository.has_blocked_topic?
+      ENV.delete('BLOCKED_TOPICS')
+    end
+  end
+
   context 'sync methods with hidden owners' do
     setup do
       @host = FactoryBot.create(:github_host)

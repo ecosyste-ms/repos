@@ -32,11 +32,14 @@ class HostsController < ApplicationController
 
   def topics
     @host = Host.find_by_name!(params[:id])
-    @pagy, @topics = pagy_array(@host.topics)
+    topics = @host.topics.reject { |topic| Repository.blocked_topics.include?(topic[0]) }
+    @pagy, @topics = pagy_array(topics)
   end
 
   def topic
     @host = Host.find_by_name!(params[:id])
+
+    raise ActiveRecord::RecordNotFound if Repository.blocked_topics.include?(params[:topic])
 
     scope = @host.repositories.where.not(last_synced_at:nil)
 

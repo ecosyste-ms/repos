@@ -38,6 +38,11 @@ class Repository < ApplicationRecord
 
   self.record_timestamps = false
 
+  def self.blocked_topics
+    return [] unless ENV['BLOCKED_TOPICS'].present?
+    ENV['BLOCKED_TOPICS'].split(',').map(&:strip)
+  end
+
   def self.topics
     if self == Repository
       Rails.cache.fetch("topics", expires_in: 1.week) do
@@ -587,6 +592,13 @@ class Repository < ApplicationRecord
   def owner_hidden?
     return false if owner.blank?
     owner_record&.hidden? == true
+  end
+
+  def has_blocked_topic?
+    return false if topics.blank?
+    return false if self.class.blocked_topics.empty?
+
+    (topics & self.class.blocked_topics).any?
   end
 
   def sync_scorecard

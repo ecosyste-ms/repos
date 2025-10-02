@@ -79,4 +79,47 @@ class HostsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 'releases', controller.action_name
     assert_equal 'FAvO/wera', controller.params[:id]
   end
+
+  test 'topics index excludes blocked topics' do
+    blocked_repo = @host.repositories.create!(
+      full_name: 'test/blocked',
+      owner: 'test',
+      created_at: Time.now,
+      updated_at: Time.now,
+      last_synced_at: Time.now,
+      topics: ['malwarebytes-unlocked-version', 'good-topic']
+    )
+    ENV['BLOCKED_TOPICS'] = 'malwarebytes-unlocked-version,premiere-crack-2023'
+
+    get topics_host_path(id: @host.name)
+    assert_response :success
+
+    topic_names = assigns(:topics).map { |t| t[0] }
+    assert_not_includes topic_names, 'malwarebytes-unlocked-version'
+    assert_not_includes topic_names, 'premiere-crack-2023'
+
+    ENV.delete('BLOCKED_TOPICS')
+  end
+
+  test 'blocked topic page returns 404' do
+    blocked_repo = @host.repositories.create!(
+      full_name: 'test/blocked',
+      owner: 'test',
+      created_at: Time.now,
+      updated_at: Time.now,
+      last_synced_at: Time.now,
+      topics: ['download-free-dxo-photolab']
+    )
+    ENV['BLOCKED_TOPICS'] = 'download-free-dxo-photolab'
+
+    get topic_host_path(id: @host.name, topic: 'download-free-dxo-photolab')
+    assert_response :not_found
+
+    ENV.delete('BLOCKED_TOPICS')
+  end
+
+  test 'non-blocked topic page returns success' do
+    get topic_host_path(id: @host.name, topic: 'ruby')
+    assert_response :success
+  end
 end
