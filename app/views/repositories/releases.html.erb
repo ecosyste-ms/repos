@@ -33,7 +33,7 @@
       </div>
     </div>
     
-    <% if @releases.any? %>
+    <% if @releases&.any? %>
       <div class="list-group list-group-flush">
         <% @releases.each do |release| %>
           <div class="list-group-item">
@@ -84,7 +84,7 @@
       </div>
     <% end %>
     
-    <% if @pagy.pages > 1 %>
+    <% if @pagy&.pages.to_i > 1 %>
       <div class="card-footer">
         <%== pagy_bootstrap_nav(@pagy) %>
       </div>

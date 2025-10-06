@@ -186,6 +186,14 @@ class RepositoriesControllerTest < ActionDispatch::IntegrationTest
     ENV.delete('BLOCKED_TOPICS')
   end
 
+  test 'releases page handles empty releases gracefully' do
+    # Test when repository has no releases
+    get releases_host_repository_path(host_id: @host.name, id: @repository.full_name)
+    assert_response :success
+    assert_not_nil assigns(:releases)
+    assert_empty assigns(:releases)
+  end
+
   test 'get scorecard for repository with blocked topic returns 404' do
     blocked_repo = create(:repository, host: @host, full_name: 'test/blocked-repo', owner: @owner.login, topics: ['premiere-crack-2023'])
     ENV['BLOCKED_TOPICS'] = 'premiere-crack-2023'
