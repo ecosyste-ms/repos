@@ -477,7 +477,7 @@ class Repository < ApplicationRecord
     links = parse_link_header(response.headers)
 
     while links["next"].present?
-      json = response.body
+      json = response.body.is_a?(String) ? Oj.load(response.body) : response.body
 
       json.each do |package|
         repo_names << package["name"]
@@ -486,6 +486,12 @@ class Repository < ApplicationRecord
       response = conn.get(links["next"].gsub(PACKAGES_DOMAIN, ''))
       return nil unless response.success?
       links = parse_link_header(response.headers)
+    end
+
+    # Process the final page
+    json = response.body.is_a?(String) ? Oj.load(response.body) : response.body
+    json.each do |package|
+      repo_names << package["name"]
     end
 
     host = Host.find_by_name("GitHub")

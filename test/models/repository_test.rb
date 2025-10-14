@@ -746,4 +746,103 @@ class RepositoryTest < ActiveSupport::TestCase
       @visible_repo.sync_extra_details
     end
   end
+
+  context 'parse_dependencies_for_github_actions_tags method' do
+    setup do
+      @host = FactoryBot.create(:github_host)
+      @repo = FactoryBot.create(:repository, host: @host, full_name: 'actions/checkout', owner: 'actions')
+    end
+
+    should 'parse JSON response body correctly and collect repo names' do
+      # Mock the API responses
+      first_response_body = [
+        { "name" => "actions/checkout" },
+        { "name" => "actions/setup-node" }
+      ].to_json
+
+      second_response_body = [
+        { "name" => "actions/upload-artifact" }
+      ].to_json
+
+      # Mock the connection and responses
+      first_response = mock('first_response')
+      first_response.stubs(:success?).returns(true)
+      first_response.stubs(:body).returns(first_response_body)
+      first_response.stubs(:headers).returns({
+        "Link" => '</api/v1/registries/github%20actions/packages?page=2>; rel="next"'
+      })
+
+      second_response = mock('second_response')
+      second_response.stubs(:success?).returns(true)
+      second_response.stubs(:body).returns(second_response_body)
+      second_response.stubs(:headers).returns({})
+
+      conn = mock('connection')
+      conn.expects(:get).with("/api/v1/registries/github%20actions/packages?sort=updated_at&order=desc").returns(first_response)
+      conn.expects(:get).with('/api/v1/registries/github%20actions/packages?page=2').returns(second_response)
+
+      Repository.stubs(:ecosystem_connection).returns(conn)
+
+      # Mock Host.find_by_name to return our test host
+      Host.stubs(:find_by_name).with("GitHub").returns(@host)
+
+      # Mock host.find_repository to return nil so it triggers sync_repository_async
+      @host.expects(:find_repository).with("actions/checkout").returns(nil)
+      @host.expects(:sync_repository_async).with("actions/checkout").once
+      @host.expects(:find_repository).with("actions/setup-node").returns(nil)
+      @host.expects(:sync_repository_async).with("actions/setup-node").once
+      @host.expects(:find_repository).with("actions/upload-artifact").returns(nil)
+      @host.expects(:sync_repository_async).with("actions/upload-artifact").once
+
+      # Call the method
+      Repository.parse_dependencies_for_github_actions_tags
+    end
+
+    should 'handle string response body by parsing with Oj.load' do
+      # This test verifies the fix for the NoMethodError bug
+      response_body = [
+        { "name" => "actions/checkout" }
+      ].to_json
+
+      response = mock('response')
+      response.stubs(:success?).returns(true)
+      response.stubs(:body).returns(response_body)
+      response.stubs(:headers).returns({
+        "Link" => '</api/v1/registries/github%20actions/packages?page=2>; rel="next"'
+      })
+
+      second_response = mock('second_response')
+      second_response.stubs(:success?).returns(true)
+      second_response.stubs(:body).returns([].to_json)
+      second_response.stubs(:headers).returns({})
+
+      conn = mock('connection')
+      conn.expects(:get).with("/api/v1/registries/github%20actions/packages?sort=updated_at&order=desc").returns(response)
+      conn.expects(:get).with('/api/v1/registries/github%20actions/packages?page=2').returns(second_response)
+
+      Repository.stubs(:ecosystem_connection).returns(conn)
+      Host.stubs(:find_by_name).with("GitHub").returns(@host)
+      @host.expects(:find_repository).with("actions/checkout").returns(@repo)
+      @repo.expects(:download_tags).once
+      @repo.stubs(:tags).returns([])
+
+      # This should not raise NoMethodError: undefined method 'each' for String
+      assert_nothing_raised do
+        Repository.parse_dependencies_for_github_actions_tags
+      end
+    end
+
+    should 'return nil when initial request is not successful' do
+      response = mock('response')
+      response.stubs(:success?).returns(false)
+
+      conn = mock('connection')
+      conn.expects(:get).with("/api/v1/registries/github%20actions/packages?sort=updated_at&order=desc").returns(response)
+
+      Repository.stubs(:ecosystem_connection).returns(conn)
+
+      result = Repository.parse_dependencies_for_github_actions_tags
+      assert_nil result
+    end
+  end
 end
