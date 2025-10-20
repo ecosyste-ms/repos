@@ -20,4 +20,5 @@ production:
     - Errno::ENETUNREACH
     - ActionDispatch::RemoteIp::IpSpoofAttackError
     - Gitlab::Error::TooManyRequests
+    - Gitlab::Error::ServiceUnavailable
     - Faraday::FollowRedirects::RedirectLimitReached
