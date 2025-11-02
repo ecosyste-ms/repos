@@ -22,3 +22,4 @@ production:
     - Gitlab::Error::TooManyRequests
     - Gitlab::Error::ServiceUnavailable
     - Faraday::FollowRedirects::RedirectLimitReached
+    - Octokit::Unauthorized
