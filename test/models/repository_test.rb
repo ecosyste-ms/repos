@@ -747,6 +747,76 @@ class RepositoryTest < ActiveSupport::TestCase
     end
   end
 
+  context 'parse_dependencies method' do
+    setup do
+      @host = FactoryBot.create(:github_host)
+      @repository = FactoryBot.create(:repository, host: @host, full_name: 'test/repo', owner: 'test')
+    end
+
+    should 'clear dependency_job_id and start new job when 404 is returned' do
+      @repository.update_column(:dependency_job_id, 'old-job-id')
+
+      first_response = mock('first_response')
+      first_response.stubs(:status).returns(404)
+      first_response.stubs(:success?).returns(false)
+
+      second_response = mock('second_response')
+      second_response.stubs(:status).returns(200)
+      second_response.stubs(:success?).returns(true)
+      second_response.stubs(:body).returns({ id: 'new-job-id', status: 'pending' }.to_json)
+
+      conn = mock('connection')
+      conn.expects(:get).with("/api/v1/jobs/old-job-id").returns(first_response)
+      conn.expects(:post).with("/api/v1/jobs?url=#{CGI.escape(@repository.download_url)}").returns(second_response)
+
+      @repository.stubs(:ecosystem_connection).returns(conn)
+
+      @repository.parse_dependencies
+
+      @repository.reload
+      assert_equal 'new-job-id', @repository.dependency_job_id
+    end
+
+    should 'not clear dependency_job_id when response is not 404' do
+      @repository.update_column(:dependency_job_id, 'existing-job-id')
+
+      response = mock('response')
+      response.stubs(:status).returns(500)
+      response.stubs(:success?).returns(false)
+
+      conn = mock('connection')
+      conn.expects(:get).with("/api/v1/jobs/existing-job-id").returns(response)
+      conn.expects(:post).never
+
+      @repository.stubs(:ecosystem_connection).returns(conn)
+
+      @repository.parse_dependencies
+
+      @repository.reload
+      assert_equal 'existing-job-id', @repository.dependency_job_id
+    end
+
+    should 'process successfully when job exists' do
+      @repository.update_column(:dependency_job_id, 'existing-job-id')
+
+      response = mock('response')
+      response.stubs(:status).returns(200)
+      response.stubs(:success?).returns(true)
+      response.stubs(:body).returns({ id: 'existing-job-id', status: 'complete', results: { manifests: [] } }.to_json)
+
+      conn = mock('connection')
+      conn.expects(:get).with("/api/v1/jobs/existing-job-id").returns(response)
+
+      @repository.stubs(:ecosystem_connection).returns(conn)
+
+      @repository.parse_dependencies
+
+      @repository.reload
+      assert_nil @repository.dependency_job_id
+      assert_not_nil @repository.dependencies_parsed_at
+    end
+  end
+
   context 'parse_dependencies_for_github_actions_tags method' do
     setup do
       @host = FactoryBot.create(:github_host)

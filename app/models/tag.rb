@@ -114,9 +114,15 @@ class Tag < ApplicationRecord
 
     if dependency_job_id
       res = connection.get("/api/v1/jobs/#{dependency_job_id}")
-    else  
+    else
       res = connection.post("/api/v1/jobs?url=#{CGI.escape(download_url)}")
     end
+
+    if res.status == 404 && dependency_job_id.present?
+      update_column(:dependency_job_id, nil)
+      res = connection.post("/api/v1/jobs?url=#{CGI.escape(download_url)}")
+    end
+
     if res.success?
       json = Oj.load(res.body)
       record_dependency_parsing(json)

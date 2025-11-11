@@ -176,6 +176,12 @@ class Repository < ApplicationRecord
     else
       connection.post("/api/v1/jobs?url=#{CGI.escape(download_url)}")
     end
+
+    if res.status == 404 && dependency_job_id.present?
+      update_column(:dependency_job_id, nil)
+      res = connection.post("/api/v1/jobs?url=#{CGI.escape(download_url)}")
+    end
+
     if res.success?
       json = Oj.load(res.body)
       record_dependency_parsing(json)
