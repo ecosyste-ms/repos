@@ -701,6 +701,29 @@ class RepositoryTest < ActiveSupport::TestCase
       result = @repository.transform_funding_json(funding_json)
       assert_equal({}, result)
     end
+
+    should 'return empty hash for drips network schema' do
+      funding_json = {
+        "drips" => {
+          "ethereum" => {
+            "ownedBy" => "0x18deEE9699526f8C8a87004b2e4e55029Fb26b9a"
+          }
+        }
+      }
+
+      result = @repository.transform_funding_json(funding_json)
+      assert_equal({}, result)
+    end
+
+    should 'return empty hash for other unknown schemas' do
+      funding_json = {
+        "custom_field" => "value",
+        "another_field" => { "nested" => "data" }
+      }
+
+      result = @repository.transform_funding_json(funding_json)
+      assert_equal({}, result)
+    end
   end
 
   context 'has_blocked_topic? method' do

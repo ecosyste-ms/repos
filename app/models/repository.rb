@@ -397,14 +397,18 @@ class Repository < ApplicationRecord
 
   def transform_funding_json(funding_json)
     return {} unless funding_json.is_a?(Hash)
-    return {} unless funding_json["channels"].is_a?(Array)
 
-    # Extract URLs from funding channels and convert to custom format
-    urls = funding_json["channels"].map do |channel|
-      channel["address"] if channel.is_a?(Hash)
-    end.compact.select { |addr| addr.is_a?(String) && addr.start_with?("http") }
+    # Handle fundingjson.org schema
+    if funding_json["channels"].is_a?(Array)
+      urls = funding_json["channels"].map do |channel|
+        channel["address"] if channel.is_a?(Hash)
+      end.compact.select { |addr| addr.is_a?(String) && addr.start_with?("http") }
+      return urls.any? ? { "custom" => urls } : {}
+    end
 
-    urls.any? ? { "custom" => urls } : {}
+    # For other schemas (like drips network), return empty hash
+    # We can't convert these to funding links in a meaningful way
+    {}
   end
 
   def related_dot_github_repo
