@@ -339,7 +339,7 @@ class Repository < ApplicationRecord
       readme: file_list.find { |file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?README/i) },
       changelog: file_list.find { |file| file.match(/^CHANGE|^HISTORY|^NEWS/i) },
       contributing: file_list.find { |file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?CONTRIBUTING/i) },
-      funding: file_list.find { |file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?FUNDING\.ya?ml/i)},
+      funding: file_list.find { |file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?FUNDING\.(ya?ml|json)/i)},
       license: file_list.find { |file| file.match(/^LICENSE|^COPYING|^MIT-LICENSE/i) },
       code_of_conduct: file_list.find { |file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?CODE[-_]OF[-_]CONDUCT/i) },
       threat_model: file_list.find { |file| file.match(/^THREAT[-_]MODEL/i) },
@@ -383,11 +383,28 @@ class Repository < ApplicationRecord
       return if metadata["files"]["funding"].blank?
       file = get_file_contents(metadata["files"]["funding"])
       return if file.blank?
-      metadata["funding"] = YAML.load(file[:content])
+      if metadata["files"]["funding"].end_with?('.json')
+        funding_json = Oj.load(file[:content])
+        metadata["funding"] = transform_funding_json(funding_json)
+      else
+        metadata["funding"] = YAML.load(file[:content])
+      end
     end
     save
   rescue
-    nil # invalid yaml
+    nil # invalid yaml or json
+  end
+
+  def transform_funding_json(funding_json)
+    return {} unless funding_json.is_a?(Hash)
+    return {} unless funding_json["channels"].is_a?(Array)
+
+    # Extract URLs from funding channels and convert to custom format
+    urls = funding_json["channels"].map do |channel|
+      channel["address"] if channel.is_a?(Hash)
+    end.compact.select { |addr| addr.is_a?(String) && addr.start_with?("http") }
+
+    urls.any? ? { "custom" => urls } : {}
   end
 
   def related_dot_github_repo

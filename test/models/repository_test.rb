@@ -258,9 +258,24 @@ class RepositoryTest < ActiveSupport::TestCase
         'other.txt'
       ]
       @repository.stubs(:get_file_list).returns(file_list)
-      
+
       result = @repository.fetch_metadata_files_list
       assert_equal 'FUNDING.yml', result[:funding]
+    end
+
+    should 'find funding.json files' do
+      file_list = [
+        'FUNDING.json',
+        '.github/FUNDING.json',
+        'docs/FUNDING.json',
+        '.gitlab/FUNDING.json',
+        'funding.txt',
+        'other.txt'
+      ]
+      @repository.stubs(:get_file_list).returns(file_list)
+
+      result = @repository.fetch_metadata_files_list
+      assert_equal 'FUNDING.json', result[:funding]
     end
 
     should 'find license files' do
@@ -618,6 +633,73 @@ class RepositoryTest < ActiveSupport::TestCase
       result = @repository.fetch_metadata_files_list
       assert_equal 'readme.md', result[:readme]
       assert_equal 'LICENSE.txt', result[:license]
+    end
+  end
+
+  context 'transform_funding_json method' do
+    setup do
+      @host = create(:host)
+      @repository = create(:repository, host: @host)
+    end
+
+    should 'extract URLs from funding.json channels' do
+      funding_json = {
+        "channels" => [
+          { "id" => "1", "type" => "payment-provider", "address" => "https://patreon.com/example" },
+          { "id" => "2", "type" => "payment-provider", "address" => "https://opencollective.com/example" }
+        ]
+      }
+
+      result = @repository.transform_funding_json(funding_json)
+      assert_equal({ "custom" => ["https://patreon.com/example", "https://opencollective.com/example"] }, result)
+    end
+
+    should 'return empty hash when channels are missing' do
+      funding_json = { "entity" => { "name" => "Test" } }
+
+      result = @repository.transform_funding_json(funding_json)
+      assert_equal({}, result)
+    end
+
+    should 'return empty hash when input is not a hash' do
+      result = @repository.transform_funding_json([])
+      assert_equal({}, result)
+    end
+
+    should 'filter out non-URL addresses' do
+      funding_json = {
+        "channels" => [
+          { "id" => "1", "type" => "payment-provider", "address" => "https://example.com" },
+          { "id" => "2", "type" => "bank", "address" => "IBAN123456" },
+          { "id" => "3", "type" => "payment-provider", "address" => "http://another.com" }
+        ]
+      }
+
+      result = @repository.transform_funding_json(funding_json)
+      assert_equal({ "custom" => ["https://example.com", "http://another.com"] }, result)
+    end
+
+    should 'handle channels with missing addresses' do
+      funding_json = {
+        "channels" => [
+          { "id" => "1", "type" => "payment-provider", "address" => "https://example.com" },
+          { "id" => "2", "type" => "payment-provider" }
+        ]
+      }
+
+      result = @repository.transform_funding_json(funding_json)
+      assert_equal({ "custom" => ["https://example.com"] }, result)
+    end
+
+    should 'return empty hash when no valid URLs found' do
+      funding_json = {
+        "channels" => [
+          { "id" => "1", "type" => "bank", "address" => "IBAN123456" }
+        ]
+      }
+
+      result = @repository.transform_funding_json(funding_json)
+      assert_equal({}, result)
     end
   end
 
