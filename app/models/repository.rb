@@ -380,6 +380,7 @@ class Repository < ApplicationRecord
     if related_dot_github_repo.present? && related_dot_github_repo.metadata["funding"].present?
       metadata["funding"] = related_dot_github_repo.metadata["funding"]
     else
+      return if metadata["files"].blank?
       return if metadata["files"]["funding"].blank?
       file = get_file_contents(metadata["files"]["funding"])
       return if file.blank?
