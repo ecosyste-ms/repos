@@ -1,5 +1,5 @@
 class Registry < ApplicationRecord
-  extend EcosystemApiClient
+  include EcosystemApiClient
   
   def self.sync_all
     conn = ecosystem_connection(PACKAGES_DOMAIN)
