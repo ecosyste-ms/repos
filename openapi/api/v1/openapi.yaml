@@ -159,6 +159,18 @@ paths:
           required: true
           schema:
             type: string
+        - name: page
+          in: query
+          description: pagination page number
+          required: false
+          schema:
+            type: integer
+        - name: per_page
+          in: query
+          description: Number of records to return
+          required: false
+          schema:
+            type: integer
       responses:
         200:
           description: OK
@@ -194,7 +206,7 @@ paths:
                 $ref: '#/components/schemas/PackageUsage'
   /usage/{ecosystem}/{package}/dependencies:
     get:
-      summary: "Get dependent repositories for a package"
+      summary: "Get dependencies for a package"
       operationId: "usagePackageDependencies"
       parameters:
         - name: ecosystem
@@ -209,13 +221,113 @@ paths:
           required: true
           schema:
             type: string
+        - name: page
+          in: query
+          description: pagination page number
+          required: false
+          schema:
+            type: integer
+        - name: per_page
+          in: query
+          description: Number of records to return
+          required: false
+          schema:
+            type: integer
+        - name: after
+          in: query
+          description: filter to dependencies with id greater than given value (for keyset pagination)
+          required: false
+          schema:
+            type: integer
       responses:
         200:
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DependencyWithRepository'
+                type: array
+                items:
+                  $ref: '#/components/schemas/DependencyWithRepository'
+  /usage/{ecosystem}/{package}/dependent_repositories:
+    get:
+      summary: "Get dependent repositories for a package"
+      operationId: "usagePackageDependentRepositories"
+      parameters:
+        - name: ecosystem
+          in: path
+          description: "The ecosystem to get usage for"
+          required: true
+          schema:
+            type: string
+        - name: package
+          in: path
+          description: "The package to get usage for"
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: query
+          description: pagination page number
+          required: false
+          schema:
+            type: integer
+        - name: per_page
+          in: query
+          description: Number of records to return
+          required: false
+          schema:
+            type: integer
+        - name: sort
+          in: query
+          description: field to order results by
+          required: false
+          schema:
+            type: string
+        - name: order
+          in: query
+          description: direction to order results by
+          required: false
+          schema:
+            type: string
+        - name: after_id
+          in: query
+          description: filter to repositories with id greater than given value (for keyset pagination)
+          required: false
+          schema:
+            type: integer
+        - name: fork
+          in: query
+          description: filter by fork
+          required: false
+          schema:
+            type: boolean
+        - name: archived
+          in: query
+          description: filter by archived
+          required: false
+          schema:
+            type: boolean
+        - name: starred
+          in: query
+          description: filter to only starred repositories
+          required: false
+          schema:
+            type: boolean
+        - name: min_stars
+          in: query
+          description: filter to repositories with at least this many stars
+          required: false
+          schema:
+            type: integer
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Repository'
   /hosts:
     get:
       summary: list registies
@@ -321,6 +433,19 @@ paths:
           required: false
           schema:
             type: string
+        - name: kind
+          in: query
+          description: filter by owner kind
+          required: false
+          schema:
+            type: string
+            enum: [user, organization]
+        - name: has_sponsors_listing
+          in: query
+          description: filter to owners with a sponsors listing
+          required: false
+          schema:
+            type: boolean
       responses:
         200:
           description: OK
@@ -632,6 +757,26 @@ paths:
           schema:
             type: string
             enum: [user, organization]
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+  /hosts/{hostName}/owners/sponsors_logins:
+    get:
+      summary: get a list of owner logins with sponsors listings from a host
+      operationId: getHostOwnerSponsorsLogins
+      parameters:
+        - in: path
+          name: hostName
+          schema:
+            type: string
+          required: true
+          description: name of host
       responses:
         200:
           description: OK
