@@ -52,7 +52,7 @@ class HostsController < ApplicationController
       scope = scope.order('updated_at desc')
     end
 
-    @related_topics = (scope.pluck(:topics).flatten - [@keyword]).inject(Hash.new(0)) { |h, e| h[e] += 1; h }.sort_by { |_, v| -v }.first(100)
+    @related_topics = (scope.reorder('stargazers_count DESC NULLS LAST').limit(1000).pluck(:topics).flatten - [params[:topic]]).inject(Hash.new(0)) { |h, e| h[e] += 1; h }.sort_by { |_, v| -v }.first(100)
 
     raise ActiveRecord::RecordNotFound if scope.empty?
 

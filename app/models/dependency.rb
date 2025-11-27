@@ -9,8 +9,6 @@ class Dependency < ApplicationRecord
   scope :direct, -> { where(direct: true) }
   scope :transitive, -> { where(direct: false) }
 
-  scope :external, -> { where.not(repository_id: Repository.internal.pluck(:id)) }
-
   delegate :filepath, to: :manifest
 
   def package_usage
