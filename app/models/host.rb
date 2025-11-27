@@ -199,7 +199,7 @@ class Host < ApplicationRecord
   end
 
   def host_instance
-    host_class.new(self)
+    @host_instance ||= host_class.new(self)
   end
 
   def import_github_repos_from_timeline(id = nil)
