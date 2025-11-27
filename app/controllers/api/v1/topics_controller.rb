@@ -18,12 +18,10 @@ class Api::V1::TopicsController < Api::V1::ApplicationController
     scope = scope.forked(params[:fork]) if params[:fork].present?
     scope = scope.archived(params[:archived]) if params[:archived].present?
 
-    if params[:sort].present? || params[:order].present?
-      sort = params[:sort] || 'last_synced_at'
-      order = params[:order] || 'desc'
-      sort_options = sort.split(',').zip(order.split(',')).to_h
-      scope = scope.order(sort_options)
-    end
+    sort = params[:sort] || 'id'
+    order = params[:order] || 'desc'
+    sort_options = sort.split(',').zip(order.split(',')).to_h
+    scope = scope.order(sort_options)
 
     @pagy, @repositories = pagy_countless(scope)
     fresh_when @repositories, public: true

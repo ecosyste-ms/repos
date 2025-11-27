@@ -46,14 +46,10 @@ class Api::V1::UsageController < Api::V1::ApplicationController
 
     scope = @usage.repositories.includes(:host)
 
-    if params[:sort].present? || params[:order].present?
-      sort = params[:sort] || 'id'
-      order = params[:order] || 'asc'
-      sort_options = sort.split(',').zip(order.split(',')).to_h
-      scope = scope.order(sort_options)
-    else
-      scope = scope#.order('last_synced_at DESC')
-    end
+    sort = params[:sort] || 'id'
+    order = params[:order] || 'asc'
+    sort_options = sort.split(',').zip(order.split(',')).to_h
+    scope = scope.order(sort_options)
 
     if params[:after_id].present?
       scope = scope.where('repositories.id > ?', params[:after_id])
