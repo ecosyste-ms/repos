@@ -82,6 +82,7 @@ Rails.application.configure do
   # require "syslog/logger"
   # config.logger = ActiveSupport::TaggedLogging.new(Syslog::Logger.new "app-name")
 
+  STDOUT.sync = true
   if ENV["RAILS_LOG_TO_STDOUT"].present?
     logger           = ActiveSupport::Logger.new(STDOUT)
     logger.formatter = config.log_formatter
@@ -92,4 +93,6 @@ Rails.application.configure do
   config.active_record.dump_schema_after_migration = false
 
   config.secret_key_base = '<%= ENV["SECRET_KEY_BASE"] %>'
+
+  config.lograge.enabled = true
 end

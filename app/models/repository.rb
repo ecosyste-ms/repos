@@ -557,7 +557,7 @@ class Repository < ApplicationRecord
   end
 
   def purl
-    PackageURL.new(
+    @purl ||= PackageURL.new(
       type: host.host_instance.purl_type,
       namespace: owner,
       name: project_slug

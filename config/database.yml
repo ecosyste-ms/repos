@@ -22,3 +22,4 @@ production:
   <<: *default
   database: repos_production
   url: <%= ENV['DATABASE_URL'] %>
+  advisory_locks: false

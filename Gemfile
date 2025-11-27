@@ -55,6 +55,7 @@ gem 'packageurl-ruby', require: 'package_url'
 gem 'csv'
 gem 'ostruct'
 gem "rack-timeout"
+gem "lograge"
 
 # Translation
 gem 'http_accept_language'

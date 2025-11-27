@@ -27,17 +27,18 @@ class RepositoriesController < ApplicationController
   end
 
   def releases
-    scope = @repository.releases
-    
+    scope = @repository.releases.includes(repository: :host)
+
     if params[:prefix].present?
       scope = scope.where("tag_name ILIKE ?", "#{params[:prefix]}%")
     end
 
     if params[:sort] == 'semver'
-      all_releases = scope.to_a.sort
-      @pagy, @releases = pagy_array(all_releases, limit: 10)
+      # Limit to most recent 500 releases for semver sorting to avoid loading thousands into memory
+      recent_releases = scope.order('published_at DESC NULLS LAST').limit(500).to_a.sort
+      @pagy, @releases = pagy_array(recent_releases, limit: 10)
     else
-      @pagy, @releases = pagy(scope.order('published_at DESC'), limit: 10)
+      @pagy, @releases = pagy(scope.order('published_at DESC NULLS LAST'), limit: 10)
     end
 
     @sort = params[:sort] || 'date'

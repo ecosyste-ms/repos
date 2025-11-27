@@ -188,7 +188,7 @@ class Tag < ApplicationRecord
   end
 
   def purl
-    PackageURL.new(
+    @purl ||= PackageURL.new(
       type: repository.host.host_instance.purl_type,
       namespace: repository.owner,
       name: repository.project_slug,

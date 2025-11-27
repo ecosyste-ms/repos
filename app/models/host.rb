@@ -45,7 +45,7 @@ class Host < ApplicationRecord
   end
 
   def domain
-    Addressable::URI.parse(url).host
+    @domain ||= Addressable::URI.parse(url).host
   end
 
   def icon
@@ -195,11 +195,11 @@ class Host < ApplicationRecord
   end
 
   def host_class
-    "Hosts::#{kind.capitalize}".constantize
+    @host_class ||= "Hosts::#{kind.capitalize}".constantize
   end
 
   def host_instance
-    host_class.new(self)
+    @host_instance ||= host_class.new(self)
   end
 
   def import_github_repos_from_timeline(id = nil)

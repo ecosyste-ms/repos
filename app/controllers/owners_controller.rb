@@ -13,7 +13,7 @@ class OwnersController < ApplicationController
     @owner_record = @host.owners.find_by('lower(login) = ?', @owner.downcase)
     raise ActiveRecord::RecordNotFound if @owner_record&.hidden?
     fresh_when(@owner_record, public: true)
-    scope = @host.repositories.owner(@owner)
+    scope = @host.repositories.owner(@owner).includes(:host)
     
     if params[:sort].present? || params[:order].present?
       sort = params[:sort].presence || 'updated_at'
