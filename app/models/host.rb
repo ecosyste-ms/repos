@@ -45,7 +45,7 @@ class Host < ApplicationRecord
   end
 
   def domain
-    Addressable::URI.parse(url).host
+    @domain ||= Addressable::URI.parse(url).host
   end
 
   def icon
@@ -195,7 +195,7 @@ class Host < ApplicationRecord
   end
 
   def host_class
-    "Hosts::#{kind.capitalize}".constantize
+    @host_class ||= "Hosts::#{kind.capitalize}".constantize
   end
 
   def host_instance
