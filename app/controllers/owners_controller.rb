@@ -1,6 +1,7 @@
 class OwnersController < ApplicationController
+  before_action :find_host
+
   def index
-    @host = Host.find_by_name!(params[:host_id])
     scope = @host.owners.order('repositories_count DESC')
     scope = scope.has_sponsors_listing if params[:has_sponsors_listing].present?
     @pagy, @owners = pagy_countless(scope)
@@ -8,7 +9,6 @@ class OwnersController < ApplicationController
   end
 
   def show
-    @host = Host.find_by_name!(params[:host_id])
     @owner = params[:id]
     @owner_record = @host.owners.find_by('lower(login) = ?', @owner.downcase)
     raise ActiveRecord::RecordNotFound if @owner_record&.hidden?
@@ -31,7 +31,6 @@ class OwnersController < ApplicationController
   end
 
   def subgroup
-    @host = Host.find_by_name!(params[:host_id])
     parts = "#{params[:id]}/#{params[:subgroup]}".split('/')
     @owner = parts[0]
     @subgroups = parts[1..-1]

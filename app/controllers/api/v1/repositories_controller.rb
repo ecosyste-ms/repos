@@ -1,6 +1,8 @@
 class Api::V1::RepositoriesController < Api::V1::ApplicationController
+  before_action :find_host, only: [:index, :show, :sbom, :ping]
+  before_action :find_host_by_id, only: [:names]
+
   def index
-    @host = Host.find_by_name!(params[:host_id])
     scope = @host.repositories
     scope = scope.created_after(params[:created_after]) if params[:created_after].present?
     scope = scope.updated_after(params[:updated_after]) if params[:updated_after].present?
@@ -17,7 +19,6 @@ class Api::V1::RepositoriesController < Api::V1::ApplicationController
   end
 
   def names
-    @host = Host.find_by_name!(params[:id])
     scope = @host.repositories
     scope = scope.created_after(params[:created_after]) if params[:created_after].present?
     scope = scope.updated_after(params[:updated_after]) if params[:updated_after].present?
@@ -36,12 +37,11 @@ class Api::V1::RepositoriesController < Api::V1::ApplicationController
   end
 
   def show
-    @host = Host.find_by_name!(params[:host_id])
     @repository = @host.find_repository(params[:id].downcase)
     if @repository
       render json: { error: 'Repository not found' }, status: :not_found and return if @repository.owner_hidden?
       if stale?(@repository, public: true)
-        if @repository.full_name.downcase != params[:id].downcase
+        unless @repository.full_name.downcase == params[:id].downcase
           redirect_to api_v1_host_repository_path(@host, @repository.full_name), status: :moved_permanently
           return
         end
@@ -53,7 +53,6 @@ class Api::V1::RepositoriesController < Api::V1::ApplicationController
   end
 
   def sbom
-    @host = Host.find_by_name!(params[:host_id])
     @repository = @host.find_repository(params[:id].downcase)
     if @repository
       render json: { error: 'Repository not found' }, status: :not_found and return if @repository.owner_hidden?

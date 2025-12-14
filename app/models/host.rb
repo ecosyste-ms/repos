@@ -16,11 +16,14 @@ class Host < ApplicationRecord
   def self.find_by_name(name)
     return nil if name.blank?
     host = Host.find_by('lower(name) = ?', name.downcase)
+    host = Host.find_by_domain(name) if host.nil?
+    host
   end
 
   def self.find_by_name!(name)
     return nil if name.blank?
     host = Host.find_by('lower(name) = ?', name.downcase)
+    host = Host.find_by_domain(name) if host.nil?
     raise ActiveRecord::RecordNotFound if host.nil?
     host
   end
@@ -33,7 +36,25 @@ class Host < ApplicationRecord
   end
 
   def self.find_by_domain(domain)
-    Host.all.find { |host| host.domain == domain }
+    return nil if domain.blank?
+    normalized = normalize_domain(domain)
+    return nil if normalized.blank?
+    Host.all.find { |host| host.domain&.downcase == normalized }
+  end
+
+  def self.normalize_domain(input)
+    return nil if input.blank?
+    input = input.to_s.strip.downcase
+    input = input.chomp('/')
+    # If it looks like a URL, extract the host
+    if input.include?('://')
+      Addressable::URI.parse(input).host
+    else
+      # Remove any path components
+      input.split('/').first
+    end
+  rescue Addressable::URI::InvalidURIError
+    nil
   end
 
   def to_s

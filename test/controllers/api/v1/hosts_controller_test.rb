@@ -24,10 +24,22 @@ class ApiV1HostsControllerTest < ActionDispatch::IntegrationTest
     get api_v1_host_path(id: @host.name)
     assert_response :success
     assert_template 'hosts/show', file: 'hosts/show.json.jbuilder'
-    
+
     actual_response = JSON.parse(@response.body)
 
     assert_equal actual_response["name"], 'GitHub'
+  end
+
+  test 'redirects from domain to canonical host name' do
+    get api_v1_host_path(id: 'github.com')
+    assert_response :moved_permanently
+    assert_redirected_to api_v1_host_path(id: @host.name)
+  end
+
+  test 'redirects from domain preserves query parameters' do
+    get api_v1_host_path(id: 'github.com'), params: { foo: 'bar' }
+    assert_response :moved_permanently
+    assert_redirected_to api_v1_host_path(id: @host.name, foo: 'bar')
   end
 
 end

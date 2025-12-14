@@ -1,4 +1,6 @@
 class Api::V1::HostsController < Api::V1::ApplicationController
+  before_action :find_host_by_id, only: [:show]
+
   def index
     scope = Host.all.order('repositories_count DESC')
     @pagy, @hosts = pagy(scope)
@@ -6,7 +8,6 @@ class Api::V1::HostsController < Api::V1::ApplicationController
   end
 
   def show
-    @host = Host.find_by_name!(params[:id])
     fresh_when @host, public: true
   end
 end

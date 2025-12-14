@@ -55,10 +55,6 @@ class RepositoriesController < ApplicationController
 
   private
 
-  def find_host
-    @host = Host.find_by_name!(params[:host_id])
-  end
-
   def find_and_validate_repository
     @repository = @host.find_repository(params[:id].downcase)
 
@@ -66,7 +62,7 @@ class RepositoriesController < ApplicationController
     raise ActiveRecord::RecordNotFound if @repository.owner_hidden?
     raise ActiveRecord::RecordNotFound if @repository.has_blocked_topic?
 
-    if @repository.full_name.downcase != params[:id].downcase
+    unless @repository.full_name.downcase == params[:id].downcase
       redirect_path = case action_name
       when 'show'
         host_repository_path(@host, @repository.full_name)
