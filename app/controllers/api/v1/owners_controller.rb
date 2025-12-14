@@ -1,8 +1,9 @@
 class Api::V1::OwnersController < Api::V1::ApplicationController
+  before_action :find_host, except: [:ping]
+
   def index
-    @host = Host.find_by_name!(params[:host_id])
     scope = @host.owners
-    
+
     scope = scope.created_after(params[:created_after]) if params[:created_after].present?
     scope = scope.updated_after(params[:updated_after]) if params[:updated_after].present?
     scope = scope.kind(params[:kind]) if params[:kind].present?
@@ -22,14 +23,12 @@ class Api::V1::OwnersController < Api::V1::ApplicationController
   end
 
   def show
-    @host = Host.find_by_name!(params[:host_id])
     @owner = @host.owners.find_by!('lower(login) = ?', params[:id].downcase)
     raise ActiveRecord::RecordNotFound if @owner.hidden?
     fresh_when @owner, public: true
   end
 
   def repositories
-    @host = Host.find_by_name!(params[:host_id])
     @owner = @host.owners.find_by!('lower(login) = ?', params[:id].downcase)
     raise ActiveRecord::RecordNotFound if @owner.hidden?
     scope = @owner.repositories
@@ -59,9 +58,8 @@ class Api::V1::OwnersController < Api::V1::ApplicationController
   end
 
   def lookup
-    @host = Host.find_by_name!(params[:host_id])
     scope = @host.owners
-    
+
     if params[:name].present?
       scope = scope.where('lower(name) = ?', params[:name].downcase)
     end
@@ -75,19 +73,17 @@ class Api::V1::OwnersController < Api::V1::ApplicationController
   end
 
   def sponsors_logins
-    @host = Host.find_by_name!(params[:host_id])
     @sponsors_logins = @host.owners.has_sponsors_listing.pluck(:login)
     render json: @sponsors_logins
   end
 
   def names
-    @host = Host.find_by_name!(params[:host_id])
     scope = @host.owners.visible.order(:id)
 
     scope = scope.kind(params[:kind]) if params[:kind].present?
 
     @pagy, @owners = pagy_countless(scope.select(:login), limit_max: 10000)
-    
+
     expires_in 1.day, public: true
     render json: @owners.pluck(:login)
   end

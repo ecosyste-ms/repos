@@ -1,10 +1,11 @@
 class HostsController < ApplicationController
+  before_action :find_host_by_id, only: [:show, :topics, :topic]
+
   def index
     redirect_to root_path
   end
-  
+
   def show
-    @host = Host.find_by_name!(params[:id])
 
     scope = @host.repositories
 
@@ -27,14 +28,11 @@ class HostsController < ApplicationController
   end
 
   def topics
-    @host = Host.find_by_name!(params[:id])
     topics = @host.topics.reject { |topic| Repository.blocked_topics.include?(topic[0]) }
     @pagy, @topics = pagy_array(topics)
   end
 
   def topic
-    @host = Host.find_by_name!(params[:id])
-
     raise ActiveRecord::RecordNotFound if Repository.blocked_topics.include?(params[:topic])
 
     scope = @host.repositories.where.not(last_synced_at:nil)

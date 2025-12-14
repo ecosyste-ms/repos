@@ -1,6 +1,78 @@
 require "test_helper"
 
 class HostTest < ActiveSupport::TestCase
+  context 'find_by_name methods' do
+    setup do
+      @host = create(:host, name: 'GitHub', url: 'https://github.com')
+    end
+
+    should 'find host by name' do
+      found = Host.find_by_name('GitHub')
+      assert_equal @host, found
+    end
+
+    should 'find host by name case insensitively' do
+      found = Host.find_by_name('github')
+      assert_equal @host, found
+    end
+
+    should 'find host by domain when name not found' do
+      found = Host.find_by_name('github.com')
+      assert_equal @host, found
+    end
+
+    should 'return nil for find_by_name with unknown name' do
+      found = Host.find_by_name('unknown')
+      assert_nil found
+    end
+
+    should 'find host by domain case insensitively' do
+      found = Host.find_by_domain('GITHUB.COM')
+      assert_equal @host, found
+    end
+
+    should 'find host by domain with trailing slash' do
+      found = Host.find_by_domain('github.com/')
+      assert_equal @host, found
+    end
+
+    should 'find host by domain from full URL' do
+      found = Host.find_by_domain('https://github.com/')
+      assert_equal @host, found
+    end
+
+    should 'find host by domain with path components' do
+      found = Host.find_by_domain('github.com/some/path')
+      assert_equal @host, found
+    end
+
+    should 'return nil for find_by_domain with blank input' do
+      assert_nil Host.find_by_domain(nil)
+      assert_nil Host.find_by_domain('')
+      assert_nil Host.find_by_domain('   ')
+    end
+
+    should 'return nil for find_by_domain with invalid URL' do
+      assert_nil Host.find_by_domain('://invalid')
+    end
+
+    should 'find host by name with bang method' do
+      found = Host.find_by_name!('GitHub')
+      assert_equal @host, found
+    end
+
+    should 'find host by domain with bang method' do
+      found = Host.find_by_name!('github.com')
+      assert_equal @host, found
+    end
+
+    should 'raise RecordNotFound for unknown name with bang method' do
+      assert_raises(ActiveRecord::RecordNotFound) do
+        Host.find_by_name!('unknown')
+      end
+    end
+  end
+
   context 'associations' do
     should have_many(:repositories)
     should have_many(:owners)

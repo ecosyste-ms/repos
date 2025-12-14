@@ -122,4 +122,16 @@ class HostsControllerTest < ActionDispatch::IntegrationTest
     get topic_host_path(id: @host.name, topic: 'ruby')
     assert_response :success
   end
+
+  test 'redirects from domain to canonical host name' do
+    get host_path(id: 'github.com')
+    assert_response :moved_permanently
+    assert_redirected_to host_path(id: @host.name)
+  end
+
+  test 'redirects from domain preserves query parameters' do
+    get host_path(id: 'github.com'), params: { sort: 'stars' }
+    assert_response :moved_permanently
+    assert_redirected_to host_path(id: @host.name, sort: 'stars')
+  end
 end
