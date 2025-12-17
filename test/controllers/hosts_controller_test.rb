@@ -134,4 +134,16 @@ class HostsControllerTest < ActionDispatch::IntegrationTest
     assert_response :moved_permanently
     assert_redirected_to host_path(id: @host.name, sort: 'stars')
   end
+
+  test 'get a host with pagination parameters' do
+    get host_path(id: @host.name), params: { page: 2, per_page: 10 }
+    assert_response :success
+    assert_template 'hosts/show'
+  end
+
+  test 'get a host with high page number and no results' do
+    get host_path(id: @host.name), params: { page: 9999 }
+    assert_response :success
+    assert_template 'hosts/show'
+  end
 end
