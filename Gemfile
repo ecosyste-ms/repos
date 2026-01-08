@@ -1,7 +1,7 @@
 source "https://rubygems.org"
 git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
-ruby '3.4.8'
+ruby '4.0.0'
 
 # Rails components
 gem "railties", "~> 8.1.1"
@@ -31,7 +31,6 @@ gem "sidekiq"
 gem 'sidekiq-unique-jobs'
 gem "pagy", "~> 9.4.0"
 gem "pghero"
-gem "pg_query"
 gem 'bootstrap'
 gem 'rack-cors'
 gem 'rswag-api'
@@ -43,7 +42,6 @@ gem "octokit"
 gem "groupdate"
 gem 'jquery-rails'
 gem 'chartkick'
-gem 'google-protobuf'
 gem "sanitize-url"
 gem "commonmarker"
 gem 'appsignal'
@@ -76,6 +74,7 @@ group :test do
   gem "rails-controller-testing"
   gem "factory_bot_rails"
   gem "database_cleaner-active_record"
+  gem "minitest", "~> 5"
 end
 
 gem "bootstrap-icons", require: "bootstrap_icons"
