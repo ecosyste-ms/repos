@@ -37,7 +37,7 @@ gem 'rswag-api'
 gem 'rswag-ui'
 gem "semantic"
 gem "semantic_range"
-gem "gitlab"
+gem "gitlab-faraday", require: 'gitlab'
 gem "octokit"
 gem "groupdate"
 gem 'jquery-rails'
