@@ -40,7 +40,13 @@ For access the rails console use the following command:
 
 ## Importing data
 
-TODO
+To set up an initial set of repository hosts:
+
+`rake db:seed`
+
+Then, you can run an sync to import some repositories:
+
+`rake repositories:sync_recently_active`
 
 ## Tests
 
