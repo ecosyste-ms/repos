@@ -39,7 +39,7 @@ class Host < ApplicationRecord
     return nil if domain.blank?
     normalized = normalize_domain(domain)
     return nil if normalized.blank?
-    Host.all.find { |host| host.domain&.downcase == normalized }
+    Host.where("lower(substring(url from '://([^/:]+)')) = ?", normalized).first
   end
 
   def self.normalize_domain(input)
