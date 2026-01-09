@@ -9,30 +9,34 @@ class Scorecard < ApplicationRecord
     Scorecard.where('last_synced_at < ?', 1.day.ago).each(&:fetch_scorecard_async)
   end
 
-  def self.lookup(repository)
-    return nil if repository.blank?
-    scorecard = find_by(repository: repository)
-    return scorecard if scorecard
-    
-    fetch_and_create(repository)
-  end
-
-  def self.fetch_and_create(repository)
-    return nil if repository.blank?
-    
-    url_without_protocol = repository.html_url.gsub(%r{http(s)?://}, '')
-    scorecard_url = "https://api.scorecard.dev/projects/#{url_without_protocol}"
-
-    connection = Faraday.new do |builder|
+  def self.connection
+    @connection ||= Faraday.new do |builder|
       builder.use Faraday::FollowRedirects::Middleware
       builder.request :instrumentation
       builder.request :retry, max: 3, interval: 0.05, interval_randomness: 0.5, backoff_factor: 2
       builder.adapter Faraday.default_adapter
     end
+  end
 
-    response = connection.get(scorecard_url)
+  def self.scorecard_url_for(url)
+    url_without_protocol = url.gsub(%r{http(s)?://}, '')
+    "https://api.scorecard.dev/projects/#{url_without_protocol}"
+  end
+
+  def self.lookup(repository)
+    return nil if repository.blank?
+    scorecard = find_by(repository: repository)
+    return scorecard if scorecard
+
+    fetch_and_create(repository)
+  end
+
+  def self.fetch_and_create(repository)
+    return nil if repository.blank?
+
+    response = connection.get(scorecard_url_for(repository.html_url))
     return nil unless response.success?
-      
+
     json = JSON.parse(response.body)
     create(repository: repository, data: json, last_synced_at: Time.now)
   rescue
@@ -41,20 +45,10 @@ class Scorecard < ApplicationRecord
 
   def self.fetch_and_create_from_url(url)
     return nil if url.blank?
-    
-    url_without_protocol = url.gsub(%r{http(s)?://}, '')
-    scorecard_url = "https://api.scorecard.dev/projects/#{url_without_protocol}"
 
-    connection = Faraday.new do |builder|
-      builder.use Faraday::FollowRedirects::Middleware
-      builder.request :instrumentation
-      builder.request :retry, max: 3, interval: 0.05, interval_randomness: 0.5, backoff_factor: 2
-      builder.adapter Faraday.default_adapter
-    end
-
-    response = connection.get(scorecard_url)
+    response = connection.get(scorecard_url_for(url))
     return nil unless response.success?
-      
+
     json = JSON.parse(response.body)
     create(data: json, last_synced_at: Time.now)
   rescue
@@ -75,20 +69,10 @@ class Scorecard < ApplicationRecord
 
   def self.fetch_and_update(repository)
     return nil if repository.blank?
-    
-    url_without_protocol = repository.html_url.gsub(%r{http(s)?://}, '')
-    scorecard_url = "https://api.scorecard.dev/projects/#{url_without_protocol}"
 
-    connection = Faraday.new do |builder|
-      builder.use Faraday::FollowRedirects::Middleware
-      builder.request :instrumentation
-      builder.request :retry, max: 3, interval: 0.05, interval_randomness: 0.5, backoff_factor: 2
-      builder.adapter Faraday.default_adapter
-    end
-
-    response = connection.get(scorecard_url)
+    response = connection.get(scorecard_url_for(repository.html_url))
     return nil unless response.success?
-      
+
     json = JSON.parse(response.body)
     scorecard = find_by(repository: repository)
     scorecard&.update(data: json, last_synced_at: Time.now)
