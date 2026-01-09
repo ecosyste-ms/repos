@@ -12,37 +12,12 @@ class Api::V1::UsageController < Api::V1::ApplicationController
   end
 
   def show
-    @usage = PackageUsage.find_by(ecosystem: params[:ecosystem], name: params[:name])
+    @usage = find_or_create_usage!
     fresh_when @usage, public: true
-    if @usage.nil?
-      if Dependency.where(ecosystem: params[:ecosystem], package_name: params[:name]).any?
-        @usage = PackageUsage.create({
-          ecosystem: params[:ecosystem],
-          name: params[:name],
-          key: "#{params[:ecosystem]}:#{params[:name]}",
-          dependents_count: 1})
-        @usage.sync
-      else
-        raise ActiveRecord::RecordNotFound
-      end
-    end
   end
 
   def dependent_repositories
-    @usage = PackageUsage.find_by(ecosystem: params[:ecosystem], name: params[:name])
-
-    if @usage.nil?
-      if Dependency.where(ecosystem: params[:ecosystem], package_name: params[:name]).any?
-        @usage = PackageUsage.create({
-          ecosystem: params[:ecosystem],
-          name: params[:name],
-          key: "#{params[:ecosystem]}:#{params[:name]}",
-          dependents_count: 1})
-        @usage.sync
-      else
-        raise ActiveRecord::RecordNotFound
-      end
-    end
+    @usage = find_or_create_usage!
 
     scope = @usage.repositories.includes(:host)
 
@@ -69,15 +44,30 @@ class Api::V1::UsageController < Api::V1::ApplicationController
     if @usage
       @usage.sync_async
     else
-      if Dependency.where(ecosystem: params[:ecosystem], package_name: params[:name]).any?
-        @usage = PackageUsage.create({
-          ecosystem: params[:ecosystem],
-          name: params[:name],
-          key: "#{params[:ecosystem]}:#{params[:name]}",
-          dependents_count: 1})
-        @usage.sync_async
-      end
+      @usage = create_usage_if_dependency_exists
+      @usage&.sync_async
     end
     render json: { message: 'pong' }
+  end
+
+  def find_or_create_usage!
+    usage = PackageUsage.find_by(ecosystem: params[:ecosystem], name: params[:name])
+    return usage if usage
+
+    usage = create_usage_if_dependency_exists
+    raise ActiveRecord::RecordNotFound unless usage
+    usage.sync
+    usage
+  end
+
+  def create_usage_if_dependency_exists
+    return nil unless Dependency.where(ecosystem: params[:ecosystem], package_name: params[:name]).exists?
+
+    PackageUsage.create(
+      ecosystem: params[:ecosystem],
+      name: params[:name],
+      key: "#{params[:ecosystem]}:#{params[:name]}",
+      dependents_count: 1
+    )
   end
 end
