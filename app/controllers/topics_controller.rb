@@ -25,7 +25,7 @@ class TopicsController < ApplicationController
       scope = Repository.includes(:host).where('topics @> ARRAY[?]::varchar[]', @topic)
     end
 
-    @related_topics = (scope.order('stargazers_count DESC NULLS LAST').limit(1000).pluck(:topics).flatten - [@topic]).inject(Hash.new(0)) { |h, e| h[e] += 1; h }.sort_by { |_, v| -v }.first(100)
+    @related_topics = related_topics_for_scope(scope, @topic)
 
     scope = scope.order('stargazers_count DESC NULLS LAST, pushed_at DESC NULLS LAST, full_name ASC NULLS LAST')
 

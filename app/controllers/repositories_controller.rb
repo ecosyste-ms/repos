@@ -15,8 +15,8 @@ class RepositoriesController < ApplicationController
   end
 
   def dependencies
-    if params[:sha] && @tags.map(&:name).include?(params[:sha])
-      @tag = @tags.find{|t| t.name == params[:sha] }
+    @tag = @tags.find { |t| t.name == params[:sha] } if params[:sha]
+    if @tag
       @manifests = @tag.manifests.includes(:dependencies).order('kind DESC')
     else
       @manifests = @repository.manifests.includes(:dependencies).order('kind DESC')

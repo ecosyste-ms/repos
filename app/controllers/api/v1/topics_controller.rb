@@ -11,7 +11,7 @@ class Api::V1::TopicsController < Api::V1::ApplicationController
 
     scope = Repository.topic(@topic).includes(:host)
 
-    @related_topics = (scope.order('stargazers_count DESC NULLS LAST').limit(1000).pluck(:topics).flatten - [@topic]).inject(Hash.new(0)) { |h, e| h[e] += 1; h }.sort_by { |_, v| -v }.first(100)
+    @related_topics = related_topics_for_scope(scope, @topic)
 
     scope = scope.created_after(params[:created_after]) if params[:created_after].present?
     scope = scope.updated_after(params[:updated_after]) if params[:updated_after].present?

@@ -29,4 +29,24 @@ class ApplicationController < ActionController::Base
       redirect_to url_for(redirect_params.merge(only_path: true)), status: :moved_permanently
     end
   end
+
+  def related_topics_for_scope(scope, exclude_topic)
+    repo_ids = scope.reorder('stargazers_count DESC NULLS LAST').limit(1000).select(:id)
+
+    sql = Repository.sanitize_sql_array([<<~SQL, exclude_topic])
+      SELECT topic, COUNT(*) as cnt
+      FROM (
+        SELECT unnest(topics) as topic
+        FROM repositories
+        WHERE id IN (#{repo_ids.to_sql})
+          AND topics IS NOT NULL
+      ) t
+      WHERE topic != ? AND topic != ''
+      GROUP BY topic
+      ORDER BY cnt DESC, topic ASC
+      LIMIT 100
+    SQL
+
+    Repository.connection.select_rows(sql, "related_topics")
+  end
 end
