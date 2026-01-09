@@ -193,7 +193,9 @@ class Repository < ApplicationRecord
         new_manifests = json["results"].to_h.with_indifferent_access["manifests"]
 
         if new_manifests.blank?
-          manifests.each(&:destroy)
+          manifest_ids = manifests.pluck(:id)
+          Dependency.where(manifest_id: manifest_ids).delete_all if manifest_ids.any?
+          manifests.delete_all
         else
           new_manifests.each { |m| sync_manifest(m) }
           delete_old_manifests(new_manifests)
@@ -238,12 +240,13 @@ class Repository < ApplicationRecord
   end
 
   def delete_old_manifests(new_manifests)
-    existing_manifests = manifests.map { |m| [m.ecosystem, m.filepath] }
-    to_be_removed = existing_manifests - new_manifests.map { |m| [m[:platform] || m[:ecosystem], m[:path]] }
-    to_be_removed.each do |m|
-      manifests.where(ecosystem: m[0], filepath: m[1]).each(&:destroy)
-    end
-    manifests.where.not(id: manifests.latest.map(&:id)).each(&:destroy)
+    new_keys = new_manifests.map { |m| [m[:platform] || m[:ecosystem], m[:path]] }
+    keep_ids = manifests.latest.select { |m| new_keys.include?([m.ecosystem, m.filepath]) }.map(&:id)
+    delete_ids = manifests.where.not(id: keep_ids).pluck(:id)
+    return if delete_ids.empty?
+
+    Dependency.where(manifest_id: delete_ids).delete_all
+    Manifest.where(id: delete_ids).delete_all
   end
 
   def latest_tag
