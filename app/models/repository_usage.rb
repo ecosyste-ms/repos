@@ -21,20 +21,18 @@ class RepositoryUsage < ApplicationRecord
     # TODO deleting everything for the repo may be wasteful
     RepositoryUsage.where(repository: repository).delete_all
 
-    unique_dependencies = Set.new
-    repository.manifests.includes(:dependencies).each do |manifest|
-      manifest.dependencies.each do |dependency|
-        unique_dependencies.add([dependency.ecosystem, dependency.package_name])
-      end
-    end
+    unique_dependencies = Dependency
+      .joins(:manifest)
+      .where(manifests: { repository_id: repository.id })
+      .distinct
+      .pluck(:ecosystem, :package_name)
 
-    keys = unique_dependencies.map{|ecosystem, package_name| "#{ecosystem}:#{package_name}"}.uniq
+    keys = unique_dependencies.map { |ecosystem, package_name| "#{ecosystem}:#{package_name}" }
 
     existing_package_usages = []
-    keys.each_slice(50) do |slice|
-      existing_package_usages << PackageUsage.where(key: slice).all
+    keys.each_slice(1000) do |slice|
+      existing_package_usages.concat(PackageUsage.where(key: slice).to_a)
     end
-    existing_package_usages.flatten!
 
     package_usages = unique_dependencies.map do |ecosystem, package_name|
       if package_name.match(/\w/)
