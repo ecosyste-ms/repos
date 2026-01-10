@@ -119,13 +119,23 @@ namespace :health do
     disabled = []
     disabled << "RepositoryUsage.from_repository" if RepositoryUsage.from_repository(nil).nil? rescue true
     disabled << "RepositoryUsage.crawl" if RepositoryUsage.crawl.nil? rescue true
-    disabled << "Host#topics returns []" if Host.new.topics == []
-    disabled << "Repository.topics returns []" if Repository.topics == []
+    disabled << "topics#show (503)" # Still disabled until filtering is optimized
+    disabled << "hosts#topic (503)" # Still disabled until filtering is optimized
 
     if disabled.any?
       disabled.each { |d| puts "  - #{d}" }
     else
       puts "  None disabled"
+    end
+
+    # Topics table status
+    puts "\n## Topics Table"
+    topic_count = Topic.count
+    if topic_count > 0
+      puts "  Total topics: #{number_with_delimiter(topic_count)}"
+      puts "  Hosts with topics: #{Topic.distinct.count(:host_id)}"
+    else
+      puts "  Empty - run 'rake topics:backfill_all' to populate"
     end
 
     puts "\n" + "=" * 60

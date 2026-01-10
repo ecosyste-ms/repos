@@ -24,14 +24,16 @@ class Api::V1::TopicsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should get index of all topics" do
-    skip "TODO(DB_PERF): topics query disabled 2026-01-10"
+    Topic.create!(host: @host, name: 'javascript', repositories_count: 100)
+    Topic.create!(host: @host, name: 'python', repositories_count: 50)
+
     get api_v1_topics_path
     assert_response :success
 
     data = JSON.parse(@response.body)
     assert data.is_a?(Array)
-    # Should include topics from visible repositories
     assert data.length > 0
+    assert_equal 'javascript', data.first['name']
   end
 
   test "should set cache headers for topics index" do

@@ -85,23 +85,18 @@ class HostsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test 'topics index excludes blocked topics' do
-    skip "TODO(DB_PERF): Host#topics disabled 2026-01-10"
-    blocked_repo = @host.repositories.create!(
-      full_name: 'test/blocked',
-      owner: 'test',
-      created_at: Time.now,
-      updated_at: Time.now,
-      last_synced_at: Time.now,
-      topics: ['malwarebytes-unlocked-version', 'good-topic']
-    )
+    Topic.create!(host: @host, name: 'malwarebytes-unlocked-version', repositories_count: 10)
+    Topic.create!(host: @host, name: 'good-topic', repositories_count: 5)
+
     ENV['BLOCKED_TOPICS'] = 'malwarebytes-unlocked-version,premiere-crack-2023'
 
     get topics_host_path(id: @host.name)
     assert_response :success
 
-    topic_names = assigns(:topics).map { |t| t[0] }
+    topic_names = assigns(:topics).map(&:name)
     assert_not_includes topic_names, 'malwarebytes-unlocked-version'
     assert_not_includes topic_names, 'premiere-crack-2023'
+    assert_includes topic_names, 'good-topic'
 
     ENV.delete('BLOCKED_TOPICS')
   end
