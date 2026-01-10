@@ -31,6 +31,9 @@ class ApplicationController < ActionController::Base
   end
 
   def related_topics_for_scope(scope, exclude_topic)
+    # TODO(DB_PERF): related_topics disabled 2026-01-10
+    # unnest(topics) query causing DB performance issues
+    return []
     repo_ids = scope.reorder('stargazers_count DESC NULLS LAST').limit(1000).pluck(:id)
     return [] if repo_ids.empty?
 
