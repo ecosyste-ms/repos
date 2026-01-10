@@ -159,6 +159,12 @@ class Host < ApplicationRecord
     host_instance.recently_changed_repo_names(since).first(1000).each do |full_name|
       sync_repository_async(full_name)
     end
+  rescue Faraday::TimeoutError, Faraday::ConnectionFailed, Net::OpenTimeout, Socket::ResolutionError => e
+    update(status: 'timeout', status_checked_at: Time.current, last_error: e.message)
+  rescue Faraday::SSLError => e
+    update(status: 'ssl_error', status_checked_at: Time.current, last_error: e.message)
+  rescue Faraday::Error => e
+    update(status: 'error', status_checked_at: Time.current, last_error: e.message)
   end 
 
   def sync_owner_repositories_async(owner)
@@ -167,6 +173,12 @@ class Host < ApplicationRecord
     names.each do |full_name|
       sync_repository_async(full_name)
     end
+  rescue Faraday::TimeoutError, Faraday::ConnectionFailed, Net::OpenTimeout, Socket::ResolutionError => e
+    update(status: 'timeout', status_checked_at: Time.current, last_error: e.message)
+  rescue Faraday::SSLError => e
+    update(status: 'ssl_error', status_checked_at: Time.current, last_error: e.message)
+  rescue Faraday::Error => e
+    update(status: 'error', status_checked_at: Time.current, last_error: e.message)
   end
 
   def sync_owner_repositories(owner)
@@ -175,6 +187,12 @@ class Host < ApplicationRecord
     names.each do |full_name|
       sync_repository(full_name)
     end
+  rescue Faraday::TimeoutError, Faraday::ConnectionFailed, Net::OpenTimeout, Socket::ResolutionError => e
+    update(status: 'timeout', status_checked_at: Time.current, last_error: e.message)
+  rescue Faraday::SSLError => e
+    update(status: 'ssl_error', status_checked_at: Time.current, last_error: e.message)
+  rescue Faraday::Error => e
+    update(status: 'error', status_checked_at: Time.current, last_error: e.message)
   end
 
   def crawl_repositories_async
