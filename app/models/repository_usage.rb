@@ -6,6 +6,10 @@ class RepositoryUsage < ApplicationRecord
   belongs_to :package_usage
 
   def self.crawl
+    # TODO(DB_PERF): crawl disabled 2026-01-10
+    # Iterates all 297M repositories with find_each, calls from_repository on each
+    # Needs batching with limits, or move to scheduled background job with throttling
+    return
     latest_id = REDIS.get('repository_usage_crawl_id').to_i
 
     Repository.where('id > ?', latest_id).find_each do |repository|
@@ -17,6 +21,10 @@ class RepositoryUsage < ApplicationRecord
   end
 
   def self.from_repository(repository)
+    # TODO(DB_PERF): from_repository disabled 2026-01-10
+    # Queries 24B dependencies table with joins, deletes from 10B repository_usages table
+    # Needs query optimization or complete rethink of approach at this scale
+    return
     return if repository.dependencies_parsed_at.nil?
     # TODO deleting everything for the repo may be wasteful
     RepositoryUsage.where(repository: repository).delete_all
@@ -59,6 +67,10 @@ class RepositoryUsage < ApplicationRecord
   end
 
   def self.from_package_usage(package_usage)
+    # TODO(DB_PERF): from_package_usage disabled 2026-01-10
+    # each_instance over potentially millions of dependencies per package
+    # Needs pagination/limits or background processing with throttling
+    return
     repo_ids = Set.new
     Dependency.where(ecosystem: package_usage.ecosystem, package_name: package_usage.name).includes(:repository).each_instance do |dependency|
       if dependency.repository.nil?

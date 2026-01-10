@@ -43,15 +43,19 @@ class Repository < ApplicationRecord
   end
 
   def self.topics
-    if self == Repository
-      Rails.cache.fetch("topics", expires_in: 1.week) do
-        Repository.connection.select_rows("SELECT topics, COUNT(topics) AS topics_count FROM (SELECT id, unnest(topics) AS topics FROM repositories WHERE topics IS NOT NULL AND array_length(topics, 1) > 0) AS foo GROUP BY topics ORDER BY topics_count DESC, topics ASC LIMIT 10000;")
-      end
-    else
-      Rails.cache.fetch("host/#{id}/topics", expires_in: 1.week) do
-        Repository.connection.select_rows("SELECT topics, COUNT(topics) AS topics_count FROM (SELECT id, unnest(topics) AS topics FROM repositories WHERE topics IS NOT NULL AND array_length(topics, 1) > 0) AS foo GROUP BY topics ORDER BY topics_count DESC, topics ASC LIMIT 10000;")
-      end
-    end
+    # TODO(DB_PERF): topics query disabled 2026-01-10
+    # unnest(topics) on 297M rows is extremely slow even with caching
+    # Consider: materialized view, pre-computed table, or async background job
+    # if self == Repository
+    #   Rails.cache.fetch("topics", expires_in: 1.week) do
+    #     Repository.connection.select_rows("SELECT topics, COUNT(topics) AS topics_count FROM (SELECT id, unnest(topics) AS topics FROM repositories WHERE topics IS NOT NULL AND array_length(topics, 1) > 0) AS foo GROUP BY topics ORDER BY topics_count DESC, topics ASC LIMIT 10000;")
+    #   end
+    # else
+    #   Rails.cache.fetch("host/#{id}/topics", expires_in: 1.week) do
+    #     Repository.connection.select_rows("SELECT topics, COUNT(topics) AS topics_count FROM (SELECT id, unnest(topics) AS topics FROM repositories WHERE topics IS NOT NULL AND array_length(topics, 1) > 0) AS foo GROUP BY topics ORDER BY topics_count DESC, topics ASC LIMIT 10000;")
+    #   end
+    # end
+    []
   end
 
   def self.parse_dependencies_async

@@ -8,12 +8,16 @@ class Host < ApplicationRecord
   scope :kind, ->(kind) { where(kind: kind) }
 
   def topics
-    Rails.cache.fetch("host/#{self.id}/topics", expires_in: 1.week) do
-      Repository.connection.select_rows(
-        "SELECT topics, COUNT(topics) AS topics_count FROM (SELECT id, unnest(topics) AS topics FROM repositories WHERE host_id = #{self.id.to_i} AND topics IS NOT NULL AND array_length(topics, 1) > 0) AS foo GROUP BY topics ORDER BY topics_count DESC, topics ASC LIMIT 10000",
-        "topics"
-      )
-    end
+    # TODO(DB_PERF): topics query disabled 2026-01-10
+    # unnest(topics) on 297M rows is extremely slow even with caching
+    # Consider: materialized view, pre-computed table, or async background job
+    # Rails.cache.fetch("host/#{self.id}/topics", expires_in: 1.week) do
+    #   Repository.connection.select_rows(
+    #     "SELECT topics, COUNT(topics) AS topics_count FROM (SELECT id, unnest(topics) AS topics FROM repositories WHERE host_id = #{self.id.to_i} AND topics IS NOT NULL AND array_length(topics, 1) > 0) AS foo GROUP BY topics ORDER BY topics_count DESC, topics ASC LIMIT 10000",
+    #     "topics"
+    #   )
+    # end
+    []
   end
 
   def self.find_by_name(name)
@@ -33,7 +37,9 @@ class Host < ApplicationRecord
 
   def find_repository(full_name)
     return nil if full_name.blank?
-    # TODO: previous_names fallback disabled - was causing multi-hour queries
+    # TODO(DB_PERF): previous_names fallback disabled 2026-01-10
+    # Was causing multi-hour queries - GIN index on previous_names + host_id filter is slow on 297M rows
+    # Needs composite index or different approach before re-enabling
     # repo = repositories.where('previous_names && ARRAY[?]::varchar[]', full_name.downcase).first if repo.nil?
     repositories.find_by('lower(full_name) = ?', full_name.downcase)
   end

@@ -13,6 +13,7 @@ class RepositoryUsageTest < ActiveSupport::TestCase
 
   context '.from_repository' do
     setup do
+      skip "TODO(DB_PERF): RepositoryUsage disabled 2026-01-10"
       @repository = create(:repository, dependencies_parsed_at: Time.now)
       @manifest = create(:manifest, repository: @repository)
     end
