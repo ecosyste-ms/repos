@@ -179,10 +179,22 @@ class Host < ApplicationRecord
 
   def crawl_repositories_async
     host_instance.crawl_repositories_async
+  rescue Faraday::TimeoutError, Faraday::ConnectionFailed, Net::OpenTimeout => e
+    update(status: 'timeout', status_checked_at: Time.current, last_error: e.message)
+  rescue Faraday::SSLError => e
+    update(status: 'ssl_error', status_checked_at: Time.current, last_error: e.message)
+  rescue Faraday::Error => e
+    update(status: 'error', status_checked_at: Time.current, last_error: e.message)
   end
 
   def crawl_repositories
     host_instance.crawl_repositories
+  rescue Faraday::TimeoutError, Faraday::ConnectionFailed, Net::OpenTimeout => e
+    update(status: 'timeout', status_checked_at: Time.current, last_error: e.message)
+  rescue Faraday::SSLError => e
+    update(status: 'ssl_error', status_checked_at: Time.current, last_error: e.message)
+  rescue Faraday::Error => e
+    update(status: 'error', status_checked_at: Time.current, last_error: e.message)
   end
 
   def download_tags(repository)
