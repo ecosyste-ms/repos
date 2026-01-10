@@ -1,4 +1,6 @@
 class TopicsController < ApplicationController
+  VALID_TOPIC_PATTERN = /\A[a-z0-9][a-z0-9\-]*\z/
+
   def index
     if params[:host_id]
       @host = Host.find_by_name(params[:host_id])
@@ -16,6 +18,7 @@ class TopicsController < ApplicationController
   def show
     @topic = params[:id]
 
+    raise ActiveRecord::RecordNotFound unless @topic.match?(VALID_TOPIC_PATTERN)
     raise ActiveRecord::RecordNotFound if Repository.blocked_topics.include?(@topic)
 
     if params[:host_id]

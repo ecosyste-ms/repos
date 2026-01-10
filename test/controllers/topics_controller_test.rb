@@ -45,4 +45,19 @@ class TopicsControllerTest < ActionDispatch::IntegrationTest
 
     ENV.delete('BLOCKED_TOPICS')
   end
+
+  test 'topic with question mark returns 404' do
+    get topic_path(id: 'test-topic?page=1')
+    assert_response :not_found
+  end
+
+  test 'topic with ampersand returns 404' do
+    get topic_path(id: 'test-topic&other=1')
+    assert_response :not_found
+  end
+
+  test 'topic with equals sign returns 404' do
+    get topic_path(id: 'test-topic=value')
+    assert_response :not_found
+  end
 end

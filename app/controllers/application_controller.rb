@@ -31,14 +31,15 @@ class ApplicationController < ActionController::Base
   end
 
   def related_topics_for_scope(scope, exclude_topic)
-    repo_ids = scope.reorder('stargazers_count DESC NULLS LAST').limit(1000).select(:id)
+    repo_ids = scope.reorder('stargazers_count DESC NULLS LAST').limit(1000).pluck(:id)
+    return [] if repo_ids.empty?
 
-    sql = Repository.sanitize_sql_array([<<~SQL, exclude_topic])
+    sql = Repository.sanitize_sql_array([<<~SQL, repo_ids, exclude_topic])
       SELECT topic, COUNT(*) as cnt
       FROM (
         SELECT unnest(topics) as topic
         FROM repositories
-        WHERE id IN (#{repo_ids.to_sql})
+        WHERE id IN (?)
           AND topics IS NOT NULL
       ) t
       WHERE topic != ? AND topic != ''
