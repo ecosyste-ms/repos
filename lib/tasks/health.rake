@@ -97,7 +97,7 @@ namespace :health do
 
     # Cron locks
     puts "\n## Active Cron Locks"
-    keys = REDIS.keys("cron_lock:*")
+    keys = scan_cron_lock_keys
     if keys.empty?
       puts "  None"
     else
@@ -160,7 +160,7 @@ namespace :health do
     puts "Current Cron Locks"
     puts "=" * 60
 
-    keys = REDIS.keys("cron_lock:*")
+    keys = scan_cron_lock_keys
 
     if keys.empty?
       puts "No active locks"
@@ -203,7 +203,7 @@ namespace :health do
 
   desc "Clear all cron locks (use with caution)"
   task clear_all_locks: :environment do
-    keys = REDIS.keys("cron_lock:*")
+    keys = scan_cron_lock_keys
 
     if keys.empty?
       puts "No locks to clear"
@@ -211,6 +211,19 @@ namespace :health do
       keys.each { |key| REDIS.del(key) }
       puts "Cleared #{keys.count} locks"
     end
+  end
+
+  def scan_cron_lock_keys
+    keys = []
+    cursor = "0"
+    iterations = 0
+    loop do
+      cursor, batch = REDIS.scan(cursor, match: "cron_lock:*", count: 100)
+      keys.concat(batch)
+      iterations += 1
+      break if cursor == "0" || cursor == 0 || iterations > 100
+    end
+    keys
   end
 
   def number_with_delimiter(number)
