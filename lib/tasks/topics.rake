@@ -52,19 +52,27 @@ namespace :topics do
   def with_direct_connection
     migration_url = ENV['MIGRATION_DATABASE_URL']
     if migration_url
-      puts "Using direct database connection (bypassing PgBouncer)..."
-      ActiveRecord::Base.establish_connection(migration_url)
-      ActiveRecord::Base.connection.execute("SET statement_timeout = 0")
+      puts "Attempting direct database connection (bypassing PgBouncer)..."
+      begin
+        ActiveRecord::Base.establish_connection(migration_url)
+        ActiveRecord::Base.connection.execute("SET statement_timeout = 0")
+        puts "Connected directly to PostgreSQL"
+      rescue ActiveRecord::DatabaseConnectionError => e
+        puts "Direct connection failed - port 5432 not accessible"
+        puts "Falling back to PgBouncer connection (300s timeout per query)"
+        puts ""
+        puts "For large hosts, run this task from the database server:"
+        puts "  cd /path/to/app && RAILS_ENV=production bundle exec rake topics:backfill_all"
+        puts ""
+        ActiveRecord::Base.establish_connection(ENV['DATABASE_URL'] || Rails.application.config.database_configuration[Rails.env])
+      end
     else
-      puts "Warning: MIGRATION_DATABASE_URL not set, using default connection"
-      ActiveRecord::Base.connection.execute("SET statement_timeout = 0")
+      puts "Using default connection (300s statement timeout)"
     end
 
     yield
   ensure
-    if migration_url
-      ActiveRecord::Base.establish_connection(ENV['DATABASE_URL'] || Rails.application.config.database_configuration[Rails.env])
-    end
+    ActiveRecord::Base.establish_connection(ENV['DATABASE_URL'] || Rails.application.config.database_configuration[Rails.env])
   end
 
   desc 'Show topic stats'
