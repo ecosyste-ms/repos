@@ -45,7 +45,7 @@
       "schedule": "0 2 * * *"
     },
     {
-      "command": "bundle exec rake sitemap:refresh",
+      "command": "bundle exec rake sitemap:refresh_with_lock",
       "schedule": "0 6 * * *"
     },
     {

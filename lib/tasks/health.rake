@@ -1,3 +1,5 @@
+require_relative '../cron_lock'
+
 namespace :health do
   desc "Check database and system health - run this to diagnose performance issues"
   task check: :environment do
@@ -93,6 +95,25 @@ namespace :health do
       puts "  #{table}: #{number_with_delimiter(count)}"
     end
 
+    # Cron locks
+    puts "\n## Active Cron Locks"
+    keys = REDIS.keys("cron_lock:*")
+    if keys.empty?
+      puts "  None"
+    else
+      keys.sort.each do |key|
+        value = REDIS.get(key)
+        ttl = REDIS.ttl(key)
+        name = key.sub("cron_lock:", "")
+        if value
+          host, pid, started = value.split(":")
+          started_at = Time.at(started.to_i) rescue nil
+          running_for = started_at ? ((Time.now - started_at) / 60).round : "?"
+          puts "  #{name}: #{running_for}min (TTL: #{ttl}s)"
+        end
+      end
+    end
+
     # Check for disabled features
     puts "\n## Disabled Features (TODO(DB_PERF))"
     disabled = []
@@ -131,6 +152,64 @@ namespace :health do
       puts "Killed #{result.count} queries"
     else
       puts "No slow queries to kill"
+    end
+  end
+
+  desc "Show current cron locks"
+  task locks: :environment do
+    puts "Current Cron Locks"
+    puts "=" * 60
+
+    keys = REDIS.keys("cron_lock:*")
+
+    if keys.empty?
+      puts "No active locks"
+    else
+      keys.sort.each do |key|
+        value = REDIS.get(key)
+        ttl = REDIS.ttl(key)
+        name = key.sub("cron_lock:", "")
+
+        if value
+          host, pid, started = value.split(":")
+          started_at = Time.at(started.to_i) rescue nil
+          running_for = started_at ? ((Time.now - started_at) / 60).round : "?"
+
+          puts "#{name}"
+          puts "  Host: #{host}, PID: #{pid}"
+          puts "  Running: #{running_for} min, TTL: #{ttl}s"
+          puts ""
+        end
+      end
+    end
+  end
+
+  desc "Clear a specific cron lock (use with caution)"
+  task :clear_lock, [:name] => :environment do |t, args|
+    unless args[:name]
+      puts "Usage: rake health:clear_lock[task_name]"
+      puts "Example: rake health:clear_lock[repositories:crawl]"
+      exit 1
+    end
+
+    key = "cron_lock:#{args[:name]}"
+    if REDIS.exists?(key)
+      REDIS.del(key)
+      puts "Cleared lock: #{args[:name]}"
+    else
+      puts "No lock found for: #{args[:name]}"
+    end
+  end
+
+  desc "Clear all cron locks (use with caution)"
+  task clear_all_locks: :environment do
+    keys = REDIS.keys("cron_lock:*")
+
+    if keys.empty?
+      puts "No locks to clear"
+    else
+      keys.each { |key| REDIS.del(key) }
+      puts "Cleared #{keys.count} locks"
     end
   end
 

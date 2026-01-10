@@ -1,28 +1,32 @@
+require_relative '../cron_lock'
+
 namespace :gharchive do
   desc "Import recent push and release events from GHArchive"
   task import_recent: :environment do
-    Rails.logger = Logger.new(STDOUT)
-    
-    importer = GharchiveImporter.new
-    now = Time.current.utc
-    
-    # Import last 24 hours with a 2-hour delay for data availability
-    end_time = now - 2.hours
-    start_time = end_time - 24.hours
-    
-    puts "Importing from #{start_time} to #{end_time}"
-    
-    (start_time.to_date..end_time.to_date).each do |date|
-      start_hour = date == start_time.to_date ? start_time.hour : 0
-      end_hour = date == end_time.to_date ? end_time.hour : 23
-      
-      (start_hour..end_hour).each do |hour|
-        timestamp = date.to_time + hour.hours
-        next if timestamp < start_time || timestamp > end_time
-        
-        puts "Importing #{date} hour #{hour}..."
-        success = importer.import_hour(date, hour)
-        puts success ? "✓ Success" : "✗ Failed"
+    CronLock.acquire("gharchive:import_recent", ttl: 2.hours) do
+      Rails.logger = Logger.new(STDOUT)
+
+      importer = GharchiveImporter.new
+      now = Time.current.utc
+
+      # Import last 24 hours with a 2-hour delay for data availability
+      end_time = now - 2.hours
+      start_time = end_time - 24.hours
+
+      puts "Importing from #{start_time} to #{end_time}"
+
+      (start_time.to_date..end_time.to_date).each do |date|
+        start_hour = date == start_time.to_date ? start_time.hour : 0
+        end_hour = date == end_time.to_date ? end_time.hour : 23
+
+        (start_hour..end_hour).each do |hour|
+          timestamp = date.to_time + hour.hours
+          next if timestamp < start_time || timestamp > end_time
+
+          puts "Importing #{date} hour #{hour}..."
+          success = importer.import_hour(date, hour)
+          puts success ? "✓ Success" : "✗ Failed"
+        end
       end
     end
   end
