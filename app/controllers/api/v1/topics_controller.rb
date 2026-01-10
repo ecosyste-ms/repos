@@ -1,8 +1,8 @@
 class Api::V1::TopicsController < Api::V1::ApplicationController
   def index
-    topics = Repository.topics
+    scope = Topic.where.not(name: Repository.blocked_topics).by_count
 
-    @pagy, @topics = pagy_array(topics)
+    @pagy, @topics = pagy(scope)
     expires_in 1.day, public: true
   end
 

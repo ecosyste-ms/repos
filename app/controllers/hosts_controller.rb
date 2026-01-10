@@ -28,8 +28,8 @@ class HostsController < ApplicationController
   end
 
   def topics
-    topics = @host.topics.reject { |topic| Repository.blocked_topics.include?(topic[0]) }
-    @pagy, @topics = pagy_array(topics)
+    scope = @host.topics.where.not(name: Repository.blocked_topics).by_count
+    @pagy, @topics = pagy(scope)
   end
 
   def topic

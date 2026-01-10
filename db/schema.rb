@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_27_152745) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_10_194159) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -246,5 +246,19 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_27_152745) do
     t.index ["repository_id", "published_at"], name: "index_tags_on_repository_id_and_published_at", order: { published_at: "DESC NULLS LAST" }
   end
 
+  create_table "topics", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "host_id", null: false
+    t.string "name", null: false
+    t.integer "repositories_count", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["host_id", "name"], name: "index_topics_on_host_id_and_name", unique: true
+    t.index ["host_id", "repositories_count"], name: "index_topics_on_host_id_and_repositories_count"
+    t.index ["host_id"], name: "index_topics_on_host_id"
+    t.index ["name"], name: "index_topics_on_name"
+    t.index ["repositories_count"], name: "index_topics_on_repositories_count"
+  end
+
   add_foreign_key "scorecards", "repositories"
+  add_foreign_key "topics", "hosts"
 end

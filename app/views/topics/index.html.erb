@@ -8,16 +8,16 @@
 
 
   <div class="row">
-    <% @topics.each do |topic, count| %>
-      <% next if topic.blank? %>
+    <% @topics.each do |topic| %>
+      <% next if topic.name.blank? %>
       <div class="col-md-4">
         <div class="card mb-3">
           <div class="card-body">
             <h5 class="card-title">
-              <%= link_to topic, topic_path(topic) %>
+              <%= link_to topic.name, topic_path(topic.name) %>
             </h5>
             <p class="card-text">
-              <%= number_with_delimiter count %> <%= Repository.model_name.human(count: count) %>
+              <%= number_with_delimiter topic.repositories_count %> <%= Repository.model_name.human(count: topic.repositories_count) %>
             </p>
           </div>
         </div>

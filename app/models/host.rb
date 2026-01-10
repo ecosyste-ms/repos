@@ -4,21 +4,9 @@ class Host < ApplicationRecord
 
   has_many :repositories, dependent: :destroy
   has_many :owners, dependent: :destroy
+  has_many :topics, dependent: :destroy
 
   scope :kind, ->(kind) { where(kind: kind) }
-
-  def topics
-    # TODO(DB_PERF): topics query disabled 2026-01-10
-    # unnest(topics) on 297M rows is extremely slow even with caching
-    # Consider: materialized view, pre-computed table, or async background job
-    # Rails.cache.fetch("host/#{self.id}/topics", expires_in: 1.week) do
-    #   Repository.connection.select_rows(
-    #     "SELECT topics, COUNT(topics) AS topics_count FROM (SELECT id, unnest(topics) AS topics FROM repositories WHERE host_id = #{self.id.to_i} AND topics IS NOT NULL AND array_length(topics, 1) > 0) AS foo GROUP BY topics ORDER BY topics_count DESC, topics ASC LIMIT 10000",
-    #     "topics"
-    #   )
-    # end
-    []
-  end
 
   def self.find_by_name(name)
     return nil if name.blank?
@@ -197,7 +185,7 @@ class Host < ApplicationRecord
 
   def crawl_repositories_async
     host_instance.crawl_repositories_async
-  rescue Faraday::TimeoutError, Faraday::ConnectionFailed, Net::OpenTimeout => e
+  rescue Faraday::TimeoutError, Faraday::ConnectionFailed, Net::OpenTimeout, Socket::ResolutionError => e
     update(status: 'timeout', status_checked_at: Time.current, last_error: e.message)
   rescue Faraday::SSLError => e
     update(status: 'ssl_error', status_checked_at: Time.current, last_error: e.message)
@@ -207,7 +195,7 @@ class Host < ApplicationRecord
 
   def crawl_repositories
     host_instance.crawl_repositories
-  rescue Faraday::TimeoutError, Faraday::ConnectionFailed, Net::OpenTimeout => e
+  rescue Faraday::TimeoutError, Faraday::ConnectionFailed, Net::OpenTimeout, Socket::ResolutionError => e
     update(status: 'timeout', status_checked_at: Time.current, last_error: e.message)
   rescue Faraday::SSLError => e
     update(status: 'ssl_error', status_checked_at: Time.current, last_error: e.message)

@@ -4,14 +4,12 @@ class TopicsController < ApplicationController
   def index
     if params[:host_id]
       @host = Host.find_by_name(params[:host_id])
-      @topics = @host.repositories.topics
+      scope = @host.topics.where.not(name: Repository.blocked_topics).by_count
     else
-      @topics = Repository.topics
+      scope = Topic.where.not(name: Repository.blocked_topics).by_count
     end
 
-    @topics = @topics.reject { |topic| Repository.blocked_topics.include?(topic[0]) }
-
-    @pagy, @topics = pagy_array(@topics)
+    @pagy, @topics = pagy(scope)
     expires_in 1.day, public: true
   end
 
