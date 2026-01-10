@@ -36,6 +36,11 @@ namespace :topics do
     ActiveRecord::Base.connection.execute("SET statement_timeout = 0")
 
     Host.order(:name).each do |host|
+      if host.topics.exists?
+        puts "Skipping #{host.name} - already has topics"
+        next
+      end
+
       puts "Backfilling topics for #{host.name}..."
 
       start_time = Time.current
@@ -52,7 +57,7 @@ namespace :topics do
     puts "Total topics: #{total}"
     puts ""
 
-    Host.joins(:topics_records)
+    Host.joins(:topics)
         .select('hosts.name, COUNT(topics.id) as topic_count')
         .group('hosts.id')
         .order('topic_count DESC')
