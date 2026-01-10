@@ -33,28 +33,9 @@ class HostsController < ApplicationController
   end
 
   def topic
-    raise ActiveRecord::RecordNotFound if Repository.blocked_topics.include?(params[:topic])
-
-    scope = @host.repositories.where.not(last_synced_at:nil)
-
-    scope = scope.topic(params[:topic])
-    
-    if params[:sort].present? || params[:order].present?
-      sort = params[:sort].presence || 'updated_at'
-      if params[:order] == 'asc'
-        scope = scope.order(Arel.sql(sort).asc.nulls_last)
-      else
-        scope = scope.order(Arel.sql(sort).desc.nulls_last)
-      end
-    else
-      scope = scope.order('updated_at desc')
-    end
-
-    @related_topics = related_topics_for_scope(scope, params[:topic])
-
-    raise ActiveRecord::RecordNotFound if scope.empty?
-
-    @pagy, @repositories = pagy_countless(scope)
-    expires_in 1.day, public: true
+    # TODO(DB_PERF): hosts#topic disabled 2026-01-10
+    # topics @> ARRAY query on 297M rows is slow even with GIN index
+    # Needs: composite index, materialized view, or pre-computed topic pages
+    render plain: "Topic pages temporarily unavailable", status: :service_unavailable
   end
 end

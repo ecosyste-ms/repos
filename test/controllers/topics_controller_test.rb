@@ -8,6 +8,7 @@ class TopicsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test 'get blocked topic returns 404' do
+    skip "TODO(DB_PERF): topics#show disabled 2026-01-10"
     ENV['BLOCKED_TOPICS'] = 'malwarebytes-unlocked-version,premiere-crack-2023'
     get topic_path(id: 'malwarebytes-unlocked-version')
     assert_response :not_found
@@ -15,11 +16,13 @@ class TopicsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test 'get non-blocked topic returns success' do
+    skip "TODO(DB_PERF): topics#show disabled 2026-01-10"
     get topic_path(id: 'ruby')
     assert_response :success
   end
 
   test 'topics index excludes blocked topics' do
+    skip "TODO(DB_PERF): Repository.topics disabled 2026-01-10"
     blocked_repo = create(:repository, host: @host, full_name: 'test/blocked', owner: @owner.login, topics: ['malwarebytes-unlocked-version', 'good-topic'])
     ENV['BLOCKED_TOPICS'] = 'malwarebytes-unlocked-version,premiere-crack-2023'
 
@@ -34,6 +37,7 @@ class TopicsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test 'host topics index excludes blocked topics' do
+    skip "TODO(DB_PERF): Host#topics disabled 2026-01-10"
     blocked_repo = create(:repository, host: @host, full_name: 'test/blocked', owner: @owner.login, topics: ['download-free-dxo-photolab', 'good-topic'])
     ENV['BLOCKED_TOPICS'] = 'download-free-dxo-photolab'
 
@@ -47,16 +51,19 @@ class TopicsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test 'topic with question mark returns 404' do
+    skip "TODO(DB_PERF): topics#show disabled 2026-01-10"
     get topic_path(id: 'test-topic?page=1')
     assert_response :not_found
   end
 
   test 'topic with ampersand returns 404' do
+    skip "TODO(DB_PERF): topics#show disabled 2026-01-10"
     get topic_path(id: 'test-topic&other=1')
     assert_response :not_found
   end
 
   test 'topic with equals sign returns 404' do
+    skip "TODO(DB_PERF): topics#show disabled 2026-01-10"
     get topic_path(id: 'test-topic=value')
     assert_response :not_found
   end

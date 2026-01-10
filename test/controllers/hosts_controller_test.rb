@@ -21,6 +21,7 @@ class HostsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test 'topic route with simple topic' do
+    skip "TODO(DB_PERF): hosts#topic disabled 2026-01-10"
     get topic_host_path(id: @host.name, topic: 'ruby')
     assert_response :success
     assert_equal 'hosts', controller.controller_name
@@ -28,6 +29,7 @@ class HostsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test 'topic route with topic containing dots' do
+    skip "TODO(DB_PERF): hosts#topic disabled 2026-01-10"
     get topic_host_path(id: @host.name, topic: 'Node.js')
     assert_response :success
     assert_equal 'hosts', controller.controller_name
@@ -36,6 +38,7 @@ class HostsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test 'topic route with topic containing forward slashes' do
+    skip "TODO(DB_PERF): hosts#topic disabled 2026-01-10"
     get topic_host_path(id: @host.name, topic: 'HTML/CSS')
     assert_response :success
     assert_equal 'hosts', controller.controller_name
@@ -44,6 +47,7 @@ class HostsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test 'topic route with complex topic' do
+    skip "TODO(DB_PERF): hosts#topic disabled 2026-01-10"
     get topic_host_path(id: @host.name, topic: 'some/ip')
     assert_response :success
     assert_equal 'hosts', controller.controller_name
@@ -81,6 +85,7 @@ class HostsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test 'topics index excludes blocked topics' do
+    skip "TODO(DB_PERF): Host#topics disabled 2026-01-10"
     blocked_repo = @host.repositories.create!(
       full_name: 'test/blocked',
       owner: 'test',
@@ -102,6 +107,7 @@ class HostsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test 'blocked topic page returns 404' do
+    skip "TODO(DB_PERF): hosts#topic disabled 2026-01-10"
     blocked_repo = @host.repositories.create!(
       full_name: 'test/blocked',
       owner: 'test',
@@ -119,6 +125,7 @@ class HostsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test 'non-blocked topic page returns success' do
+    skip "TODO(DB_PERF): hosts#topic disabled 2026-01-10"
     get topic_host_path(id: @host.name, topic: 'ruby')
     assert_response :success
   end

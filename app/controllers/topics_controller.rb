@@ -16,26 +16,10 @@ class TopicsController < ApplicationController
   end
 
   def show
-    @topic = params[:id]
-
-    raise ActiveRecord::RecordNotFound unless @topic.match?(VALID_TOPIC_PATTERN)
-    raise ActiveRecord::RecordNotFound if Repository.blocked_topics.include?(@topic)
-
-    if params[:host_id]
-      @host = Host.find_by_name(params[:host_id])
-      scope = @host.repositories.includes(:host).where('topics @> ARRAY[?]::varchar[]', @topic)
-    else
-      scope = Repository.includes(:host).where('topics @> ARRAY[?]::varchar[]', @topic)
-    end
-
-    @related_topics = related_topics_for_scope(scope, @topic)
-
-    scope = scope.order('stargazers_count DESC NULLS LAST, pushed_at DESC NULLS LAST, full_name ASC NULLS LAST')
-
-    @pagy, @repositories = pagy_countless(scope)
-
-    raise ActiveRecord::RecordNotFound if @repositories.empty?
-
-    expires_in 1.day, public: true
+    # TODO(DB_PERF): topics#show disabled 2026-01-10
+    # topics @> ARRAY query on 297M rows is slow even with GIN index
+    # Combined with ORDER BY stargazers_count, it causes 15+ minute queries
+    # Needs: composite index, materialized view, or pre-computed topic pages
+    render plain: "Topic pages temporarily unavailable", status: :service_unavailable
   end
 end
