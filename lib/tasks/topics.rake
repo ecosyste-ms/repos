@@ -17,37 +17,53 @@ namespace :topics do
 
   desc 'Backfill topics for a single host (use for initial population)'
   task :backfill_host, [:host_name] => :environment do |t, args|
-    host = Host.find_by_name!(args[:host_name])
-    puts "Backfilling topics for #{host.name}..."
-    puts "Disabling statement timeout..."
-
-    ActiveRecord::Base.connection.execute("SET statement_timeout = 0")
-
-    start_time = Time.current
-    count = Topic.sync_for_host(host)
-    elapsed = Time.current - start_time
-
-    puts "Done! #{count} topics synced in #{elapsed.round(1)}s"
-  end
-
-  desc 'Backfill topics for all hosts (run once for initial population)'
-  task backfill_all: :environment do
-    puts "Disabling statement timeout..."
-    ActiveRecord::Base.connection.execute("SET statement_timeout = 0")
-
-    Host.order(:name).each do |host|
-      if host.topics.exists?
-        puts "Skipping #{host.name} - already has topics"
-        next
-      end
-
+    with_direct_connection do
+      host = Host.find_by_name!(args[:host_name])
       puts "Backfilling topics for #{host.name}..."
 
       start_time = Time.current
       count = Topic.sync_for_host(host)
       elapsed = Time.current - start_time
 
-      puts "  #{count} topics synced in #{elapsed.round(1)}s"
+      puts "Done! #{count} topics synced in #{elapsed.round(1)}s"
+    end
+  end
+
+  desc 'Backfill topics for all hosts (run once for initial population)'
+  task backfill_all: :environment do
+    with_direct_connection do
+      Host.order(:repositories_count).each do |host|
+        if host.topics.exists?
+          puts "Skipping #{host.name} - already has topics"
+          next
+        end
+
+        puts "Backfilling topics for #{host.name}..."
+
+        start_time = Time.current
+        count = Topic.sync_for_host(host)
+        elapsed = Time.current - start_time
+
+        puts "  #{count} topics synced in #{elapsed.round(1)}s"
+      end
+    end
+  end
+
+  def with_direct_connection
+    migration_url = ENV['MIGRATION_DATABASE_URL']
+    if migration_url
+      puts "Using direct database connection (bypassing PgBouncer)..."
+      ActiveRecord::Base.establish_connection(migration_url)
+      ActiveRecord::Base.connection.execute("SET statement_timeout = 0")
+    else
+      puts "Warning: MIGRATION_DATABASE_URL not set, using default connection"
+      ActiveRecord::Base.connection.execute("SET statement_timeout = 0")
+    end
+
+    yield
+  ensure
+    if migration_url
+      ActiveRecord::Base.establish_connection(ENV['DATABASE_URL'] || Rails.application.config.database_configuration[Rails.env])
     end
   end
 
