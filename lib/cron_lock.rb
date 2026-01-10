@@ -40,7 +40,6 @@ module CronLock
       end
     rescue TaskTimeout
       puts "[CronLock] TIMEOUT: #{name} exceeded #{timeout.to_i}s - killed"
-      raise
     ensure
       # Only release if we still hold the lock (check value matches)
       current = REDIS.get(lock_key)

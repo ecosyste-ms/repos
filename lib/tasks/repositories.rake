@@ -13,7 +13,7 @@ namespace :repositories do
   desc 'sync repos that have been recently active'
   task sync_recently_active: :environment do
     CronLock.acquire("repositories:sync_recently_active", ttl: 30.minutes) do
-      Host.all.each do |host|
+      Host.order("RANDOM()").each do |host|
         host.sync_recently_changed_repos_async
       end
     end
@@ -51,7 +51,7 @@ namespace :repositories do
   desc 'crawl repositories'
   task crawl: :environment do
     CronLock.acquire("repositories:crawl", ttl: 10.minutes) do
-      Host.all.each do |host|
+      Host.order("RANDOM()").each do |host|
         host.crawl_repositories_async
       end
     end
