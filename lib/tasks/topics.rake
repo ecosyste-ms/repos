@@ -21,12 +21,17 @@ namespace :topics do
     large_host_threshold = 100_000
 
     Host.order(:repositories_count).each do |host|
-      if host.topics.exists?
+      cursor_key = "topics_backfill:#{host.id}"
+      has_cursor = REDIS.exists?(cursor_key)
+
+      # If we have a cursor, resume regardless of existing topics
+      # Otherwise skip hosts that already have topics
+      if !has_cursor && host.topics.exists?
         puts "Skipping #{host.name} - already has topics"
         next
       end
 
-      if host.repositories_count > large_host_threshold
+      if host.repositories_count > large_host_threshold || has_cursor
         backfill_large_host(host, batch_size)
       else
         backfill_small_host(host)
