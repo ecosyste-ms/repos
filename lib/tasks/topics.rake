@@ -15,64 +15,88 @@ namespace :topics do
     end
   end
 
-  desc 'Backfill topics for a single host (use for initial population)'
-  task :backfill_host, [:host_name] => :environment do |t, args|
-    with_direct_connection do
-      host = Host.find_by_name!(args[:host_name])
-      puts "Backfilling topics for #{host.name}..."
+  desc 'Backfill topics for all hosts'
+  task :backfill, [:batch_size] => :environment do |t, args|
+    batch_size = (args[:batch_size] || 10_000).to_i
+    large_host_threshold = 100_000
+
+    Host.order(:repositories_count).each do |host|
+      if host.topics.exists?
+        puts "Skipping #{host.name} - already has topics"
+        next
+      end
+
+      if host.repositories_count > large_host_threshold
+        backfill_large_host(host, batch_size)
+      else
+        backfill_small_host(host)
+      end
+    end
+  end
+
+  def backfill_small_host(host)
+    puts "Backfilling #{host.name} (#{host.repositories_count} repos)..."
+    start_time = Time.current
+    count = Topic.sync_for_host(host)
+    elapsed = Time.current - start_time
+    puts "  #{count} topics in #{elapsed.round(1)}s"
+  end
+
+  def backfill_large_host(host, batch_size)
+    host_id = host.id
+    min_id, max_id = Repository.where(host_id: host_id).pick(Arel.sql('MIN(id), MAX(id)'))
+
+    unless min_id && max_id
+      puts "Skipping #{host.name} - no repositories"
+      return
+    end
+
+    puts "Backfilling #{host.name} (#{host.repositories_count} repos) in batches of #{batch_size}..."
+    puts "  Repository ID range: #{min_id} - #{max_id}"
+
+    current = min_id
+    batch_num = 0
+    total_upserts = 0
+
+    while current <= max_id
+      batch_num += 1
+      batch_end = current + batch_size - 1
 
       start_time = Time.current
-      count = Topic.sync_for_host(host)
+
+      sql = <<~SQL
+        INSERT INTO topics (host_id, name, repositories_count, created_at, updated_at)
+        SELECT
+          #{host_id},
+          topic_name,
+          cnt,
+          NOW(),
+          NOW()
+        FROM (
+          SELECT unnest(topics) AS topic_name, COUNT(*) AS cnt
+          FROM repositories
+          WHERE host_id = #{host_id}
+            AND id BETWEEN #{current} AND #{batch_end}
+            AND topics IS NOT NULL
+            AND array_length(topics, 1) > 0
+          GROUP BY topic_name
+        ) t
+        ON CONFLICT (host_id, name) DO UPDATE SET
+          repositories_count = topics.repositories_count + EXCLUDED.repositories_count,
+          updated_at = NOW()
+      SQL
+
+      result = ActiveRecord::Base.connection.execute(sql)
       elapsed = Time.current - start_time
+      upserts = result.cmd_tuples rescue 0
+      total_upserts += upserts
 
-      puts "Done! #{count} topics synced in #{elapsed.round(1)}s"
-    end
-  end
+      puts "  Batch #{batch_num}: #{upserts} upserts in #{elapsed.round(1)}s"
 
-  desc 'Backfill topics for all hosts (run once for initial population)'
-  task backfill_all: :environment do
-    with_direct_connection do
-      Host.order(:repositories_count).each do |host|
-        if host.topics.exists?
-          puts "Skipping #{host.name} - already has topics"
-          next
-        end
-
-        puts "Backfilling topics for #{host.name}..."
-
-        start_time = Time.current
-        count = Topic.sync_for_host(host)
-        elapsed = Time.current - start_time
-
-        puts "  #{count} topics synced in #{elapsed.round(1)}s"
-      end
-    end
-  end
-
-  def with_direct_connection
-    migration_url = ENV['MIGRATION_DATABASE_URL']
-    if migration_url
-      puts "Attempting direct database connection (bypassing PgBouncer)..."
-      begin
-        ActiveRecord::Base.establish_connection(migration_url)
-        ActiveRecord::Base.connection.execute("SET statement_timeout = 0")
-        puts "Connected directly to PostgreSQL"
-      rescue ActiveRecord::DatabaseConnectionError => e
-        puts "Direct connection failed - port 5432 not accessible"
-        puts "Falling back to PgBouncer connection (300s timeout per query)"
-        puts ""
-        puts "For large hosts, run this task from the database server:"
-        puts "  cd /path/to/app && RAILS_ENV=production bundle exec rake topics:backfill_all"
-        puts ""
-        ActiveRecord::Base.establish_connection(ENV['DATABASE_URL'] || Rails.application.config.database_configuration[Rails.env])
-      end
-    else
-      puts "Using default connection (300s statement timeout)"
+      current = batch_end + 1
     end
 
-    yield
-  ensure
-    ActiveRecord::Base.establish_connection(ENV['DATABASE_URL'] || Rails.application.config.database_configuration[Rails.env])
+    puts "  Done! #{total_upserts} total upserts across #{batch_num} batches"
   end
 
   desc 'Show topic stats'
