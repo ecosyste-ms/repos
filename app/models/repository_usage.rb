@@ -63,6 +63,9 @@ class RepositoryUsage < ApplicationRecord
   end
 
   def self.count_for_package_usage(package_usage)
+    # TODO(DB_PERF): count_for_package_usage disabled 2026-01-11
+    # COUNT on 10B+ row table is slow
+    return nil
     RepositoryUsage.where(package_usage_id: package_usage.id).count
   end
 

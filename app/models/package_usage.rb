@@ -153,6 +153,8 @@ class PackageUsage < ApplicationRecord
   end
 
   def update_repository_usages_count
+    # TODO(DB_PERF): disabled 2026-01-11 - COUNT on 10B+ row table is slow
+    return
     ruc = RepositoryUsage.count_for_package_usage(self)
     updates = {
       repository_usages_count: ruc
