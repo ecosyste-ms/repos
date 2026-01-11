@@ -58,35 +58,47 @@ namespace :topics do
     cursor_key = "topics_backfill:#{host_id}"
     last_id = REDIS.get(cursor_key).to_i
 
+    # Get max_id with fast indexed lookup (ORDER BY id DESC LIMIT 1)
+    max_id = Repository.where(host_id: host_id).order(id: :desc).limit(1).pick(:id)
+    unless max_id
+      puts "Skipping #{host.name} - no repositories"
+      REDIS.set("topics_backfill_done:#{host_id}", "1", ex: 7.days.to_i)
+      return
+    end
+
     if last_id > 0
-      puts "Backfilling #{host.name} - resuming from id #{last_id}..."
+      puts "Backfilling #{host.name} - resuming from id #{last_id} (max: #{max_id})..."
     else
-      puts "Backfilling #{host.name} (#{host.repositories_count} repos) in batches of #{batch_size}..."
+      puts "Backfilling #{host.name} (#{host.repositories_count} repos, max_id: #{max_id})..."
     end
 
     batch_num = 0
     total_upserts = 0
+    id_step = 50_000  # Fixed ID range per batch - avoids ORDER BY
 
-    # Use find_in_batches which does WHERE id > last_id pagination (no cursor/transaction)
-    # Minimal filters - handle topic checks in Ruby to maximize index usage
-    Repository.where(host_id: host_id)
-              .where('id > ?', last_id)
-              .select(:id, :topics)
-              .find_in_batches(batch_size: batch_size) do |repos|
+    current_start = last_id
+    while current_start < max_id
       batch_num += 1
+      current_end = current_start + id_step
       topic_counts = Hash.new(0)
-      current_id = 0
+
+      # Query by ID range - no ORDER BY needed, uses index on (host_id) + id range
+      repos = Repository.where(host_id: host_id)
+                        .where('id > ? AND id <= ?', current_start, current_end)
+                        .select(:id, :topics)
+                        .to_a
 
       repos.each do |repo|
-        current_id = repo.id
         next if repo.topics.blank?
         repo.topics.each { |t| topic_counts[t] += 1 }
       end
 
       upserts = flush_topic_counts(host_id, topic_counts)
       total_upserts += upserts
-      REDIS.set(cursor_key, current_id)
-      puts "  Batch #{batch_num}: #{upserts} upserts (#{repos.size} repos, cursor: #{current_id})"
+      REDIS.set(cursor_key, current_end)
+      puts "  Batch #{batch_num}: #{upserts} upserts (#{repos.size} repos, id #{current_start}-#{current_end})"
+
+      current_start = current_end
     end
 
     # Clear cursor and mark as done
