@@ -143,9 +143,8 @@ class HostsControllerTest < ActionDispatch::IntegrationTest
     assert_template 'hosts/show'
   end
 
-  test 'get a host with high page number and no results' do
+  test 'get a host with high page number returns bad request' do
     get host_path(id: @host.name), params: { page: 9999 }
-    assert_response :success
-    assert_template 'hosts/show'
+    assert_response :bad_request
   end
 end

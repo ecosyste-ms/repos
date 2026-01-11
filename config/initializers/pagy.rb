@@ -9,4 +9,5 @@ require 'pagy/extras/i18n'
 Pagy::DEFAULT[:limit] = 100
 Pagy::DEFAULT[:limit_param] = :per_page
 Pagy::DEFAULT[:limit_max] = 1000
+Pagy::DEFAULT[:max_pages] = 1000
 Pagy::DEFAULT[:overflow] = :empty_page
