@@ -29,6 +29,12 @@ class Api::V1::OwnersController < Api::V1::ApplicationController
   end
 
   def repositories
+    max_page = 100
+    if params[:page].to_i > max_page
+      render json: { error: "Page limit exceeded (max #{max_page})" }, status: :bad_request
+      return
+    end
+
     @owner = @host.owners.find_by!('lower(login) = ?', params[:id].downcase)
     raise ActiveRecord::RecordNotFound if @owner.hidden?
     scope = @owner.repositories

@@ -9,12 +9,18 @@ class OwnersController < ApplicationController
   end
 
   def show
+    max_page = 100
+    if params[:page].to_i > max_page
+      render plain: "Page limit exceeded (max #{max_page})", status: :bad_request
+      return
+    end
+
     @owner = params[:id]
     @owner_record = @host.owners.find_by('lower(login) = ?', @owner.downcase)
     raise ActiveRecord::RecordNotFound if @owner_record&.hidden?
     fresh_when(@owner_record, public: true)
     scope = @host.repositories.owner(@owner).includes(:host)
-    
+
     if params[:sort].present? || params[:order].present?
       sort = params[:sort].presence || 'updated_at'
       if params[:order] == 'asc'
@@ -31,6 +37,12 @@ class OwnersController < ApplicationController
   end
 
   def subgroup
+    max_page = 100
+    if params[:page].to_i > max_page
+      render plain: "Page limit exceeded (max #{max_page})", status: :bad_request
+      return
+    end
+
     parts = "#{params[:id]}/#{params[:subgroup]}".split('/')
     @owner = parts[0]
     @subgroups = parts[1..-1]

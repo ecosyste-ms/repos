@@ -3,6 +3,12 @@ class Api::V1::RepositoriesController < Api::V1::ApplicationController
   before_action :find_host_by_id, only: [:names]
 
   def index
+    max_page = 100
+    if params[:page].to_i > max_page
+      render json: { error: "Page limit exceeded (max #{max_page})" }, status: :bad_request
+      return
+    end
+
     scope = @host.repositories
     scope = scope.created_after(params[:created_after]) if params[:created_after].present?
     scope = scope.updated_after(params[:updated_after]) if params[:updated_after].present?
@@ -19,6 +25,12 @@ class Api::V1::RepositoriesController < Api::V1::ApplicationController
   end
 
   def names
+    max_page = 100
+    if params[:page].to_i > max_page
+      render json: { error: "Page limit exceeded (max #{max_page})" }, status: :bad_request
+      return
+    end
+
     scope = @host.repositories
     scope = scope.created_after(params[:created_after]) if params[:created_after].present?
     scope = scope.updated_after(params[:updated_after]) if params[:updated_after].present?

@@ -6,6 +6,11 @@ class HostsController < ApplicationController
   end
 
   def show
+    max_page = 100
+    if params[:page].to_i > max_page
+      render plain: "Page limit exceeded (max #{max_page})", status: :bad_request
+      return
+    end
 
     scope = @host.repositories
 
