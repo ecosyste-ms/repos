@@ -19,8 +19,9 @@ namespace :topics do
   task :backfill, [:batch_size] => :environment do |t, args|
     batch_size = (args[:batch_size] || 10_000).to_i
     large_host_threshold = 100_000
+    processed = 0
+    with_topics = 0
 
-    skipped = 0
     Host.order(:repositories_count).each do |host|
       cursor_key = "topics_backfill:#{host.id}"
       done_key = "topics_backfill_done:#{host.id}"
@@ -28,29 +29,25 @@ namespace :topics do
       already_done = REDIS.exists?(done_key)
 
       # Skip if already completed or has topics (unless we have a cursor to resume)
-      if !has_cursor && (already_done || host.topics.exists?)
-        skipped += 1
-        next
-      end
-
-      puts "Skipped #{skipped} hosts" if skipped > 0
-      skipped = 0
+      next if !has_cursor && (already_done || host.topics.exists?)
 
       if host.repositories_count > large_host_threshold || has_cursor
         backfill_large_host(host, batch_size)
       else
-        backfill_small_host(host)
+        count = backfill_small_host(host)
+        processed += 1
+        with_topics += 1 if count > 0
       end
     end
+
+    puts "Processed #{processed} small hosts, #{with_topics} had topics" if processed > 0
   end
 
   def backfill_small_host(host)
-    puts "Backfilling #{host.name} (#{host.repositories_count} repos)..."
-    start_time = Time.current
     count = Topic.sync_for_host(host)
-    elapsed = Time.current - start_time
     REDIS.set("topics_backfill_done:#{host.id}", "1", ex: 7.days.to_i)
-    puts "  #{count} topics in #{elapsed.round(1)}s"
+    puts "#{host.name}: #{count} topics" if count > 0
+    count
   end
 
   def backfill_large_host(host, batch_size)
