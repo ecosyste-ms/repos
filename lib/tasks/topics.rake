@@ -23,16 +23,17 @@ namespace :topics do
     skipped = 0
     Host.order(:repositories_count).each do |host|
       cursor_key = "topics_backfill:#{host.id}"
+      done_key = "topics_backfill_done:#{host.id}"
       has_cursor = REDIS.exists?(cursor_key)
+      already_done = REDIS.exists?(done_key)
 
-      # If we have a cursor, resume regardless of existing topics
-      # Otherwise skip hosts that already have topics
-      if !has_cursor && host.topics.exists?
+      # Skip if already completed or has topics (unless we have a cursor to resume)
+      if !has_cursor && (already_done || host.topics.exists?)
         skipped += 1
         next
       end
 
-      puts "Skipped #{skipped} hosts with existing topics" if skipped > 0
+      puts "Skipped #{skipped} hosts" if skipped > 0
       skipped = 0
 
       if host.repositories_count > large_host_threshold || has_cursor
@@ -48,6 +49,7 @@ namespace :topics do
     start_time = Time.current
     count = Topic.sync_for_host(host)
     elapsed = Time.current - start_time
+    REDIS.set("topics_backfill_done:#{host.id}", "1", ex: 7.days.to_i)
     puts "  #{count} topics in #{elapsed.round(1)}s"
   end
 
@@ -87,8 +89,9 @@ namespace :topics do
       puts "  Batch #{batch_num}: #{upserts} upserts (#{repos.size} repos, cursor: #{current_id})"
     end
 
-    # Clear cursor on completion
+    # Clear cursor and mark as done
     REDIS.del(cursor_key)
+    REDIS.set("topics_backfill_done:#{host_id}", "1", ex: 7.days.to_i)
     puts "  Done! #{total_upserts} total upserts across #{batch_num} batches"
   end
 
