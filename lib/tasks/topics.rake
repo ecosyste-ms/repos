@@ -44,59 +44,105 @@ namespace :topics do
 
   def backfill_large_host(host, batch_size)
     host_id = host.id
-    min_id, max_id = Repository.where(host_id: host_id).pick(Arel.sql('MIN(id), MAX(id)'))
+    cursor_key = "topics_backfill:#{host_id}"
+    last_id = REDIS.get(cursor_key).to_i
 
-    unless min_id && max_id
-      puts "Skipping #{host.name} - no repositories"
-      return
+    if last_id > 0
+      puts "Backfilling #{host.name} - resuming from id #{last_id}..."
+    else
+      puts "Backfilling #{host.name} (#{host.repositories_count} repos) in batches of #{batch_size}..."
     end
 
-    puts "Backfilling #{host.name} (#{host.repositories_count} repos) in batches of #{batch_size}..."
-    puts "  Repository ID range: #{min_id} - #{max_id}"
-
-    current = min_id
     batch_num = 0
     total_upserts = 0
+    topic_counts = Hash.new(0)
+    repos_in_batch = 0
+    current_id = 0
 
-    while current <= max_id
-      batch_num += 1
-      batch_end = current + batch_size - 1
+    Repository.where(host_id: host_id)
+              .where('id > ?', last_id)
+              .where.not(topics: nil)
+              .order(:id)
+              .select(:id, :topics)
+              .each_hash do |row|
+      next unless row['topics'].present?
 
-      start_time = Time.current
+      current_id = row['id'].to_i
 
-      sql = <<~SQL
-        INSERT INTO topics (host_id, name, repositories_count, created_at, updated_at)
-        SELECT
-          #{host_id},
-          topic_name,
-          cnt,
-          NOW(),
-          NOW()
-        FROM (
-          SELECT unnest(topics) AS topic_name, COUNT(*) AS cnt
-          FROM repositories
-          WHERE host_id = #{host_id}
-            AND id BETWEEN #{current} AND #{batch_end}
-            AND topics IS NOT NULL
-            AND array_length(topics, 1) > 0
-          GROUP BY topic_name
-        ) t
-        ON CONFLICT (host_id, name) DO UPDATE SET
-          repositories_count = topics.repositories_count + EXCLUDED.repositories_count,
-          updated_at = NOW()
-      SQL
+      # Parse the PostgreSQL array format {topic1,topic2,"topic with spaces"}
+      topics = parse_pg_array(row['topics'])
+      topics.each { |t| topic_counts[t] += 1 }
+      repos_in_batch += 1
 
-      result = ActiveRecord::Base.connection.execute(sql)
-      elapsed = Time.current - start_time
-      upserts = result.cmd_tuples rescue 0
-      total_upserts += upserts
-
-      puts "  Batch #{batch_num}: #{upserts} upserts in #{elapsed.round(1)}s"
-
-      current = batch_end + 1
+      # Flush batch when we hit batch_size repos
+      if repos_in_batch >= batch_size
+        batch_num += 1
+        upserts = flush_topic_counts(host_id, topic_counts)
+        total_upserts += upserts
+        REDIS.set(cursor_key, current_id)
+        puts "  Batch #{batch_num}: #{upserts} upserts (#{repos_in_batch} repos, cursor: #{current_id})"
+        topic_counts.clear
+        repos_in_batch = 0
+      end
     end
 
+    # Flush remaining
+    if topic_counts.any?
+      batch_num += 1
+      upserts = flush_topic_counts(host_id, topic_counts)
+      total_upserts += upserts
+      puts "  Batch #{batch_num}: #{upserts} upserts (#{repos_in_batch} repos)"
+    end
+
+    # Clear cursor on completion
+    REDIS.del(cursor_key)
     puts "  Done! #{total_upserts} total upserts across #{batch_num} batches"
+  end
+
+  def parse_pg_array(str)
+    return [] if str.nil? || str == '{}'
+    # Remove outer braces and parse CSV-like format
+    inner = str[1..-2]
+    return [] if inner.nil? || inner.empty?
+
+    result = []
+    current = ''
+    in_quotes = false
+
+    inner.each_char do |c|
+      if c == '"' && !in_quotes
+        in_quotes = true
+      elsif c == '"' && in_quotes
+        in_quotes = false
+      elsif c == ',' && !in_quotes
+        result << current unless current.empty?
+        current = ''
+      else
+        current << c
+      end
+    end
+    result << current unless current.empty?
+    result
+  end
+
+  def flush_topic_counts(host_id, topic_counts)
+    return 0 if topic_counts.empty?
+
+    values = topic_counts.map do |name, count|
+      escaped_name = ActiveRecord::Base.connection.quote(name)
+      "(#{host_id}, #{escaped_name}, #{count}, NOW(), NOW())"
+    end.join(",\n")
+
+    sql = <<~SQL
+      INSERT INTO topics (host_id, name, repositories_count, created_at, updated_at)
+      VALUES #{values}
+      ON CONFLICT (host_id, name) DO UPDATE SET
+        repositories_count = topics.repositories_count + EXCLUDED.repositories_count,
+        updated_at = NOW()
+    SQL
+
+    result = ActiveRecord::Base.connection.execute(sql)
+    result.cmd_tuples rescue 0
   end
 
   desc 'Show topic stats'
