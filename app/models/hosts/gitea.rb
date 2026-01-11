@@ -37,14 +37,14 @@ module Hosts
       page = 1
 
       repos = load_repo_names(page, 'updated')
-      return [] unless repos.present?
+      return [] unless repos.is_a?(Array) && repos.present?
       oldest = repos.last["updated_at"]
       names += repos.map{|repo| repo["full_name"] }
 
       while oldest > target_time
         page += 1
         repos = load_repo_names(page, 'updated')
-        break unless repos.present?
+        break unless repos.is_a?(Array) && repos.present?
         oldest = repos.last["updated_at"]
         names += repos.map{|repo| repo["full_name"] }
       end
