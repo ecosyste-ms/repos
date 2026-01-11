@@ -60,74 +60,33 @@ namespace :topics do
 
     batch_num = 0
     total_upserts = 0
-    topic_counts = Hash.new(0)
-    repos_in_batch = 0
-    current_id = 0
 
+    # Use find_in_batches which does WHERE id > last_id pagination (no cursor/transaction)
     Repository.where(host_id: host_id)
               .where('id > ?', last_id)
               .where.not(topics: nil)
+              .where("array_length(topics, 1) > 0")
               .order(:id)
               .select(:id, :topics)
-              .each_hash do |row|
-      next unless row['topics'].present?
-
-      current_id = row['id'].to_i
-
-      # Parse the PostgreSQL array format {topic1,topic2,"topic with spaces"}
-      topics = parse_pg_array(row['topics'])
-      topics.each { |t| topic_counts[t] += 1 }
-      repos_in_batch += 1
-
-      # Flush batch when we hit batch_size repos
-      if repos_in_batch >= batch_size
-        batch_num += 1
-        upserts = flush_topic_counts(host_id, topic_counts)
-        total_upserts += upserts
-        REDIS.set(cursor_key, current_id)
-        puts "  Batch #{batch_num}: #{upserts} upserts (#{repos_in_batch} repos, cursor: #{current_id})"
-        topic_counts.clear
-        repos_in_batch = 0
-      end
-    end
-
-    # Flush remaining
-    if topic_counts.any?
+              .find_in_batches(batch_size: batch_size) do |repos|
       batch_num += 1
+      topic_counts = Hash.new(0)
+      current_id = 0
+
+      repos.each do |repo|
+        current_id = repo.id
+        repo.topics.each { |t| topic_counts[t] += 1 }
+      end
+
       upserts = flush_topic_counts(host_id, topic_counts)
       total_upserts += upserts
-      puts "  Batch #{batch_num}: #{upserts} upserts (#{repos_in_batch} repos)"
+      REDIS.set(cursor_key, current_id)
+      puts "  Batch #{batch_num}: #{upserts} upserts (#{repos.size} repos, cursor: #{current_id})"
     end
 
     # Clear cursor on completion
     REDIS.del(cursor_key)
     puts "  Done! #{total_upserts} total upserts across #{batch_num} batches"
-  end
-
-  def parse_pg_array(str)
-    return [] if str.nil? || str == '{}'
-    # Remove outer braces and parse CSV-like format
-    inner = str[1..-2]
-    return [] if inner.nil? || inner.empty?
-
-    result = []
-    current = ''
-    in_quotes = false
-
-    inner.each_char do |c|
-      if c == '"' && !in_quotes
-        in_quotes = true
-      elsif c == '"' && in_quotes
-        in_quotes = false
-      elsif c == ',' && !in_quotes
-        result << current unless current.empty?
-        current = ''
-      else
-        current << c
-      end
-    end
-    result << current unless current.empty?
-    result
   end
 
   def flush_topic_counts(host_id, topic_counts)
