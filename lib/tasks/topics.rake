@@ -20,6 +20,7 @@ namespace :topics do
     batch_size = (args[:batch_size] || 10_000).to_i
     large_host_threshold = 100_000
 
+    skipped = 0
     Host.order(:repositories_count).each do |host|
       cursor_key = "topics_backfill:#{host.id}"
       has_cursor = REDIS.exists?(cursor_key)
@@ -27,9 +28,12 @@ namespace :topics do
       # If we have a cursor, resume regardless of existing topics
       # Otherwise skip hosts that already have topics
       if !has_cursor && host.topics.exists?
-        puts "Skipping #{host.name} - already has topics"
+        skipped += 1
         next
       end
+
+      puts "Skipped #{skipped} hosts with existing topics" if skipped > 0
+      skipped = 0
 
       if host.repositories_count > large_host_threshold || has_cursor
         backfill_large_host(host, batch_size)
@@ -62,11 +66,9 @@ namespace :topics do
     total_upserts = 0
 
     # Use find_in_batches which does WHERE id > last_id pagination (no cursor/transaction)
+    # Minimal filters - handle topic checks in Ruby to maximize index usage
     Repository.where(host_id: host_id)
               .where('id > ?', last_id)
-              .where.not(topics: nil)
-              .where("array_length(topics, 1) > 0")
-              .order(:id)
               .select(:id, :topics)
               .find_in_batches(batch_size: batch_size) do |repos|
       batch_num += 1
@@ -75,6 +77,7 @@ namespace :topics do
 
       repos.each do |repo|
         current_id = repo.id
+        next if repo.topics.blank?
         repo.topics.each { |t| topic_counts[t] += 1 }
       end
 
