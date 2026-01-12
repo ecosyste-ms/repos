@@ -157,7 +157,7 @@ class Host < ApplicationRecord
 
   def sync_owner_repositories_async(owner)
     return if owner.hidden?
-    names = host_instance.load_owner_repos_names(owner)
+    names = host_instance.load_owner_repos_names(owner) || []
     names.each do |full_name|
       sync_repository_async(full_name)
     end
@@ -171,7 +171,7 @@ class Host < ApplicationRecord
 
   def sync_owner_repositories(owner)
     return if owner.hidden?
-    names = host_instance.load_owner_repos_names(owner)
+    names = host_instance.load_owner_repos_names(owner) || []
     names.each do |full_name|
       sync_repository(full_name)
     end
