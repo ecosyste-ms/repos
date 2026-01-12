@@ -53,39 +53,30 @@ namespace :topics do
   def backfill_large_host(host, batch_size)
     host_id = host.id
     cursor_key = "topics_backfill:#{host_id}"
-    last_id = REDIS.get(cursor_key).to_i
+    current_start = REDIS.get(cursor_key).to_i
 
-    # Get max_id with fast indexed lookup (ORDER BY id DESC LIMIT 1)
-    max_id = Repository.where(host_id: host_id).order(id: :desc).limit(1).pick(:id)
-    unless max_id
-      puts "Skipping #{host.name} - no repositories"
-      REDIS.set("topics_backfill_done:#{host_id}", "1", ex: 7.days.to_i)
-      return
-    end
-
-    if last_id > 0
-      puts "Backfilling #{host.name} - resuming from id #{last_id} (max: #{max_id})..."
-    else
-      puts "Backfilling #{host.name} (#{host.repositories_count} repos, max_id: #{max_id})..."
-    end
+    puts "Backfilling #{host.name} (#{host.repositories_count} repos) from id #{current_start}..."
 
     batch_num = 0
     total_upserts = 0
-    id_step = 50_000  # Fixed ID range per batch - avoids ORDER BY
+    empty_batches = 0
+    id_step = 100_000  # Large ID range per batch
 
-    current_start = last_id
-    while current_start < max_id
+    loop do
       batch_num += 1
       current_end = current_start + id_step
       topic_counts = Hash.new(0)
+      repo_count = 0
 
-      # Query by ID range - no ORDER BY needed, uses index on (host_id) + id range
-      repos = Repository.where(host_id: host_id)
-                        .where('id > ? AND id <= ?', current_start, current_end)
-                        .select(:id, :topics)
+      # Query by primary key range only - uses primary key index
+      # Filter by host_id in Ruby
+      repos = Repository.where('id > ? AND id <= ?', current_start, current_end)
+                        .select(:id, :host_id, :topics)
                         .to_a
 
       repos.each do |repo|
+        next unless repo.host_id == host_id
+        repo_count += 1
         next if repo.topics.blank?
         repo.topics.each { |t| topic_counts[t] += 1 }
       end
@@ -93,15 +84,22 @@ namespace :topics do
       upserts = flush_topic_counts(host_id, topic_counts)
       total_upserts += upserts
       REDIS.set(cursor_key, current_end)
-      puts "  Batch #{batch_num}: #{upserts} upserts (#{repos.size} repos, id #{current_start}-#{current_end})"
+
+      if repo_count > 0
+        empty_batches = 0
+        puts "  Batch #{batch_num}: #{upserts} topics from #{repo_count} repos (id #{current_start}-#{current_end})"
+      else
+        empty_batches += 1
+        # Stop after 10 consecutive empty batches (1M id gap)
+        break if empty_batches >= 10
+      end
 
       current_start = current_end
     end
 
-    # Clear cursor and mark as done
     REDIS.del(cursor_key)
     REDIS.set("topics_backfill_done:#{host_id}", "1", ex: 7.days.to_i)
-    puts "  Done! #{total_upserts} total upserts across #{batch_num} batches"
+    puts "  Done! #{total_upserts} total topics across #{batch_num} batches"
   end
 
   def flush_topic_counts(host_id, topic_counts)
