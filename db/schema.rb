@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_10_194159) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_12_160000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -27,7 +27,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_10_194159) do
     t.datetime "updated_at", null: false
     t.index ["ecosystem", "package_name"], name: "index_dependencies_on_ecosystem_and_package_name"
     t.index ["manifest_id"], name: "index_dependencies_on_manifest_id"
-    t.index ["package_name", "ecosystem"], name: "index_dependencies_on_package_name_and_ecosystem"
   end
 
   create_table "exports", force: :cascade do |t|
@@ -109,7 +108,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_10_194159) do
     t.string "website"
     t.index "host_id, lower((login)::text)", name: "index_owners_on_host_id_lower_login", unique: true
     t.index ["host_id", "uuid"], name: "index_owners_on_host_id_uuid", unique: true
-    t.index ["last_synced_at"], name: "index_owners_on_last_synced_at"
   end
 
   create_table "package_usages", force: :cascade do |t|
@@ -124,7 +122,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_10_194159) do
     t.datetime "updated_at"
     t.index ["ecosystem", "name"], name: "index_package_usages_on_ecosystem_and_name"
     t.index ["key"], name: "index_package_usages_on_key", unique: true
-    t.index ["package_last_synced_at"], name: "index_package_usages_on_package_last_synced_at"
   end
 
   create_table "registries", force: :cascade do |t|
@@ -208,13 +205,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_10_194159) do
     t.datetime "usage_updated_at"
     t.string "uuid"
     t.index "host_id, lower((full_name)::text)", name: "index_repositories_on_host_id_lower_full_name", unique: true
-    t.index ["dependencies_parsed_at"], name: "index_repositories_on_dependencies_parsed_at"
-    t.index ["dependency_job_id"], name: "index_repositories_on_dependency_job_id"
     t.index ["host_id", "uuid"], name: "index_repositories_on_host_id_uuid", unique: true
-    t.index ["last_synced_at"], name: "index_repositories_on_last_synced_at"
     t.index ["owner"], name: "index_repositories_on_owner"
-    t.index ["previous_names"], name: "index_repositories_on_previous_names", using: :gin
-    t.index ["topics"], name: "index_repositories_on_topics", using: :gin
   end
 
   create_table "repository_usages", force: :cascade do |t|
