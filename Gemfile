@@ -54,6 +54,7 @@ gem 'csv'
 gem 'ostruct'
 gem "rack-timeout"
 gem "lograge"
+gem "cgi"
 
 # Translation
 gem 'http_accept_language'
