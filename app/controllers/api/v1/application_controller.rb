@@ -4,4 +4,10 @@ class Api::V1::ApplicationController < ApplicationController
   def default_url_options(options = {})
     Rails.env.production? ? { :protocol => "https" }.merge(options) : options
   end
+
+  def set_cache_headers
+    return unless request.get? || request.head?
+    expires_in 5.minutes, public: true, stale_while_revalidate: 30.minutes
+    response.headers['CDN-Cache-Control'] = "max-age=#{1.hour.to_i}, stale-while-revalidate=#{4.hours.to_i}"
+  end
 end
