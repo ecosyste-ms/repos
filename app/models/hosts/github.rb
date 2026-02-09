@@ -424,6 +424,7 @@ module Hosts
 
     def sync_repos_with_tags
       data = load_repos_with_tags
+      return if data.nil?
       names = data.map { |r| r["repository"] }.uniq
       host = Host.find_by_name("GitHub")
       names.each do |name|
@@ -444,7 +445,7 @@ module Hosts
         end
 
         if resp.success?
-          Oj.load(resp.body)
+          Oj.load(resp.body) || []
         else
           []
         end

@@ -504,6 +504,47 @@ class HostTest < ActiveSupport::TestCase
     end
   end
 
+  context 'sync_repos_with_tags' do
+    setup do
+      @host = create(:github_host)
+    end
+
+    should 'handle nil response from load_repos_with_tags' do
+      github_instance = @host.host_instance
+      github_instance.stubs(:load_repos_with_tags).returns(nil)
+
+      assert_nothing_raised do
+        github_instance.sync_repos_with_tags
+      end
+    end
+
+    should 'handle empty response from load_repos_with_tags' do
+      github_instance = @host.host_instance
+      github_instance.stubs(:load_repos_with_tags).returns([])
+
+      assert_nothing_raised do
+        github_instance.sync_repos_with_tags
+      end
+    end
+
+    should 'sync repositories from tag events' do
+      github_instance = @host.host_instance
+      github_instance.stubs(:load_repos_with_tags).returns([
+        {"repository" => "owner/repo1"},
+        {"repository" => "owner/repo2"},
+        {"repository" => "owner/repo1"}
+      ])
+
+      Host.stubs(:find_by_name).with("GitHub").returns(@host)
+      @host.expects(:find_repository).with("owner/repo1").returns(nil)
+      @host.expects(:find_repository).with("owner/repo2").returns(nil)
+      @host.expects(:sync_repository_async).with("owner/repo1").once
+      @host.expects(:sync_repository_async).with("owner/repo2").once
+
+      github_instance.sync_repos_with_tags
+    end
+  end
+
   context 'GitLab host specific functionality' do
     setup do
       @gitlab_host = create(:gitlab_host)
