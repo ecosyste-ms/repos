@@ -1,108 +1,48 @@
-  <h1>
-    <%= link_to @host, host_path(@host) %> /
-    <%= link_to @repository.owner, host_owner_path(@host, @repository.owner) %> / 
-
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><%= link_to "Hosts", root_path %></li>
+    <li class="breadcrumb-item"><%= link_to @host, host_path(@host) %></li>
+    <li class="breadcrumb-item"><%= link_to @repository.owner, host_owner_path(@host, @repository.owner) %></li>
     <% if @repository.subgroups.any? %>
       <% subgroups = [] %>
       <% @repository.subgroups.each do |group| %>
         <% subgroups += [group] %>
-        <%= link_to group, subgroup_host_owner_path(@host, @repository.owner, subgroups) %> / 
-      <%end %>
+        <li class="breadcrumb-item"><%= link_to group, subgroup_host_owner_path(@host, @repository.owner, subgroups) %></li>
+      <% end %>
     <% end %>
-    <%= link_to @repository.project_slug, @repository.html_url, target: :_blank %>
-  </h1>
+    <li class="breadcrumb-item active" aria-current="page"><%= @repository.project_slug %></li>
+  </ol>
+</nav>
 
-  <p><%= @repository.description %></p>
-
-  <p>
-    JSON API: <%= link_to api_v1_host_repository_url(@host, @repository), api_v1_host_repository_url(@host, @repository), target: :_blank %><br/>
-    PURL: <code><%= @repository.purl %></code>
-  </p>
-
-  <div class="row">
-    <div class="col-md-4">
-      <p><small class='text-muted'>
-        <% if @repository.fork && @repository.source_name %>
-          <%= t('repositories.fork_of') %> <%= link_to @repository.source_name, host_repository_path(@host, @repository.source_name) %><br/>
-        <% end %>
-        <span class='text-capitalize'><%= Repository.human_attribute_name(:stargazers_count) %></span>: <%= number_with_delimiter @repository.stargazers_count %><br/>
-        <span class='text-capitalize'><%= Repository.human_attribute_name(:forks_count) %></span>: <%= number_with_delimiter @repository.forks_count %><br/>
-        <span class='text-capitalize'><%= Repository.human_attribute_name(:open_issues_count) %></span>: <%= number_with_delimiter @repository.open_issues_count %><br/>
-      </small></p>
-    </div>
-    <div class="col-md-4">
-      <p><small class='text-muted'>
-        <span class='text-capitalize'><%= Repository.human_attribute_name(:license) %></span>: <%= @repository.license || 'None' %><br/>
-        <span class='text-capitalize'><%= Repository.human_attribute_name(:language) %></span>: <%= @repository.language %><br/>
-        <% if @repository.size %>
-          <span class='text-capitalize'><%= Repository.human_attribute_name(:size) %></span>: <%= number_to_human_size @repository.size*1000 %><br/>
-        <% end %>
-       <span class='text-capitalize'><%= Repository.human_attribute_name(:dependencies_parsed_at) %>: <% if @repository.dependencies_parsed_at && @manifests %>
-          <%= number_with_delimiter @manifests.sum{|m| m.dependencies.length } %>
-        <% else %>
-          <%= t('repositories.dependencies.pending') %>
-        <% end %>
-      </small></p>
-    </div>
-    <div class="col-md-4">
-      <p><small class='text-muted'>
-        <span class='text-capitalize'><%= Repository.human_attribute_name(:created_at) %></span>: <%= t('time_ago', time: distance_of_time_in_words_to_now(@repository.created_at)) %><br/>
-        <span class='text-capitalize'><%= Repository.human_attribute_name(:updated_at) %></span>: <%= t('time_ago', time: distance_of_time_in_words_to_now(@repository.updated_at)) %><br/>
-        <% if @repository.pushed_at %>
-          <span class='text-capitalize'><%= Repository.human_attribute_name(:pushed_at) %></span>: <%= t('time_ago', time: distance_of_time_in_words_to_now(@repository.pushed_at)) %><br/>
-        <% end %>
-        <% if @repository.last_synced_at %>
-          <span class='text-capitalize'><%= Repository.human_attribute_name(:last_synced_at) %></span>: <%= t('time_ago', time: distance_of_time_in_words_to_now(@repository.last_synced_at)) %><br/>
-        <% end %>
-      </small></p>
-    </div>
+<div class="card mb-3">
+  <div class="card-body">
+    <h1 class="card-title h3 mb-0">
+      <%= link_to @repository.project_slug, @repository.html_url, target: :_blank %>
+      <% if @repository.fork %>
+        <span class="badge bg-secondary">Fork</span>
+      <% end %>
+    </h1>
   </div>
+</div>
 
-  <% if @repository.commit_stats %>
-    <h5>Commit Stats</h5>
-    <p>
-      <small class='text-muted'>
-        Commits: <%= @repository.commit_stats['total_commits'] %><br/>
-        Authors: <%= @repository.commit_stats['total_committers'] %><br/>
-        Mean commits per author: <%= @repository.commit_stats['mean_commits'].to_f.round(2) %><br/>
-        Development Distribution Score: <%= @repository.commit_stats['dds'].to_f.round(3) %><br/>
-        More commit stats: <%= link_to @repository.commits_url, @repository.commits_url, target: :_blank %>
-      </small>
-    </p>
-  <% end %>
+<% if @repository.description.present? %>
+  <p><%= @repository.description %></p>
+<% end %>
 
-  <% if @repository.topics.any? %>
-    <p><small class='text-muted'>
-    <%= t 'virtual.models.topic.other' %>: 
-    <% if @repository.host.host_instance.topic_url('test') %>
-      <% @repository.topics.reject(&:blank?).uniq.each_with_index do |k, i| %><%= ', ' if i > 0 %><%= link_to k, topic_host_path(id: @repository.host.name, topic: k), target: :_blank %><% end %>
-    <% else %>
-      <%= @repository.topics.join(', ') %>
-    <% end %>
-    </small></p>
-  <% end %>
-
-
-  <% if @repository.funding_links.any? %>
-    <p><small class='text-muted'>
-    <%= t '.funding_links' %> <% @repository.funding_links.each_with_index do |url,i| %><%= ', ' if i > 0 %><%= link_to(url, sanitize_user_url(url), target: :_blank) %><% end %>
-    </small></p>
-  <% end %>
-
-  <% if @tags.length > 0 %>
-    <div class="dropdown">
-      <button class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-        Tags
-      </button>
-      <ul class="dropdown-menu">
+<% if @tags.length > 0 %>
+  <div class="dropdown mb-3">
+    <button class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+      Tags
+    </button>
+    <ul class="dropdown-menu">
+      <li>
+        <%= link_to @repository.default_branch, url_for(sha: nil), class: "dropdown-item #{'active' if @sha == @repository.default_branch}" %>
+      </li>
+      <% @tags.each do |tag| %>
         <li>
-            <%= link_to @repository.default_branch, url_for(sha: nil), class: "dropdown-item #{'active' if @sha == @repository.default_branch}" %>
-          </li>
-        <% @tags.each do |tag| %>
-          <li>
-            <%= link_to tag, url_for(sha: tag.name), class: "dropdown-item #{'active' if tag.name == @sha}" %>
-          </li>
-        <% end %>
-      </ul>
-    </div>
-  <% end %>
+          <%= link_to tag, url_for(sha: tag.name), class: "dropdown-item #{'active' if tag.name == @sha}" %>
+        </li>
+      <% end %>
+    </ul>
+  </div>
+<% end %>

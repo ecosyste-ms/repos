@@ -4,69 +4,51 @@
 <div class="container-sm">
   <%= render 'overview' %>
 
-  <ul class="nav nav-tabs mt-3">
-    <li class="nav-item">
-      <a class="nav-link" href="<%= host_repository_path(@host, @repository) %>">Files</a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link" href="<%= readme_host_repository_path(@host, @repository) %>">Readme</a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link active" href="<%= dependencies_host_repository_path(@host, @repository) %>">Dependencies</a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link" href="<%= releases_host_repository_path(@host, @repository) %>">Releases</a>
-    </li>
-    <% if @repository.has_scorecard? %>
-      <li class="nav-item">
-        <a class="nav-link" href="<%= scorecard_host_repository_path(@host, @repository) %>">Scorecard</a>
-      </li>
-    <% end %>
-    <li class="nav-item ms-auto">
-      <%= link_to "Export SBOM", sbom_api_v1_host_repository_path(@host, @repository), class: "btn btn-secondary btn-sm", target: :blank %>
-    </li>
-  </ul>
+  <div class="row">
+    <div class="col-lg-8">
+      <%= render 'tabs' %>
 
-
-  <% if @repository.dependencies_parsed_at %>
-    <% if @manifests.present? %>
-      <% @manifests.each do |manifest| %>
-        <div class="card mt-3">
-          <div class="card-header">
-            <%= link_to manifest.filepath, manifest.repository_link, target: :_blank %>
-            <span class='text-muted'>
-              <%= manifest.ecosystem %>
-            </span>
-          </div>
-          <ul class="list-group list-group-flush">
-            <% if manifest.lockfile? && manifest.dependencies.length > 100 %>
-              <li class="list-group-item">
-                <%= link_to pluralize(manifest.dependencies.length, 'dependencies'), manifest.repository_link, target: :_blank %>
-              </li>
-            <% else %>
-              <% manifest.dependencies.sort_by{|d| [d.kind.to_s, d.package_name]}.each do |dependency| %>
-                <li class="list-group-item">
-                  <%= link_to dependency.package_name, usage_path(dependency.ecosystem, dependency.package_name) %>
-                  <i><%= dependency.requirements %></i>
-                  <small class='text-muted'>
-                  <% if dependency.kind != 'runtime' %>
-                    <%= dependency.kind %>
+      <% if @repository.dependencies_parsed_at %>
+        <% if @manifests.present? %>
+          <% @manifests.each do |manifest| %>
+            <div class="card mt-3">
+              <div class="card-header">
+                <%= link_to manifest.filepath, manifest.repository_link, target: :_blank %>
+                <span class='text-muted'>
+                  <%= manifest.ecosystem %>
+                </span>
+              </div>
+              <ul class="list-group list-group-flush">
+                <% if manifest.lockfile? && manifest.dependencies.length > 100 %>
+                  <li class="list-group-item">
+                    <%= link_to pluralize(manifest.dependencies.length, 'dependencies'), manifest.repository_link, target: :_blank %>
+                  </li>
+                <% else %>
+                  <% manifest.dependencies.sort_by{|d| [d.kind.to_s, d.package_name]}.each do |dependency| %>
+                    <li class="list-group-item">
+                      <%= link_to dependency.package_name, usage_path(dependency.ecosystem, dependency.package_name) %>
+                      <i><%= dependency.requirements %></i>
+                      <small class='text-muted'>
+                      <% if dependency.kind != 'runtime' %>
+                        <%= dependency.kind %>
+                      <% end %>
+                      <% if dependency.optional %>
+                        (optional)
+                      <% end %>
+                      </small>
+                    </li>
                   <% end %>
-                  <% if dependency.optional %>
-                    (optional)
-                  <% end %>
-                  </small>
-                </li>
-              <% end %>
-            <% end %>
-          </ul>
-        </div>
+                <% end %>
+              </ul>
+            </div>
+          <% end %>
+        <% else %>
+          <p class='mt-3'>No dependencies found</p>
+        <% end %>
       <% end %>
-    <% else %>
-      <p class='mt-3'>No dependencies found</p>
-    <% end %>
-  <% end %>
+    </div>
+    <div class="col-lg-4">
+      <%= render 'sidebar' %>
+    </div>
+  </div>
 </div>
-
-  
-

@@ -1,0 +1,130 @@
+<div class="card mb-3">
+  <div class="card-header">Links</div>
+  <ul class="list-group list-group-flush">
+    <li class="list-group-item">
+      Source: <%= link_to @repository.html_url, @repository.html_url, target: :_blank %>
+    </li>
+    <li class="list-group-item">
+      JSON API: <%= link_to "repos.ecosyste.ms", api_v1_host_repository_url(@host, @repository), target: :_blank %>
+    </li>
+    <li class="list-group-item">
+      PURL: <code><%= @repository.purl %></code>
+    </li>
+  </ul>
+</div>
+
+<div class="card mb-3">
+  <div class="card-header">Repository Details</div>
+  <ul class="list-group list-group-flush">
+    <% if @repository.fork && @repository.source_name %>
+      <li class="list-group-item">
+        <%= t('repositories.fork_of') %> <%= link_to @repository.source_name, host_repository_path(@host, @repository.source_name) %>
+      </li>
+    <% end %>
+    <li class="list-group-item d-flex justify-content-between">
+      <span><%= Repository.human_attribute_name(:stargazers_count) %></span>
+      <span><%= number_with_delimiter @repository.stargazers_count %></span>
+    </li>
+    <li class="list-group-item d-flex justify-content-between">
+      <span><%= Repository.human_attribute_name(:forks_count) %></span>
+      <span><%= number_with_delimiter @repository.forks_count %></span>
+    </li>
+    <li class="list-group-item d-flex justify-content-between">
+      <span><%= Repository.human_attribute_name(:open_issues_count) %></span>
+      <span><%= number_with_delimiter @repository.open_issues_count %></span>
+    </li>
+    <li class="list-group-item d-flex justify-content-between">
+      <span><%= Repository.human_attribute_name(:license) %></span>
+      <span><%= @repository.license || 'None' %></span>
+    </li>
+    <li class="list-group-item d-flex justify-content-between">
+      <span><%= Repository.human_attribute_name(:language) %></span>
+      <span><%= @repository.language %></span>
+    </li>
+    <% if @repository.size %>
+      <li class="list-group-item d-flex justify-content-between">
+        <span><%= Repository.human_attribute_name(:size) %></span>
+        <span><%= number_to_human_size @repository.size*1000 %></span>
+      </li>
+    <% end %>
+    <li class="list-group-item d-flex justify-content-between">
+      <span><%= Repository.human_attribute_name(:created_at) %></span>
+      <span><%= t('time_ago', time: distance_of_time_in_words_to_now(@repository.created_at)) %></span>
+    </li>
+    <li class="list-group-item d-flex justify-content-between">
+      <span><%= Repository.human_attribute_name(:updated_at) %></span>
+      <span><%= t('time_ago', time: distance_of_time_in_words_to_now(@repository.updated_at)) %></span>
+    </li>
+    <% if @repository.pushed_at %>
+      <li class="list-group-item d-flex justify-content-between">
+        <span><%= Repository.human_attribute_name(:pushed_at) %></span>
+        <span><%= t('time_ago', time: distance_of_time_in_words_to_now(@repository.pushed_at)) %></span>
+      </li>
+    <% end %>
+    <% if @repository.last_synced_at %>
+      <li class="list-group-item d-flex justify-content-between">
+        <span><%= Repository.human_attribute_name(:last_synced_at) %></span>
+        <span><%= t('time_ago', time: distance_of_time_in_words_to_now(@repository.last_synced_at)) %></span>
+      </li>
+    <% end %>
+    <li class="list-group-item d-flex justify-content-between">
+      <span><%= Repository.human_attribute_name(:dependencies_parsed_at) %></span>
+      <span>
+        <% if @repository.dependencies_parsed_at && @manifests %>
+          <%= number_with_delimiter @manifests.sum{|m| m.dependencies.length } %>
+        <% else %>
+          <%= t('repositories.dependencies.pending') %>
+        <% end %>
+      </span>
+    </li>
+  </ul>
+</div>
+
+<% if @repository.commit_stats %>
+  <div class="card mb-3">
+    <div class="card-header">Commit Stats</div>
+    <ul class="list-group list-group-flush">
+      <li class="list-group-item d-flex justify-content-between">
+        <span>Commits</span>
+        <span><%= @repository.commit_stats['total_commits'] %></span>
+      </li>
+      <li class="list-group-item d-flex justify-content-between">
+        <span>Authors</span>
+        <span><%= @repository.commit_stats['total_committers'] %></span>
+      </li>
+      <li class="list-group-item d-flex justify-content-between">
+        <span>Mean commits per author</span>
+        <span><%= @repository.commit_stats['mean_commits'].to_f.round(2) %></span>
+      </li>
+      <li class="list-group-item d-flex justify-content-between">
+        <span>DDS</span>
+        <span><%= @repository.commit_stats['dds'].to_f.round(3) %></span>
+      </li>
+      <li class="list-group-item">
+        <%= link_to "More commit stats", @repository.commits_url, target: :_blank %>
+      </li>
+    </ul>
+  </div>
+<% end %>
+
+<% if @repository.topics.any? %>
+  <div class="card mb-3">
+    <div class="card-header"><%= t 'virtual.models.topic.other' %></div>
+    <div class="card-body">
+      <% if @repository.host.host_instance.topic_url('test') %>
+        <% @repository.topics.reject(&:blank?).uniq.each_with_index do |k, i| %><%= ', ' if i > 0 %><%= link_to k, topic_host_path(id: @repository.host.name, topic: k), target: :_blank %><% end %>
+      <% else %>
+        <%= @repository.topics.join(', ') %>
+      <% end %>
+    </div>
+  </div>
+<% end %>
+
+<% if @repository.funding_links.any? %>
+  <div class="card mb-3">
+    <div class="card-header">Funding</div>
+    <div class="card-body">
+      <% @repository.funding_links.each_with_index do |url,i| %><%= ', ' if i > 0 %><%= link_to(url, sanitize_user_url(url), target: :_blank) %><% end %>
+    </div>
+  </div>
+<% end %>

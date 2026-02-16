@@ -2,10 +2,15 @@
 <% @meta_description = 'Most popular repository topics' %>
 
 <div class="container-sm">
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item active" aria-current="page"><%= t 'virtual.models.topic.other' %></li>
+    </ol>
+  </nav>
+
   <h2>
     <%= t 'virtual.models.topic.other' %>
   </h2>
-
 
   <div class="row">
     <% @topics.each do |topic| %>

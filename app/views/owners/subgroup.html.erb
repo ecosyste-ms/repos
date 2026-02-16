@@ -1,20 +1,23 @@
 <% @meta_title = "#{params[:id]}/#{params[:subgroup]} | #{@host} owners" %>
 <% @meta_description = "Repositories of #{params[:id]}/#{params[:subgroup]} on #{@host}" %>
 <div class="container-sm">
-  <h1 class='mb-4'>
-    <%= link_to @host, host_path(@host) %> / <%= link_to @owner, host_owner_path(@host, @owner) %> / 
-
-    <% subgroups = [] %>
-    <% @subgroups.each_with_index do |group, i| %>
-      <% if i < (@subgroups.length-1) %>
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><%= link_to "Hosts", root_path %></li>
+      <li class="breadcrumb-item"><%= link_to @host, host_path(@host) %></li>
+      <li class="breadcrumb-item"><%= link_to @owner, host_owner_path(@host, @owner) %></li>
+      <% subgroups = [] %>
+      <% @subgroups.each_with_index do |group, i| %>
         <% subgroups += [group] %>
-        <%= link_to group, subgroup_host_owner_path(@host, @owner, subgroups) %> / 
-      <% else %>
-        <%= group %>
+        <% if i < (@subgroups.length-1) %>
+          <li class="breadcrumb-item"><%= link_to group, subgroup_host_owner_path(@host, @owner, subgroups) %></li>
+        <% else %>
+          <li class="breadcrumb-item active" aria-current="page"><%= group %></li>
+        <% end %>
       <% end %>
-    <%end %>
-  </h1>
+    </ol>
+  </nav>
 
   <%= render @repositories %>
-  <%== pagy_bootstrap_nav(@pagy) if @pagy.pages && @pagy.pages > 1 %>  
+  <%== pagy_bootstrap_nav(@pagy) if @pagy.pages && @pagy.pages > 1 %>
 </div>

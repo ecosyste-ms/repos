@@ -1,0 +1,24 @@
+<ul class="nav nav-tabs mt-3">
+  <li class="nav-item">
+    <a class="nav-link <%= 'active' if action_name == 'show' %>" href="<%= host_repository_path(@host, @repository) %>">Files</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link <%= 'active' if action_name == 'readme' %>" href="<%= readme_host_repository_path(@host, @repository) %>">Readme</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link <%= 'active' if action_name == 'dependencies' %>" href="<%= dependencies_host_repository_path(@host, @repository) %>">Dependencies</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link <%= 'active' if action_name == 'releases' %>" href="<%= releases_host_repository_path(@host, @repository) %>">Releases</a>
+  </li>
+  <% if @repository.has_scorecard? %>
+    <li class="nav-item">
+      <a class="nav-link <%= 'active' if action_name == 'scorecard' %>" href="<%= scorecard_host_repository_path(@host, @repository) %>">Scorecard</a>
+    </li>
+  <% end %>
+  <% if action_name == 'dependencies' %>
+    <li class="nav-item ms-auto">
+      <%= link_to "Export SBOM", sbom_api_v1_host_repository_path(@host, @repository), class: "btn btn-secondary btn-sm", target: :blank %>
+    </li>
+  <% end %>
+</ul>

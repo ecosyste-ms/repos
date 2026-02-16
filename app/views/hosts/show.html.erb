@@ -2,28 +2,55 @@
 <% @meta_description = "Repositories of #{@host}" %>
 
 <div class="container-sm">
-  <h1 class='mb-4'>
-    <%= link_to @host, @host.url, target: :_blank %>
-  </h1>
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><%= link_to "Hosts", root_path %></li>
+      <li class="breadcrumb-item active" aria-current="page"><%= @host %></li>
+    </ol>
+  </nav>
+
+  <div class="card mb-3">
+    <div class="card-body">
+      <h1 class="card-title h3 mb-0">
+        <i class="fas fa-server me-2"></i>
+        <%= link_to @host, @host.url, target: :_blank %>
+      </h1>
+    </div>
+  </div>
+
+  <div class="row mb-3">
+    <div class="col-md-3 col-6">
+      <div class="card text-center">
+        <div class="card-body">
+          <h4 class="card-title text-primary mb-1"><%= number_with_delimiter @host.repositories_count %></h4>
+          <p class="card-text small text-muted mb-0"><%= Repository.model_name.human(count: @host.repositories_count) %></p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-6">
+      <div class="card text-center">
+        <div class="card-body">
+          <h4 class="card-title text-success mb-1"><%= number_with_delimiter @host.owners_count %></h4>
+          <p class="card-text small text-muted mb-0"><%= Owner.model_name.human(count: @host.owners_count) %></p>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <% if @host.status.present? %>
-    <div class="alert alert-<%= @host.status_color %> mb-3" role="alert">
-      <h6 class="alert-heading">
-        <i class="fas fa-server"></i> Host Status
-      </h6>
-      <p class="mb-2">
-        <strong>Status:</strong> <%= @host.status_description %>
-        <% if @host.offline? && @host.last_error.present? %>
-          <br><strong>Error:</strong> <%= @host.last_error %>
-        <% end %>
-      </p>
+    <div class="alert alert-<%= @host.status_color %> py-2 px-3 mb-2 small" role="alert">
+      <i class="fas fa-server"></i>
+      <strong>Status:</strong> <%= @host.status_description %>
+      <% if @host.offline? && @host.last_error.present? %>
+        - <%= @host.last_error %>
+      <% end %>
       <% if @host.status_checked_at.present? %>
-        <small class="text-muted">
-          Last checked: <%= time_ago_in_words(@host.status_checked_at) %> ago
+        <span class="text-muted ms-2">
+          checked <%= time_ago_in_words(@host.status_checked_at) %> ago
           <% if @host.status_stale? %>
             <span class="badge bg-warning text-dark ms-1">Stale</span>
           <% end %>
-        </small>
+        </span>
       <% end %>
     </div>
   <% end %>
@@ -34,63 +61,37 @@
         when 'not_found' then 'info'
         when /^error_/ then 'danger'
         else 'secondary'
-        end %> mb-3" role="alert">
-      <h6 class="alert-heading">
-        <i class="fas fa-robot"></i> Robots.txt Status
-      </h6>
-      <p class="mb-2">
-        <% case @host.robots_txt_status %>
-        <% when 'success' %>
-          <strong>Found:</strong> <%= link_to 'robots.txt', @host.robots_txt_url, target: '_blank', class: 'alert-link' %>
-          <% if @host.can_crawl_api? %>
-            - API crawling is <strong>allowed</strong>
-          <% else %>
-            - API crawling is <strong>blocked</strong>
-          <% end %>
-        <% when 'not_found' %>
-          <strong>Not Found:</strong> No robots.txt file found - all crawling allowed by default
-        <% when /^error_/ %>
-          <strong>Error:</strong> Failed to fetch robots.txt (<%= @host.robots_txt_status.humanize %>)
+        end %> py-2 px-3 mb-2 small" role="alert">
+      <i class="fas fa-robot"></i>
+      <strong>Robots.txt:</strong>
+      <% case @host.robots_txt_status %>
+      <% when 'success' %>
+        <%= link_to 'Found', @host.robots_txt_url, target: '_blank', class: 'alert-link' %>
+        <% if @host.can_crawl_api? %>
+          - API crawling <strong>allowed</strong>
         <% else %>
-          <strong>Status:</strong> <%= @host.robots_txt_status.humanize %>
+          - API crawling <strong>blocked</strong>
         <% end %>
-      </p>
+      <% when 'not_found' %>
+        Not found - all crawling allowed by default
+      <% when /^error_/ %>
+        Error fetching (<%= @host.robots_txt_status.humanize %>)
+      <% else %>
+        <%= @host.robots_txt_status.humanize %>
+      <% end %>
       <% if @host.robots_txt_updated_at.present? %>
-        <small class="text-muted">
-          Last checked: <%= time_ago_in_words(@host.robots_txt_updated_at) %> ago
+        <span class="text-muted ms-2">
+          checked <%= time_ago_in_words(@host.robots_txt_updated_at) %> ago
           <% if @host.robots_txt_stale? %>
             <span class="badge bg-warning text-dark ms-1">Stale</span>
           <% end %>
-        </small>
+        </span>
       <% end %>
     </div>
   <% end %>
 
-  <ul class="nav nav-tabs my-3">
-    <li class="nav-item">
-      <a class="nav-link active" aria-current="page">
-        <%= Repository.model_name.human(count: @host.repositories_count) %>
-        <span class="badge bg-secondary rounded-pill">
-          <%= number_with_delimiter @host.repositories_count %>
-        </span>
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link" href="<%= host_owners_path(@host) %>">
-        <%= Owner.model_name.human(count: @host.owners_count) %>
-        <span class="badge bg-secondary rounded-pill">
-          <%= number_with_delimiter @host.owners_count %>
-        </span>
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link" href="<%= topics_host_path(@host) %>">
-        <%= t('virtual.models.topic.other') %>
-      </a>
-    </li>
-    <%= render 'sort' %>
-  </ul>
+  <%= render 'hosts/tabs' %>
 
   <%= render @repositories %>
-  <%== pagy_bootstrap_nav(@pagy) if @pagy.pages && @pagy.pages > 1 %>  
+  <%== pagy_bootstrap_nav(@pagy) if @pagy.pages && @pagy.pages > 1 %>
 </div>

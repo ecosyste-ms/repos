@@ -9,29 +9,18 @@
 <div class="container-sm">
   <%= render 'overview' %>
 
-  <ul class="nav nav-tabs mt-3">
-    <li class="nav-item">
-      <a class="nav-link active" href="/">Files</a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link" href="<%= readme_host_repository_path(@host, @repository) %>">Readme</a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link" href="<%= dependencies_host_repository_path(@host, @repository) %>">Dependencies</a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link" href="<%= releases_host_repository_path(@host, @repository) %>">Releases</a>
-    </li>
-    <% if @repository.has_scorecard? %>
-      <li class="nav-item">
-        <a class="nav-link" href="<%= scorecard_host_repository_path(@host, @repository) %>">Scorecard</a>
-      </li>
-    <% end %>
-  </ul>
+  <div class="row">
+    <div class="col-lg-8">
+      <%= render 'tabs' %>
 
-  <div class='card mt-3' id="files" data-url="<%= @repository.download_url(@sha, params['sha'].present? ? 'tag' : 'branch') %>" data-basename="<%= @sha || @repository.archive_basename %>" data-path="<%= params[:path] %>">
-    <div id='files-header' class="card-header"></div>
-    <ul id="files-list" class="list-group list-group-flush"></ul>
-    <div id="files-content" class="card-body">Loading...</div>
+      <div class='card mt-3' id="files" data-url="<%= @repository.download_url(@sha, params['sha'].present? ? 'tag' : 'branch') %>" data-basename="<%= @sha || @repository.archive_basename %>" data-path="<%= params[:path] %>">
+        <div id='files-header' class="card-header"></div>
+        <ul id="files-list" class="list-group list-group-flush"></ul>
+        <div id="files-content" class="card-body">Loading...</div>
+      </div>
+    </div>
+    <div class="col-lg-4">
+      <%= render 'sidebar' %>
+    </div>
   </div>
 </div>

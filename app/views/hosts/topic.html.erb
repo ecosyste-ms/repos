@@ -2,9 +2,14 @@
 <% @meta_description = "Repositories of #{@host} with topic #{params[:topic]}" %>
 
 <div class="container-sm">
-  <h1 class='mb-4'>
-    <%= link_to @host, @host.url, target: :_blank %> topics: <%= params[:topic] %>
-  </h1>
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><%= link_to "Hosts", root_path %></li>
+      <li class="breadcrumb-item"><%= link_to @host, host_path(@host) %></li>
+      <li class="breadcrumb-item"><%= link_to t('virtual.models.topic.other'), topics_host_path(@host) %></li>
+      <li class="breadcrumb-item active" aria-current="page"><%= params[:topic] %></li>
+    </ol>
+  </nav>
 
   <ul class="nav nav-tabs my-3">
     <li class="nav-item">
@@ -12,15 +17,15 @@
         Repositories
       </a>
     </li>
-    <%= render 'sort' %>
+    <%= render 'hosts/sort' %>
   </ul>
 
   <div class='row'>
-    <div class='col-md-8'>
+    <div class='col-lg-8'>
       <%= render @repositories %>
-      <%== pagy_bootstrap_nav(@pagy) if @pagy.pages && @pagy.pages > 1 %>  
-    </div>  
-    <div class='col-md-4'>
+      <%== pagy_bootstrap_nav(@pagy) if @pagy.pages && @pagy.pages > 1 %>
+    </div>
+    <div class='col-lg-4'>
       <div class="card">
         <div class="card-header">
           Related Keywords
@@ -33,10 +38,8 @@
               <span class="badge bg-primary rounded-pill"><%= number_with_delimiter count%></span>
             </a>
           <% end %>
-        </ul>
+        </div>
       </div>
-
-
     </div>
   </div>
 </div>
