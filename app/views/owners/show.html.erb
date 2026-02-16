@@ -2,43 +2,72 @@
 <% @meta_description = "Repositories of #{@owner} on #{@host}" %>
 
 <div class="container-sm">
-  <h1 class='mb-4'>
-    <%= link_to @host, host_path(@host) %> / <%= link_to @owner, "#{@host.url}/#{@owner}", target: :_blank %>
-    <% if @owner_record %>
-      <small class='text-muted'>
-        <%= number_with_delimiter(@owner_record.repositories_count) %> <%= Repository.model_name.human(count: @owner_record.repositories_count) %>
-      </small>
-    <% end %>
-  </h1>
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><%= link_to "Hosts", root_path %></li>
+      <li class="breadcrumb-item"><%= link_to @host, host_path(@host) %></li>
+      <li class="breadcrumb-item active" aria-current="page"><%= @owner %></li>
+    </ol>
+  </nav>
 
-  <% if @owner_record %>
-    <% if @owner_record.description.present? %>
-      <p>
-        <%= @owner_record.description %>
-      </p>
-    <% end %>
-
-    <% if @owner_record.funding_links.any? %>
-      <p><small class='text-muted'>
-      <%= t '.funding_links' %> <% @owner_record.funding_links.each_with_index do |url,i| %><%= ', ' if i > 0 %><%= link_to(url, sanitize_user_url(url), target: :_blank) %><% end %>
-      </small></p>
-    <% end %>
-  <% end %>
-
-    <ul class="nav nav-tabs my-3">
-    <li class="nav-item">
-      <a class="nav-link active" aria-current="page">
-        <%= Repository.model_name.human(count: @owner_record&.repositories_count || 0) %>
+  <div class="card mb-3">
+    <div class="card-body">
+      <h1 class="card-title h3 mb-0">
+        <%= link_to @owner, "#{@host.url}/#{@owner}", target: :_blank %>
         <% if @owner_record %>
-        <span class="badge bg-secondary rounded-pill">
-          <%= number_with_delimiter @owner_record.repositories_count %>
-        </span>
+          <small class='text-muted'>
+            <%= number_with_delimiter(@owner_record.repositories_count) %> <%= Repository.model_name.human(count: @owner_record.repositories_count) %>
+          </small>
         <% end %>
-      </a>
-    </li>
-    <%= render 'sort' %>
-  </ul>
+      </h1>
+    </div>
+  </div>
 
-  <%= render @repositories %>
-  <%== pagy_bootstrap_nav(@pagy) if @pagy.pages && @pagy.pages > 1 %>  
+  <div class="row">
+    <div class="col-lg-8">
+      <ul class="nav nav-tabs my-3">
+        <li class="nav-item">
+          <a class="nav-link active" aria-current="page">
+            <%= Repository.model_name.human(count: @owner_record&.repositories_count || 0) %>
+            <% if @owner_record %>
+            <span class="badge bg-secondary rounded-pill">
+              <%= number_with_delimiter @owner_record.repositories_count %>
+            </span>
+            <% end %>
+          </a>
+        </li>
+        <%= render 'sort' %>
+      </ul>
+
+      <%= render @repositories %>
+      <%== pagy_bootstrap_nav(@pagy) if @pagy.pages && @pagy.pages > 1 %>
+    </div>
+    <div class="col-lg-4">
+      <% if @owner_record %>
+        <% if @owner_record.description.present? || @owner_record.funding_links.any? %>
+          <div class="card mb-3">
+            <div class="card-header">Details</div>
+            <div class="card-body">
+              <% if @owner_record.description.present? %>
+                <p class="<%= 'mb-0' unless @owner_record.funding_links.any? %>"><%= @owner_record.description %></p>
+              <% end %>
+              <% if @owner_record.funding_links.any? %>
+                <p class="mb-0"><small class='text-muted'>
+                  <%= t '.funding_links' %> <% @owner_record.funding_links.each_with_index do |url,i| %><%= ', ' if i > 0 %><%= link_to(url, sanitize_user_url(url), target: :_blank) %><% end %>
+                </small></p>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      <% end %>
+      <div class="card mb-3">
+        <div class="card-header">Links</div>
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item">
+            JSON API: <%= link_to "repos.ecosyste.ms", api_v1_host_owner_url(@host, @owner), target: :_blank %>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
 </div>

@@ -82,15 +82,15 @@ class ImportsControllerTest < ActionDispatch::IntegrationTest
   test "should calculate recent stats for last 24 hours" do
     get imports_path
     assert_response :success
-    
-    # Verify stats are calculated and displayed
-    assert_select 'div.card-body' do
-      assert_select 'strong', text: 'Total Imports:'
-      assert_select 'strong', text: 'Successful:'
-      assert_select 'strong', text: 'Failed:'
-      assert_select 'strong', text: 'Repositories Processed:'
-      assert_select 'strong', text: 'With Releases:'
-      assert_select 'strong', text: 'Success Rate:'
+
+    # Verify stat cards are displayed
+    assert_select 'div.card.text-center' do
+      assert_select 'p.card-text', text: 'Total Imports'
+      assert_select 'p.card-text', text: 'Successful'
+      assert_select 'p.card-text', text: 'Failed'
+      assert_select 'p.card-text', text: 'Repos Processed'
+      assert_select 'p.card-text', text: 'With Releases'
+      assert_select 'p.card-text', text: 'Success Rate'
     end
   end
 

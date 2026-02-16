@@ -4,90 +4,79 @@
 <div class="container-sm">
   <%= render 'overview' %>
 
-  <ul class="nav nav-tabs mt-3">
-    <li class="nav-item">
-      <a class="nav-link" href="<%= host_repository_path(@host, @repository) %>">Files</a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link" href="<%= readme_host_repository_path(@host, @repository) %>">Readme</a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link" href="<%= dependencies_host_repository_path(@host, @repository) %>">Dependencies</a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link active" href="<%= releases_host_repository_path(@host, @repository) %>">Releases</a>
-    </li>
-    <% if @repository.has_scorecard? %>
-      <li class="nav-item">
-        <a class="nav-link" href="<%= scorecard_host_repository_path(@host, @repository) %>">Scorecard</a>
-      </li>
-    <% end %>
-  </ul>
+  <div class="row">
+    <div class="col-lg-8">
+      <%= render 'tabs' %>
 
-  <div class="card mt-3">
-    <div class="card-header d-flex justify-content-between align-items-center">
-      <h5 class="mb-0">Releases</h5>
-      <div class="btn-group">
-        <%= link_to "Date", releases_host_repository_path(@host, @repository, prefix: @prefix), class: "btn btn-sm #{'btn-primary' if @sort == 'date'} #{'btn-outline-secondary' if @sort != 'date'}" %>
-        <%= link_to "Semver", releases_host_repository_path(@host, @repository, sort: 'semver', prefix: @prefix), class: "btn btn-sm #{'btn-primary' if @sort == 'semver'} #{'btn-outline-secondary' if @sort != 'semver'}" %>
-      </div>
-    </div>
-    
-    <% if @releases&.any? %>
-      <div class="list-group list-group-flush">
-        <% @releases.each do |release| %>
-          <div class="list-group-item">
-            <div class="d-flex w-100 justify-content-between">
-              <div>
-                <h6 class="mb-1">
-                  <a href="<%= release.html_url %>" target="_blank" class="text-decoration-none">
-                    <%= release.name.presence || release.tag_name %>
-                  </a>
-                </h6>
-                <p class="mb-1 text-muted">
-                  <small>
-                    <span class="badge bg-secondary me-2"><%= release.tag_name %></span>
-                    <% if release.prerelease %>
-                      <span class="badge bg-warning text-dark">Pre-release</span>
+      <div class="card mt-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">Releases</h5>
+          <div class="btn-group">
+            <%= link_to "Date", releases_host_repository_path(@host, @repository, prefix: @prefix), class: "btn btn-sm #{'btn-primary' if @sort == 'date'} #{'btn-outline-secondary' if @sort != 'date'}" %>
+            <%= link_to "Semver", releases_host_repository_path(@host, @repository, sort: 'semver', prefix: @prefix), class: "btn btn-sm #{'btn-primary' if @sort == 'semver'} #{'btn-outline-secondary' if @sort != 'semver'}" %>
+          </div>
+        </div>
+
+        <% if @releases&.any? %>
+          <div class="list-group list-group-flush">
+            <% @releases.each do |release| %>
+              <div class="list-group-item">
+                <div class="d-flex w-100 justify-content-between">
+                  <div>
+                    <h6 class="mb-1">
+                      <a href="<%= release.html_url %>" target="_blank" class="text-decoration-none">
+                        <%= release.name.presence || release.tag_name %>
+                      </a>
+                    </h6>
+                    <p class="mb-1 text-muted">
+                      <small>
+                        <span class="badge bg-secondary me-2"><%= release.tag_name %></span>
+                        <% if release.prerelease %>
+                          <span class="badge bg-warning text-dark">Pre-release</span>
+                        <% end %>
+                        <% if release.draft %>
+                          <span class="badge bg-info">Draft</span>
+                        <% end %>
+                      </small>
+                    </p>
+                    <% if release.body.present? %>
+                      <div class="mb-1 text-muted release-body">
+                        <%= Commonmarker.to_html(release.body, options: { parse: { smart: true }, render: { unsafe: false } }).html_safe %>
+                      </div>
                     <% end %>
-                    <% if release.draft %>
-                      <span class="badge bg-info">Draft</span>
-                    <% end %>
-                  </small>
-                </p>
-                <% if release.body.present? %>
-                  <div class="mb-1 text-muted release-body">
-                    <%= Commonmarker.to_html(release.body, options: { parse: { smart: true }, render: { unsafe: false } }).html_safe %>
                   </div>
-                <% end %>
+                  <div class="text-end">
+                    <small class="text-muted">
+                      <% if release.published_at %>
+                        <%= time_ago_in_words(release.published_at) %> ago
+                      <% else %>
+                        Not published
+                      <% end %>
+                    </small>
+                    <br>
+                    <a href="<%= release.download_url %>" class="btn btn-sm btn-outline-primary mt-1">
+                      Download
+                    </a>
+                  </div>
+                </div>
               </div>
-              <div class="text-end">
-                <small class="text-muted">
-                  <% if release.published_at %>
-                    <%= time_ago_in_words(release.published_at) %> ago
-                  <% else %>
-                    Not published
-                  <% end %>
-                </small>
-                <br>
-                <a href="<%= release.download_url %>" class="btn btn-sm btn-outline-primary mt-1">
-                  Download
-                </a>
-              </div>
-            </div>
+            <% end %>
+          </div>
+        <% else %>
+          <div class="card-body text-center text-muted">
+            <p class="mb-0">No releases found for this repository.</p>
+          </div>
+        <% end %>
+
+        <% if @pagy&.pages.to_i > 1 %>
+          <div class="card-footer">
+            <%== pagy_bootstrap_nav(@pagy) %>
           </div>
         <% end %>
       </div>
-    <% else %>
-      <div class="card-body text-center text-muted">
-        <p class="mb-0">No releases found for this repository.</p>
-      </div>
-    <% end %>
-    
-    <% if @pagy&.pages.to_i > 1 %>
-      <div class="card-footer">
-        <%== pagy_bootstrap_nav(@pagy) %>
-      </div>
-    <% end %>
+    </div>
+    <div class="col-lg-4">
+      <%= render 'sidebar' %>
+    </div>
   </div>
 </div>

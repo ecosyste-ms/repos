@@ -1,0 +1,26 @@
+<ul class="nav nav-tabs my-3">
+  <li class="nav-item">
+    <a class="nav-link <%= 'active' if controller_name == 'hosts' && action_name == 'show' %>" href="<%= host_path(@host) %>">
+      <%= Repository.model_name.human(count: @host.repositories_count) %>
+      <span class="badge bg-secondary rounded-pill">
+        <%= number_with_delimiter @host.repositories_count %>
+      </span>
+    </a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link <%= 'active' if controller_name == 'owners' %>" href="<%= host_owners_path(@host) %>">
+      <%= Owner.model_name.human(count: @host.owners_count) %>
+      <span class="badge bg-secondary rounded-pill">
+        <%= number_with_delimiter @host.owners_count %>
+      </span>
+    </a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link <%= 'active' if controller_name == 'hosts' && action_name == 'topics' %>" href="<%= topics_host_path(@host) %>">
+      <%= t('virtual.models.topic.other') %>
+    </a>
+  </li>
+  <% if controller_name == 'hosts' && action_name == 'show' %>
+    <%= render 'hosts/sort' %>
+  <% end %>
+</ul>
