@@ -35,6 +35,23 @@ class Repository < ApplicationRecord
   scope :with_metadata, -> { where("length(metadata::text) > 2") }
   scope :has_scorecard, -> { joins(:scorecard) }
 
+  def self.sortable_columns
+    {
+      'id' => 'id',
+      'updated_at' => 'updated_at',
+      'created_at' => 'created_at',
+      'stargazers_count' => 'stargazers_count',
+      'forks_count' => 'forks_count',
+      'open_issues_count' => 'open_issues_count',
+      'subscribers_count' => 'subscribers_count',
+      'size' => 'size',
+      'pushed_at' => 'pushed_at',
+      'full_name' => 'full_name',
+      'language' => 'language',
+      'tags_count' => 'tags_count',
+    }
+  end
+
   self.record_timestamps = false
 
   def self.blocked_topics

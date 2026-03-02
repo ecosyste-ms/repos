@@ -37,6 +37,12 @@ class ApplicationController < ActionController::Base
     end
   end
 
+  def sanitize_sort(allowed_columns, default: 'updated_at')
+    sort_param = params[:sort].presence || default
+    sql = allowed_columns[sort_param] || allowed_columns[default] || default
+    Arel.sql(sql)
+  end
+
   def related_topics_for_scope(scope, exclude_topic)
     # TODO(DB_PERF): related_topics disabled 2026-01-10
     # unnest(topics) query causing DB performance issues

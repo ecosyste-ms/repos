@@ -14,11 +14,11 @@ class HostsController < ApplicationController
 
     scope = @host.repositories
 
-    sort = params[:sort].presence || 'id'
+    sort = sanitize_sort(Repository.sortable_columns, default: 'id')
     if params[:order] == 'asc'
-      scope = scope.order(Arel.sql(sort).asc.nulls_last)
+      scope = scope.order(sort.asc.nulls_last)
     else
-      scope = scope.order(Arel.sql(sort).desc.nulls_last)
+      scope = scope.order(sort.desc.nulls_last)
     end
 
     @pagy, @repositories = pagy_countless(scope)

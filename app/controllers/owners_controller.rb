@@ -22,11 +22,11 @@ class OwnersController < ApplicationController
     scope = @host.repositories.owner(@owner).includes(:host)
 
     if params[:sort].present? || params[:order].present?
-      sort = params[:sort].presence || 'updated_at'
+      sort = sanitize_sort(Repository.sortable_columns)
       if params[:order] == 'asc'
-        scope = scope.order(Arel.sql(sort).asc.nulls_last)
+        scope = scope.order(sort.asc.nulls_last)
       else
-        scope = scope.order(Arel.sql(sort).desc.nulls_last)
+        scope = scope.order(sort.desc.nulls_last)
       end
     else
       scope = scope.order('updated_at desc')
