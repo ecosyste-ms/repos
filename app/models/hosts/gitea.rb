@@ -147,7 +147,7 @@ module Hosts
     def map_repository_data(data)
       {
         uuid: data['id'],
-        full_name: data['full_name'],
+        full_name: data['full_name']&.strip,
         owner: data['owner']&.[]('login'),
         language: data['language'],
         archived: data['archived'],

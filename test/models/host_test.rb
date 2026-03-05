@@ -624,6 +624,23 @@ class HostTest < ActiveSupport::TestCase
       @hidden_owner = FactoryBot.create(:hidden_owner, host: @host, login: 'hidden')
     end
 
+    should 'strip whitespace from full_name' do
+      @host.stubs(:host_instance).returns(mock('host_instance').tap do |m|
+        m.expects(:fetch_repository).with('visible/repo').returns({
+          uuid: '12345',
+          id: '12345',
+          full_name: 'visible/repo',
+          description: 'Test repo',
+          created_at: 1.week.ago,
+          updated_at: 1.day.ago,
+          owner: 'visible'
+        })
+      end)
+
+      repository = @host.sync_repository('visible/repo ')
+      assert_equal 'visible/repo', repository.full_name
+    end
+
     should 'not sync repository when owner is hidden' do
       result = @host.sync_repository('hidden/repo')
       assert_nil result

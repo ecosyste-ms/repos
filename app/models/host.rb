@@ -81,6 +81,7 @@ class Host < ApplicationRecord
 
   def sync_repository(full_name, uuid: nil)
     return if full_name.blank?
+    full_name = full_name.strip
     # remove .git from the end of the full_name
     full_name = full_name.gsub(/\.git$/, '')
 
