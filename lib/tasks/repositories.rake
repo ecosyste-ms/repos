@@ -74,7 +74,11 @@ namespace :repositories do
   desc 'clean up sidekiq unique jobs'
   task clean_up_sidekiq_unique_jobs: :environment do
     CronLock.acquire("repositories:clean_up_sidekiq_unique_jobs", ttl: 6.days) do
-      REDIS.del('uniquejobs:digests')
+      digests = SidekiqUniqueJobs::Digests.new
+      digests.delete_by_pattern("*", count: 10_000)
+
+      expiring = SidekiqUniqueJobs::ExpiringDigests.new
+      expiring.delete_by_pattern("*", count: 10_000)
     end
   end
 end
