@@ -9,7 +9,7 @@ gem "activesupport", "~> 8.1.1"
 gem "activemodel", "~> 8.1.1"
 gem "activerecord", "~> 8.1.1"
 gem "actionpack", "~> 8.1.1"
-gem "actionview", "~> 8.1.1"
+gem "actionview", "~> 8.1.2"
 
 gem "secure_headers"
 gem "sprockets-rails"
