@@ -1,0 +1,25 @@
+public/spa/index.html
+  6e79ae544b873fea 1-156
+public/spa/app.js
+  6e79ae544b873fea 1-743
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.20",
+  "base_commit_sha": "f55847681e784ed5ccae169b09c40623403eb272",
+  "prompts": {
+    "6e79ae544b873fea": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6ef7b02a-a0f2-4764-8f8a-4a74fbdf3f50",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Andrew Nesbitt <andrewnez@gmail.com>",
+      "messages": [],
+      "total_additions": 899,
+      "total_deletions": 0,
+      "accepted_lines": 899,
+      "overriden_lines": 0
+    }
+  }
+}
