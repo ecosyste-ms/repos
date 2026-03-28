@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ecosyste.ms: Repos</title>
+    <meta name="description" content="An open API service providing repository metadata for many open source software ecosystems.">
+    <link rel="stylesheet" href="/assets/application.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+</head>
+<body>
+    <header class="header">
+        <div class="header__global">
+            <div class="container">
+                <div class="row mb-4">
+                    <div class="col-md-6 header__global__site-logo-wrapper mb-3 mb-lg-0">
+                        <h1><a class="site-logo" href="/spa/">ecosyste.ms</a></h1>
+                    </div>
+                    <div class="col-md-6 text-md-end">
+                        <a class="header__global__menu-link" role="button" aria-expanded="false" aria-controls="header__global__menu" data-bs-toggle="collapse" href="#header__global__menu">All services <svg class="bi" width="12" height="12"><use xlink:href="#caret-down-fill"/></svg></a>
+                    </div>
+                </div>
+                <div id="header__global__menu" class="collapse header__global__menu">
+                    <div class="header__global__menu__category">
+                        <h2 class="header__global__menu__category-title">Data</h2>
+                        <ul class="header__global__menu__category-links">
+                            <li><a href="https://packages.ecosyste.ms" target="_blank">Packages</a></li>
+                            <li><a href="https://repos.ecosyste.ms" target="_blank">Repositories</a></li>
+                            <li><a href="https://advisories.ecosyste.ms" target="_blank">Advisories</a></li>
+                        </ul>
+                    </div>
+                    <div class="header__global__menu__category">
+                        <h2 class="header__global__menu__category-title">Tools</h2>
+                        <ul class="header__global__menu__category-links">
+                            <li><a href="https://parser.ecosyste.ms" target="_blank">Dependency Parser</a></li>
+                            <li><a href="https://resolve.ecosyste.ms" target="_blank">Dependency Resolver</a></li>
+                            <li><a href="https://sbom.ecosyste.ms" target="_blank">SBOM Parser</a></li>
+                            <li><a href="https://licenses.ecosyste.ms" target="_blank">License Parser</a></li>
+                            <li><a href="https://digest.ecosyste.ms" target="_blank">Digest</a></li>
+                            <li><a href="https://archives.ecosyste.ms" target="_blank">Archives</a></li>
+                            <li><a href="https://diff.ecosyste.ms" target="_blank">Diff</a></li>
+                            <li><a href="https://summary.ecosyste.ms" target="_blank">Summary</a></li>
+                        </ul>
+                    </div>
+                    <div class="header__global__menu__category">
+                        <h2 class="header__global__menu__category-title">Indexes</h2>
+                        <ul class="header__global__menu__category-links">
+                            <li><a href="https://timeline.ecosyste.ms" target="_blank">Timeline</a></li>
+                            <li><a href="https://commits.ecosyste.ms" target="_blank">Commits</a></li>
+                            <li><a href="https://issues.ecosyste.ms" target="_blank">Issues</a></li>
+                            <li><a href="https://sponsors.ecosyste.ms" target="_blank">Sponsors</a></li>
+                            <li><a href="https://docker.ecosyste.ms" target="_blank">Docker</a></li>
+                            <li><a href="https://opencollective.ecosyste.ms" target="_blank">Open Collective</a></li>
+                            <li><a href="https://dependabot.ecosyste.ms" target="_blank">Dependabot</a></li>
+                        </ul>
+                    </div>
+                    <div class="header__global__menu__category">
+                        <h2 class="header__global__menu__category-title">Applications</h2>
+                        <ul class="header__global__menu__category-links">
+                            <li><a href="https://funds.ecosyste.ms" target="_blank">Funds</a></li>
+                            <li><a href="https://dashboards.ecosyste.ms" target="_blank">Dashboards</a></li>
+                        </ul>
+                    </div>
+                    <div class="header__global__menu__category">
+                        <h2 class="header__global__menu__category-title">Experiments</h2>
+                        <ul class="header__global__menu__category-links">
+                            <li><a href="https://ost.ecosyste.ms" target="_blank">OST</a></li>
+                            <li><a href="https://papers.ecosyste.ms" target="_blank">Papers</a></li>
+                            <li><a href="https://awesome.ecosyste.ms" target="_blank">Awesome</a></li>
+                            <li><a href="https://ruby.ecosyste.ms" target="_blank">Ruby</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="header__local pt-3">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-3 col-md-4">
+                        <h1 class="h3 header__local__sitename">
+                            <a class="header__local__homelink" href="/spa/">Repos</a>
+                        </h1>
+                    </div>
+                    <div class="col-lg-5 col-md-8">
+                        <p class="header__local__description">An open API service providing repository metadata for many open source software ecosystems.</p>
+                    </div>
+                    <div class="col-lg-4 col-md-12">
+                        <nav class="header__local__navigation">
+                            <ul class="nav">
+                                <li class="nav-item"><a class="nav-link" href="https://opencollective.com/ecosystems" target="_blank">Support</a></li>
+                                <li class="nav-item"><a class="nav-link" href="https://github.com/ecosyste-ms/repos" target="_blank">GitHub</a></li>
+                                <li class="nav-item"><a class="nav-link" href="/docs">API</a></li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="main" id="content">
+        <div class="container-sm">
+            <p class="text-muted">Loading...</p>
+        </div>
+    </div>
+
+    <footer class="footer dark-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-8">
+                    <a class="site-logo site-logo--white" href="/spa/">Ecosyste.ms</a>
+                    <p class="small">Tools and open datasets to support, sustain, and secure critical digital infrastructure.</p>
+                    <p class="small">
+                        Code: <a href="https://github.com/ecosyste-ms/documentation/blob/main/LICENSE">AGPL-3</a> -
+                        Data: <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank">CC BY-SA 4.0</a>
+                    </p>
+                    <div>
+                        <h3 class="mt-5 h6">Supported by</h3>
+                        <div class="row justify-content-start align-items-center g-4 mb-4 mb-lg-0">
+                            <div class="col-auto">
+                                <a href="https://www.schmidtfutures.org">
+                                    <img src="/assets/logo-schmidt-white.svg" alt="Schmidt Futures" class="img-fluid p3" width="267" height="20">
+                                </a>
+                            </div>
+                            <div class="col-auto">
+                                <a href="https://oscollective.org">
+                                    <img src="/assets/logo-osc-white.png" alt="Open Source Collective" class="img-fluid p3" width="210" height="56">
+                                </a>
+                            </div>
+                        </div>
+                        <p class="mt-3"><a href="https://opencollective.com/ecosystems" class="small">Become a sponsor</a></p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <ul class="list-unstyled footer-links mt-3 small">
+                        <li><strong><a href="https://ecosyste.ms">About</a></strong></li>
+                        <li><strong><a href="https://blog.ecosyste.ms">Blog</a></strong></li>
+                        <li><strong><a href="https://mastodon.social/@ecosystems">Contact</a></strong></li>
+                        <li><strong><a href="https://ecosyste.ms/privacy">Privacy</a></strong></li>
+                        <li><strong><a href="https://ecosyste.ms/terms">Terms</a></strong></li>
+                        <li><strong><a href="https://ecosystems.appsignal-status.com/">Status</a></strong></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/spa/app.js"></script>
+</body>
+</html>
