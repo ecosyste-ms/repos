@@ -179,12 +179,13 @@ class Tag < ApplicationRecord
   end
 
   def delete_old_manifests(new_manifests)
-    existing_manifests = manifests.map{|m| [m.ecosystem, m.filepath] }
-    to_be_removed = existing_manifests - new_manifests.map{|m| [(m[:platform] || m[:ecosystem]), m[:path]] }
-    to_be_removed.each do |m|
-      manifests.where(ecosystem: m[0], filepath: m[1]).each(&:destroy)
-    end
-    manifests.where.not(id: manifests.latest.map(&:id)).each(&:destroy)
+    new_keys = new_manifests.map { |m| [m[:platform] || m[:ecosystem], m[:path]] }
+    keep_ids = manifests.latest.select { |m| new_keys.include?([m.ecosystem, m.filepath]) }.map(&:id)
+    delete_ids = manifests.where.not(id: keep_ids).pluck(:id)
+    return if delete_ids.empty?
+
+    Dependency.where(manifest_id: delete_ids).delete_all
+    Manifest.where(id: delete_ids).delete_all
   end
 
   def purl
