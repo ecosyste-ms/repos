@@ -1,0 +1,29 @@
+app/sidekiq/parse_dependencies_worker.rb
+  1052356df7976c58 6
+app/sidekiq/parse_tag_dependencies_worker.rb
+  1052356df7976c58 6
+test/workers/parse_dependencies_worker_test.rb
+  1052356df7976c58 1-44
+test/workers/parse_tag_dependencies_worker_test.rb
+  1052356df7976c58 1-45
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.5",
+  "base_commit_sha": "65d6e109cdf7f3b95de9887f4e559f1dd0e12fcc",
+  "prompts": {
+    "1052356df7976c58": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "032bbbd0-08c1-423f-969c-921f86ff4132",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Andrew Nesbitt",
+      "messages": [],
+      "total_additions": 95,
+      "total_deletions": 6,
+      "accepted_lines": 91,
+      "overriden_lines": 0
+    }
+  }
+}
