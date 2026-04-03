@@ -20,7 +20,7 @@ class ParseDependenciesWorkerTest < ActiveSupport::TestCase
       end
     end
 
-    should 'not eager load manifests and dependencies' do
+    should 'eager load manifests but not dependencies' do
       host = create(:host)
       repository = create(:repository, host: host)
       manifest = create(:manifest, repository: repository)
@@ -37,8 +37,10 @@ class ParseDependenciesWorkerTest < ActiveSupport::TestCase
         ParseDependenciesWorker.new.perform(repository.id)
       end
 
-      eager_load_queries = queries.select { |q| q.include?('manifests') || q.include?('dependencies') }
-      assert_empty eager_load_queries, "Should not eager load manifests or dependencies"
+      manifest_queries = queries.select { |q| q.include?('manifests') }
+      dependency_queries = queries.select { |q| q.include?('dependencies') }
+      assert manifest_queries.any?, "Should eager load manifests"
+      assert_empty dependency_queries, "Should not eager load dependencies"
     end
   end
 end

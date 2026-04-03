@@ -3,6 +3,6 @@ class ParseTagDependenciesWorker
   sidekiq_options queue: 'dependencies', lock: :until_executed, lock_expiration: 1.day.to_i
 
   def perform(tag_id)
-    Tag.find_by_id(tag_id).try(:parse_dependencies)
+    Tag.includes(:manifests).find_by_id(tag_id).try(:parse_dependencies)
   end
 end
