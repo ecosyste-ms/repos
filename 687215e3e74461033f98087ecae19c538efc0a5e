@@ -1,0 +1,25 @@
+app/models/tag.rb
+  1052356df7976c58 182-188
+test/models/tag_test.rb
+  1052356df7976c58 32-73
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.5",
+  "base_commit_sha": "687215e3e74461033f98087ecae19c538efc0a5e",
+  "prompts": {
+    "1052356df7976c58": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "032bbbd0-08c1-423f-969c-921f86ff4132",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Andrew Nesbitt",
+      "messages": [],
+      "total_additions": 49,
+      "total_deletions": 6,
+      "accepted_lines": 49,
+      "overriden_lines": 0
+    }
+  }
+}
