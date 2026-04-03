@@ -216,8 +216,21 @@ module Hosts
       nil
     end
 
-    def fetch_releases(repository)
-      api_client.releases(repository.full_name).map do |release|
+    def fetch_releases(repository, max_pages: 10)
+      client = api_client(nil, auto_paginate: false)
+      releases = []
+      response = client.releases(repository.full_name, per_page: 100)
+      releases.concat(response)
+
+      last_resp = client.last_response
+      pages_fetched = 1
+      while pages_fetched < max_pages && last_resp.rels[:next]
+        last_resp = last_resp.rels[:next].get
+        releases.concat(last_resp.data)
+        pages_fetched += 1
+      end
+
+      releases.map do |release|
         {
           uuid: release.id,
           tag_name: release.tag_name,
@@ -237,8 +250,21 @@ module Hosts
       []
     end
 
-    def load_owner_repos_names(owner)
-      api_client.repos(owner.login, type: "all").map { |repo| repo[:full_name] }
+    def load_owner_repos_names(owner, max_pages: 10)
+      client = api_client(nil, auto_paginate: false)
+      repos = []
+      response = client.repos(owner.login, type: "all", per_page: 100)
+      repos.concat(response.map { |repo| repo[:full_name] })
+
+      last_resp = client.last_response
+      pages_fetched = 1
+      while pages_fetched < max_pages && last_resp.rels[:next]
+        last_resp = last_resp.rels[:next].get
+        repos.concat(last_resp.data.map { |repo| repo[:full_name] })
+        pages_fetched += 1
+      end
+
+      repos
     rescue *IGNORABLE_EXCEPTIONS, Octokit::NotFound
       []
     end
