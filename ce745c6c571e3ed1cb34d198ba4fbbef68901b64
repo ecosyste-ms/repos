@@ -1,0 +1,25 @@
+test/models/hosts/github_test.rb
+  1052356df7976c58 1-145
+app/models/hosts/github.rb
+  1052356df7976c58 219-233,253-267
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.5",
+  "base_commit_sha": "ce745c6c571e3ed1cb34d198ba4fbbef68901b64",
+  "prompts": {
+    "1052356df7976c58": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "032bbbd0-08c1-423f-969c-921f86ff4132",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Andrew Nesbitt",
+      "messages": [],
+      "total_additions": 201,
+      "total_deletions": 30,
+      "accepted_lines": 175,
+      "overriden_lines": 0
+    }
+  }
+}
