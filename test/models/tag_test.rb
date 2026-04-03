@@ -29,6 +29,48 @@ class TagTest < ActiveSupport::TestCase
     end
   end
 
+  context 'delete_old_manifests' do
+    setup do
+      @host = FactoryBot.create(:github_host)
+      @repository = FactoryBot.create(:repository, host: @host, full_name: 'test/delmanifests', owner: 'test')
+      @tag = FactoryBot.create(:tag, repository: @repository, name: 'v2.0.0', sha: 'def456')
+    end
+
+    should 'delete manifests not present in new list' do
+      old_manifest = Manifest.create!(tag: @tag, ecosystem: 'npm', filepath: 'package.json', kind: 'manifest')
+      keep_manifest = Manifest.create!(tag: @tag, ecosystem: 'rubygems', filepath: 'Gemfile', kind: 'manifest')
+
+      new_manifests = [{ platform: 'rubygems', path: 'Gemfile' }]
+
+      @tag.delete_old_manifests(new_manifests)
+
+      assert_not Manifest.exists?(old_manifest.id)
+      assert Manifest.exists?(keep_manifest.id)
+    end
+
+    should 'delete dependencies belonging to removed manifests' do
+      old_manifest = Manifest.create!(tag: @tag, ecosystem: 'npm', filepath: 'package.json', kind: 'manifest')
+      dep = Dependency.create!(manifest: old_manifest, repository: @repository, ecosystem: 'npm', package_name: 'lodash', requirements: '^4.0', kind: 'runtime')
+
+      new_manifests = []
+
+      @tag.delete_old_manifests(new_manifests)
+
+      assert_not Manifest.exists?(old_manifest.id)
+      assert_not Dependency.exists?(dep.id)
+    end
+
+    should 'do nothing when all manifests match' do
+      keep = Manifest.create!(tag: @tag, ecosystem: 'npm', filepath: 'package.json', kind: 'manifest')
+
+      new_manifests = [{ platform: 'npm', path: 'package.json' }]
+
+      @tag.delete_old_manifests(new_manifests)
+
+      assert Manifest.exists?(keep.id)
+    end
+  end
+
   context 'parse_dependencies method' do
     setup do
       @host = FactoryBot.create(:github_host)
