@@ -1,0 +1,25 @@
+app/models/hosts/github.rb
+  14dde8d7d372baa1 272,277-278,281
+test/models/hosts/github_test.rb
+  14dde8d7d372baa1 88-157
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.5",
+  "base_commit_sha": "35c17b40edc24f89bc9d9ff7ad5d5c838fe951c8",
+  "prompts": {
+    "14dde8d7d372baa1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1de1328d-664f-4ae9-bd84-0f2d6aa283da",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Andrew Nesbitt",
+      "messages": [],
+      "total_additions": 74,
+      "total_deletions": 2,
+      "accepted_lines": 74,
+      "overriden_lines": 0
+    }
+  }
+}
