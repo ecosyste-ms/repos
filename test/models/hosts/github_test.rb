@@ -85,6 +85,76 @@ class Hosts::GithubTest < ActiveSupport::TestCase
     end
   end
 
+  context 'fetch_tags' do
+    should 'fetch tags via graphql' do
+      graphql_response = {
+        data: {
+          repository: {
+            refs: {
+              pageInfo: { startCursor: 'abc', hasNextPage: false, endCursor: 'def' },
+              nodes: [
+                { name: 'v1.0.0', target: { __typename: 'Commit', oid: 'sha1', committer: { date: '2026-01-01' } } }
+              ]
+            }
+          }
+        }
+      }
+
+      @github.expects(:fetch_tags_graphql).with(@repository).returns(graphql_response)
+
+      result = @github.fetch_tags(@repository)
+
+      assert_equal 1, result.length
+      assert_equal 'v1.0.0', result.first[:name]
+      assert_equal 'sha1', result.first[:sha]
+    end
+
+    should 'stop after max_pages' do
+      page1_response = {
+        data: {
+          repository: {
+            refs: {
+              pageInfo: { startCursor: 'a', hasNextPage: true, endCursor: 'cursor1' },
+              nodes: [
+                { name: 'v1.0', target: { __typename: 'Commit', oid: 'sha1', committer: { date: '2026-01-01' } } }
+              ]
+            }
+          }
+        }
+      }
+
+      page2_response = {
+        data: {
+          repository: {
+            refs: {
+              pageInfo: { startCursor: 'b', hasNextPage: true, endCursor: 'cursor2' },
+              nodes: [
+                { name: 'v2.0', target: { __typename: 'Commit', oid: 'sha2', committer: { date: '2026-01-02' } } }
+              ]
+            }
+          }
+        }
+      }
+
+      @github.expects(:fetch_tags_graphql).with(@repository).returns(page1_response)
+      @github.expects(:fetch_tags_graphql).with(@repository, 'cursor1').returns(page2_response)
+
+      result = @github.fetch_tags(@repository, max_pages: 2)
+
+      assert_equal 2, result.length
+      assert_equal 'v1.0', result.first[:name]
+      assert_equal 'v2.0', result.last[:name]
+    end
+
+    should 'return nil when graphql returns no data' do
+      @github.expects(:fetch_tags_graphql).with(@repository).returns({ data: nil })
+
+      result = @github.fetch_tags(@repository)
+
+      assert_nil result
+    end
+  end
+
   context 'load_owner_repos_names' do
     setup do
       @owner = OpenStruct.new(login: 'testuser')

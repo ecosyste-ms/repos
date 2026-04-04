@@ -269,14 +269,16 @@ module Hosts
       []
     end
 
-    def fetch_tags(repository)
+    def fetch_tags(repository, max_pages: 10)
       tags = []
       fetch_tags_graphql(repository).tap do |res|
         return if res[:data].nil? || res[:data][:repository].nil? || res[:data][:repository][:refs].nil?
         tags += map_tags(res)
-        while res.dig(:data, :repository, :refs, :pageInfo, :hasNextPage)
+        pages_fetched = 1
+        while pages_fetched < max_pages && res.dig(:data, :repository, :refs, :pageInfo, :hasNextPage)
           res = fetch_tags_graphql(repository, res[:data][:repository][:refs][:pageInfo][:endCursor])
           tags += map_tags(res)
+          pages_fetched += 1
         end
       end
       tags
