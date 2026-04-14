@@ -57,12 +57,12 @@ GEM
     builder (3.3.0)
     cgi (0.5.1)
     chartkick (5.2.1)
-    commonmarker (2.8.0-aarch64-linux-musl)
-    commonmarker (2.8.0-arm-linux)
-    commonmarker (2.8.0-arm64-darwin)
-    commonmarker (2.8.0-x86_64-darwin)
-    commonmarker (2.8.0-x86_64-linux)
-    commonmarker (2.8.0-x86_64-linux-musl)
+    commonmarker (2.8.1-aarch64-linux-musl)
+    commonmarker (2.8.1-arm-linux)
+    commonmarker (2.8.1-arm64-darwin)
+    commonmarker (2.8.1-x86_64-darwin)
+    commonmarker (2.8.1-x86_64-linux)
+    commonmarker (2.8.1-x86_64-linux-musl)
     concurrent-ruby (1.3.6)
     connection_pool (3.0.2)
     counter_culture (3.13.0)
@@ -259,7 +259,7 @@ GEM
       tsort (>= 0.2)
       zeitwerk (~> 2.6)
     rainbow (3.1.1)
-    rake (13.3.1)
+    rake (13.4.1)
     rdoc (7.2.0)
       erb
       psych (>= 4.0.0)
@@ -442,12 +442,12 @@ CHECKSUMS
   builder (3.3.0) sha256=497918d2f9dca528fdca4b88d84e4ef4387256d984b8154e9d5d3fe5a9c8835f
   cgi (0.5.1) sha256=e93fcafc69b8a934fe1e6146121fa35430efa8b4a4047c4893764067036f18e9
   chartkick (5.2.1) sha256=2848d7de87189f30f28d077eb0bbdebc8a1f0f6f81de1ded95008fe564369949
-  commonmarker (2.8.0-aarch64-linux-musl) sha256=463430ab1f2ec905d5a1a05bf226150127e140a806bafe564b5a885f817d4094
-  commonmarker (2.8.0-arm-linux) sha256=a33b197cb3102b6d1ad67dfa3b7cf241fab55e7f9c1b523e4787f3d252c7dbc0
-  commonmarker (2.8.0-arm64-darwin) sha256=81f35484d8ad933b9690ca0e0edea5afd073e4dddbb428b970a0180ac1fed010
-  commonmarker (2.8.0-x86_64-darwin) sha256=abee2c7d0e97633a0a392f00f32fa7c49d972b0493d88a3e8f303330bdb733c4
-  commonmarker (2.8.0-x86_64-linux) sha256=3b41abbd8155251e823b51f5d0ba8be789320f2e541b082173fb909526fa6840
-  commonmarker (2.8.0-x86_64-linux-musl) sha256=1841deb35c2b6c6d2efada179136a21d0400b59027279853cfe41a9039b70f15
+  commonmarker (2.8.1-aarch64-linux-musl) sha256=bbc2b3d361403431a5aac737dc86997d3b2843276ef395e7499cf17ad48e1b2c
+  commonmarker (2.8.1-arm-linux) sha256=ede48564a9c2e29e003361fd7b0b158b3b85bcbd5a15b963fa2b3c78eef3993f
+  commonmarker (2.8.1-arm64-darwin) sha256=cf75760122d6e1c3f8626b5a6911636d2e0aaa26fa8dd377fea440a49c854b3e
+  commonmarker (2.8.1-x86_64-darwin) sha256=75afa559c1f1cc201afbb81291a2f2fc77b2941347deaa8d564d008ba04ecb18
+  commonmarker (2.8.1-x86_64-linux) sha256=c8f2e903c6ee4e2c7e280aa8b49ef37c53202d388e3a2ee06dfdccc8c6fb634f
+  commonmarker (2.8.1-x86_64-linux-musl) sha256=9b6305ce47e0d444b77dabf1762bf76085c2f7963b63c25c02ec36edcf06c785
   concurrent-ruby (1.3.6) sha256=6b56837e1e7e5292f9864f34b69c5a2cbc75c0cf5338f1ce9903d10fa762d5ab
   connection_pool (3.0.2) sha256=33fff5ba71a12d2aa26cb72b1db8bba2a1a01823559fb01d29eb74c286e62e0a
   counter_culture (3.13.0) sha256=a2cde20642ddd27aec9ff0c09b73fa5b4fd729da368079e67c177bface3148bf
@@ -542,7 +542,7 @@ CHECKSUMS
   rails-i18n (8.1.0) sha256=52d5fd6c0abef28d84223cc05647f6ae0fd552637a1ede92deee9545755b6cf3
   railties (8.1.3) sha256=913eb0e0cb520aac687ffd74916bd726d48fa21f47833c6292576ef6a286de22
   rainbow (3.1.1) sha256=039491aa3a89f42efa1d6dec2fc4e62ede96eb6acd95e52f1ad581182b79bc6a
-  rake (13.3.1) sha256=8c9e89d09f66a26a01264e7e3480ec0607f0c497a861ef16063604b1b08eb19c
+  rake (13.4.1) sha256=b4e81bd6a748308a6799619d824ec6a23cd1acd07d9ec41e5f2ebfb2294447c8
   rdoc (7.2.0) sha256=8650f76cd4009c3b54955eb5d7e3a075c60a57276766ebf36f9085e8c9f23192
   redis (5.4.1) sha256=b5e675b57ad22b15c9bcc765d5ac26f60b675408af916d31527af9bd5a81faae
   redis-client (0.28.0) sha256=888892f9cd8787a41c0ece00bdf5f556dfff7770326ce40bb2bc11f1bfec824b
