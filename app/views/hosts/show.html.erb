@@ -1,3 +1,8 @@
+<% content_for :head do %>
+  <%= auto_discovery_link_tag(:rss, host_url(@host, request.query_parameters.merge(format: :rss)), title: "Repository List RSS") %>
+  <%= auto_discovery_link_tag(:atom, host_url(@host, request.query_parameters.merge(format: :atom)), title: "Repository List Atom") %>
+<% end %>
+
 <% @meta_title = @host.to_s %>
 <% @meta_description = "Repositories of #{@host}" %>
 
