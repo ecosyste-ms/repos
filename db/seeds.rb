@@ -3,6 +3,7 @@ default_hosts = [
   {name: 'GitLab.com', url: 'https://gitlab.com', kind: 'gitlab'},
   {name: 'Bitbucket.org', url: 'https://bitbucket.org', kind: 'bitbucket'},
   {name: 'SourceHut', url: 'https://sr.ht', kind: 'sourcehut'},
+  {name: 'Hugging Face', url: 'https://huggingface.co', kind: 'huggingface'},
   {name: 'Gitea.com', url: 'https://gitea.com', kind: 'gitea'},
   {name: "Codeberg.org", url: "https://codeberg.org", kind: "forgejo", org: 'Codeberg-org'},
   {name: "git.fsfe.org", url: "https://git.fsfe.org", kind: "gitea", org: 'fsfe'},
