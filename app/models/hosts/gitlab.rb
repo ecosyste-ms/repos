@@ -304,6 +304,12 @@ module Hosts
     end
 
     def crawl_repositories_async
+      if @host.org.present?
+        repos = load_host_org_repo_names
+        repos.each { |full_name| @host.sync_repository_async(full_name) }
+        return true
+      end
+
       last_id = REDIS.get("gitlab_last_id:#{@host.id}")
       repos = api_client.projects(per_page: 100, archived: false, id_before: last_id, simple: true)
       if repos.present? && repos.any?
@@ -327,6 +333,12 @@ module Hosts
     end
 
     def crawl_repositories_backwards
+      if @host.org.present?
+        repos = load_host_org_repos
+        repos.each { |repo| @host.sync_repository(repo["path_with_namespace"], uuid: repo["id"]) }
+        return true
+      end
+
       last_id = REDIS.get("gitlab_last_id:#{@host.id}")
       repos = api_client.projects(per_page: 100, archived: false, id_before: last_id, simple: true)
       if repos.present? && repos.any?
@@ -354,6 +366,14 @@ module Hosts
       nil
     end
 
+
+    def load_host_org_repos
+      api_client.group_projects(@host.org, per_page: 100, archived: false, simple: true, include_subgroups: true) || []
+    end
+
+    def load_host_org_repo_names
+      load_host_org_repos.map { |repo| repo["path_with_namespace"] }
+    end
 
     def load_owner_repos_names(owner)
       repos = if owner.user?
