@@ -138,18 +138,37 @@ module Hosts
         resp = api_client.get(url)
         return nil unless resp.success? && resp.body.present?
         return nil if resp.body['private']
-        map_repository_data(resp.body)
+        languages = fetch_languages(resp.body['full_name'])
+        map_repository_data(resp.body, languages: languages)
       rescue Faraday::Error
         nil
       end
     end
 
-    def map_repository_data(data)
+    def fetch_languages(full_name)
+      resp = api_client.get("api/v1/repos/#{full_name}/languages")
+      return {} unless resp.success? && resp.body.respond_to?(:to_h)
+      resp.body.to_h
+    rescue Faraday::Error
+      {}
+    end
+
+    def primary_language(languages, fallback)
+      return fallback if languages.blank?
+      languages.max_by { |_language, bytes| bytes.to_i }.first
+    end
+
+    def language_metadata(languages)
+      return {} if languages.blank?
+      { languages: languages }
+    end
+
+    def map_repository_data(data, languages: {})
       {
         uuid: data['id'],
         full_name: data['full_name']&.strip,
         owner: data['owner']&.[]('login'),
-        language: data['language'],
+        language: primary_language(languages, data['language']),
         archived: data['archived'],
         fork: data['fork'],
         description: data['description'],
@@ -171,6 +190,7 @@ module Hosts
         created_at: data['created_at'],
         updated_at: data['updated_at'],
         template: data['template'],
+        metadata: language_metadata(languages),
       }
     end
 
