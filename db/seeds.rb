@@ -1,4 +1,8 @@
 default_hosts = [
+  {name: 'gerrit.osmocom.org', url: 'https://gerrit.osmocom.org', kind: 'gerrit'},
+  {name: 'gerrit.cloudera.org', url: 'https://gerrit.cloudera.org', kind: 'gerrit'},
+  {name: 'gerrit.rockbox.org', url: 'https://gerrit.rockbox.org', kind: 'gerrit'},
+  {name: 'review.coreboot.org', url: 'https://review.coreboot.org', kind: 'gerrit'},
   {name: 'GitHub', url: 'https://github.com', kind: 'github'},
   {name: 'GitLab.com', url: 'https://gitlab.com', kind: 'gitlab'},
   {name: 'Bitbucket.org', url: 'https://bitbucket.org', kind: 'bitbucket'},
