@@ -32,7 +32,8 @@ module Hosts
         :status,
         :source_name,
         :template,
-        :template_full_name
+        :template_full_name,
+        :metadata
         # :allow_forking,
         # :has_projects,
         # :has_downloads,

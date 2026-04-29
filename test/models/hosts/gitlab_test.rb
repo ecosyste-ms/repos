@@ -93,3 +93,56 @@ class Hosts::GitlabTest < ActiveSupport::TestCase
     end
   end
 end
+class Hosts::GitlabLanguageTest < ActiveSupport::TestCase
+  context 'fetch_repository languages' do
+    setup do
+      @host = create(:host, url: 'https://gitlab.com', kind: 'gitlab')
+      @gitlab_instance = Hosts::Gitlab.new(@host)
+      @project = OpenStruct.new(
+        id: 123,
+        description: 'AMIRIS energy market model',
+        created_at: Time.zone.parse('2024-01-01'),
+        name: 'amiris',
+        open_issues_count: 4,
+        forks_count: 2,
+        default_branch: 'main',
+        archived: false,
+        topics: ['energy'],
+        namespace: OpenStruct.new(kind: 'group'),
+        visibility: 'public',
+        path_with_namespace: 'dlr-ve/esy/amiris/amiris',
+        last_activity_at: Time.zone.parse('2024-02-01'),
+        star_count: 12,
+        issues_enabled: true,
+        wiki_enabled: false,
+        vcs_type: 'git',
+        merge_requests_enabled: true,
+        avatar_url: 'https://gitlab.com/uploads/project/avatar.png',
+        forked_from_project: nil,
+        license: OpenStruct.new(key: 'apache-2.0')
+      )
+      @api_client = mock('gitlab_api_client')
+      @gitlab_instance.stubs(:api_client).returns(@api_client)
+    end
+
+    should 'populate language and language metadata from GitLab languages endpoint' do
+      @api_client.expects(:project).with('dlr-ve/esy/amiris/amiris', license: true).returns(@project)
+      @api_client.expects(:project_languages).with('dlr-ve/esy/amiris/amiris').returns({ 'Java' => 98.15, 'Python' => 1.14, 'BibTeX' => 0.71 })
+
+      repository = @gitlab_instance.fetch_repository('dlr-ve/esy/amiris/amiris')
+
+      assert_equal 'Java', repository[:language]
+      assert_equal({ 'Java' => 98.15, 'Python' => 1.14, 'BibTeX' => 0.71 }, repository[:metadata][:languages])
+    end
+
+    should 'keep language nil when GitLab languages endpoint is unavailable' do
+      @api_client.expects(:project).with('dlr-ve/esy/amiris/amiris-py', license: true).returns(@project)
+      @api_client.expects(:project_languages).with('dlr-ve/esy/amiris/amiris').raises(::Gitlab::Error::NotFound)
+
+      repository = @gitlab_instance.fetch_repository('dlr-ve/esy/amiris/amiris-py')
+
+      assert_nil repository[:language]
+      assert_equal({}, repository[:metadata])
+    end
+  end
+end
