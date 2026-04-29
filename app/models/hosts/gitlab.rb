@@ -103,10 +103,14 @@ module Hosts
         url = "#{@endpoint}#{path}"
         Rails.logger.debug("Gitlab[get]: Fetching from URL: #{url}")
 
-        response = faraday_client.get(url)
+        response = faraday_client.get(url, options)
         JSON.parse(response.body)
       rescue JSON::ParserError
         nil
+      end
+
+      def project_languages(id_or_full_name)
+        get("/projects/#{CGI.escape(id_or_full_name.to_s)}/languages")
       end
 
       def method_missing(method, *args, &block)
@@ -280,6 +284,8 @@ module Hosts
 
       repo_hash = full_hash.slice(:id, :description, :created_at, :name, :open_issues_count, :forks_count, :default_branch, :archived, :topics)
 
+      languages = fetch_languages(project.path_with_namespace)
+
       repo_hash.merge!({
         uuid: project.id,
         full_name: project.path_with_namespace,
@@ -289,6 +295,8 @@ module Hosts
         stargazers_count: project.star_count,
         has_issues: project.try(:issues_enabled),
         has_wiki: project.try(:wiki_enabled),
+        language: primary_language(languages),
+        metadata: language_metadata(languages),
         scm: "git",
         private: project.visibility != "public",
         pull_requests_enabled: project.try(:merge_requests_enabled),
@@ -301,6 +309,28 @@ module Hosts
       repo_hash[:license] = project.license.try(:key)
       return nil if repo_hash[:full_name].nil?
       repo_hash.slice(*repository_columns)
+    end
+
+    def fetch_languages(full_name)
+      languages = if api_client.respond_to?(:project_languages)
+        api_client.project_languages(full_name)
+      else
+        api_client.get("/projects/#{CGI.escape(full_name.to_s)}/languages")
+      end
+      return {} unless languages.respond_to?(:to_h)
+      languages.to_h
+    rescue *IGNORABLE_EXCEPTIONS
+      {}
+    end
+
+    def primary_language(languages)
+      return nil if languages.blank?
+      languages.max_by { |_language, percentage| percentage.to_f }.first
+    end
+
+    def language_metadata(languages)
+      return {} if languages.blank?
+      { languages: languages }
     end
 
     def crawl_repositories_async
