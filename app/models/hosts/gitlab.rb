@@ -356,6 +356,8 @@ module Hosts
 
 
     def load_owner_repos_names(owner)
+      return [] if owner.user? && ENV["SKIP_USER_REPOS"].present?
+
       repos = if owner.user?
         api_client.user_projects(owner.login, per_page: 100, archived: false, simple: true)
       else
@@ -376,6 +378,8 @@ module Hosts
         id = user["id"]
         user_response = api_client.user(id)
         return nil if user_response.nil?
+        return nil if ENV["SKIP_USER_REPOS"].present?
+
         user_hash = user_response.to_hash
         return nil if user_hash.nil?
         {
