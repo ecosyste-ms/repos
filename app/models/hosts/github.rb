@@ -113,10 +113,22 @@ module Hosts
       return nil if repo_response.nil?
       hash = repo_response.to_hash.with_indifferent_access
       return nil if hash[:private]
-      map_repository_data(hash)
+      languages = fetch_languages(hash[:full_name])
+      map_repository_data(hash, languages: languages)
     end
 
-    def map_repository_data(hash)
+    def fetch_languages(full_name)
+      api_client.languages(full_name).to_h
+    rescue *IGNORABLE_EXCEPTIONS, Octokit::NotFound, Octokit::RepositoryUnavailable, Octokit::UnavailableForLegalReasons
+      {}
+    end
+
+    def language_metadata(languages)
+      return {} if languages.blank?
+      { languages: languages }
+    end
+
+    def map_repository_data(hash, languages: {})
       hash[:scm] = "git"
       hash[:uuid] = hash[:id]
       hash[:license] = hash[:license][:key] if hash[:license]
@@ -124,6 +136,7 @@ module Hosts
       hash[:pull_requests_enabled] = true
       hash[:template] = hash[:is_template]
       hash[:template_full_name] = hash[:template_repository][:full_name] if hash[:template_repository]
+      hash[:metadata] = language_metadata(languages)
 
       if hash[:fork] && hash[:parent]
         hash[:source_name] = hash[:parent][:full_name]
