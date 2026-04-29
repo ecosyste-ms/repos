@@ -50,6 +50,16 @@ class ApiV1OwnersControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
+  test 'ping owner repositories queues repository sync by owner' do
+    PingOwnerRepositoriesWorker.expects(:perform_async).with(@host.name, @owner.login)
+
+    get ping_repositories_api_v1_host_owner_path(host_id: @host.name, id: @owner.login)
+    assert_response :success
+
+    actual_response = JSON.parse(@response.body)
+    assert_equal 'pong', actual_response['message']
+  end
+
   test 'get owner names for a host' do
     # Clean up any existing owners for this test
     @host.owners.destroy_all
