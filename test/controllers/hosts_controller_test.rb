@@ -20,6 +20,33 @@ class HostsControllerTest < ActionDispatch::IntegrationTest
     assert_template 'hosts/show', file: 'hosts/show.html.erb'
   end
 
+
+  test 'host page provides RSS and Atom discovery links' do
+    get host_path(id: @host.name)
+
+    assert_response :success
+    assert_select 'link[rel="alternate"][type="application/rss+xml"]'
+    assert_select 'link[rel="alternate"][type="application/atom+xml"]'
+  end
+
+  test 'renders host repositories RSS feed' do
+    get host_path(id: @host.name, format: :rss)
+
+    assert_response :success
+    assert_equal 'application/rss+xml', response.media_type
+    assert_includes response.body, '<rss'
+    assert_includes response.body, @repo.full_name
+  end
+
+  test 'renders host repositories Atom feed' do
+    get host_path(id: @host.name, format: :atom)
+
+    assert_response :success
+    assert_equal 'application/atom+xml', response.media_type
+    assert_includes response.body, '<feed'
+    assert_includes response.body, @repo.full_name
+  end
+
   test 'topic route with simple topic' do
     skip "TODO(DB_PERF): hosts#topic disabled 2026-01-10"
     get topic_host_path(id: @host.name, topic: 'ruby')

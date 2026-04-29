@@ -23,6 +23,12 @@ class HostsController < ApplicationController
 
     @pagy, @repositories = pagy_countless(scope)
     expires_in 1.day, public: true
+
+    respond_to do |format|
+      format.html
+      format.rss
+      format.atom
+    end
   end
 
   def kind
