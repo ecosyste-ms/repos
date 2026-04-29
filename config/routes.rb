@@ -26,6 +26,7 @@ Rails.application.routes.draw do
       get 'usage/:ecosystem/:name', to: 'usage#show', as: :usage, constraints: { name: /.*/ }, defaults: { format: :json }
 
       get 'repositories/lookup', to: 'repositories#lookup', as: :repositories_lookup
+      get 'hosts/stats', to: 'hosts#global_stats', as: :hosts_stats
       resources :hosts, constraints: { id: /.*/ }, defaults: { format: :json }, only: [:index, :show] do
         resources :owners, only:[:index, :show] do
           collection do
@@ -54,6 +55,7 @@ Rails.application.routes.draw do
         
         member do
           get :repository_names, to: 'repositories#names', as: :repository_names
+          get :stats
         end
       end
 
