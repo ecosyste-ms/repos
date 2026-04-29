@@ -36,6 +36,7 @@ Rails.application.routes.draw do
           member do
             get :repositories
             get :ping
+            get :ping_repositories
           end
         end
         resources :repositories, constraints: { id: /.*/ }, defaults: { format: :json }, only: [:index, :show] do

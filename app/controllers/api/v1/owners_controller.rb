@@ -63,6 +63,11 @@ class Api::V1::OwnersController < Api::V1::ApplicationController
     render json: { message: 'pong' }
   end
 
+  def ping_repositories
+    PingOwnerRepositoriesWorker.perform_async(params[:host_id], params[:id])
+    render json: { message: 'pong' }
+  end
+
   def lookup
     scope = @host.owners
 
