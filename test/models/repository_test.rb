@@ -1021,3 +1021,22 @@ class RepositoryTest < ActiveSupport::TestCase
     end
   end
 end
+
+class RepositoryReadmeBadgesTest < ActiveSupport::TestCase
+  test 'extract_readme_badges returns badge image URLs from markdown and html' do
+    repository = Repository.new
+    readme = <<~README
+      # Example
+      [![Build](https://img.shields.io/github/actions/workflow/status/example/repo/ci.yml)](https://github.com/example/repo/actions)
+      ![Unmaintained](https://unmaintained.tech/badge.svg)
+      <img alt="coverage" src="https://badgen.net/badge/coverage/95%25/green">
+      ![logo](https://example.com/logo.png)
+    README
+
+    assert_equal [
+      'https://img.shields.io/github/actions/workflow/status/example/repo/ci.yml',
+      'https://unmaintained.tech/badge.svg',
+      'https://badgen.net/badge/coverage/95%25/green'
+    ], repository.extract_readme_badges(readme)
+  end
+end
