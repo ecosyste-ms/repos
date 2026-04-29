@@ -289,7 +289,7 @@ module Hosts
         stargazers_count: project.star_count,
         has_issues: project.try(:issues_enabled),
         has_wiki: project.try(:wiki_enabled),
-        scm: "git",
+        scm: project.try(:vcs_type).presence || "git",
         private: project.visibility != "public",
         pull_requests_enabled: project.try(:merge_requests_enabled),
         logo_url: project.avatar_url,
