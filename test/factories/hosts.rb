@@ -38,6 +38,12 @@ FactoryBot.define do
       kind { 'forgejo' }
     end
 
+    factory :gogs_host do
+      name { 'Gogs' }
+      url { 'https://gogs.io' }
+      kind { 'gogs' }
+    end
+
     factory :sourcehut_host do
       name { 'SourceHut' }
       url { 'https://sr.ht' }
