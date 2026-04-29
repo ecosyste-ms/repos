@@ -397,6 +397,42 @@ class Repository < ApplicationRecord
     metadata["files"] = metadata_files
     save
     parse_funding
+    parse_readme_badges
+  end
+
+  README_BADGE_IMAGE_PATTERN = /!\[[^\]]*\]\(([^\s\)]+)(?:\s+"[^"]*")?\)|<img\b[^>]*\bsrc=["']([^"']+)["'][^>]*>/i
+
+  def parse_readme_badges
+    return if metadata["files"].blank?
+    return if metadata["files"]["readme"].blank?
+
+    file = get_file_contents(metadata["files"]["readme"])
+    return if file.blank?
+
+    badges = extract_readme_badges(file[:content])
+    metadata["badges"] = badges if badges.any?
+    save
+  rescue
+    nil
+  end
+
+  def extract_readme_badges(content)
+    return [] if content.blank?
+
+    content.scan(README_BADGE_IMAGE_PATTERN).flatten.compact.map do |url|
+      normalize_badge_url(url)
+    end.compact.uniq
+  end
+
+  def normalize_badge_url(url)
+    url = url.to_s.strip
+    return if url.blank?
+    return unless url.match?(/badge|shield|unmaintained\.tech/i)
+
+    uri = URI.parse(url)
+    return url if uri.is_a?(URI::HTTP)
+  rescue URI::InvalidURIError
+    nil
   end
 
   def parse_funding
