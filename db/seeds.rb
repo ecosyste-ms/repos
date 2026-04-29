@@ -1,4 +1,13 @@
 default_hosts = [
+  {name: 'git.kernel.org', url: 'https://git.kernel.org', kind: 'cgit'},
+  {name: 'git.zx2c4.com', url: 'https://git.zx2c4.com', kind: 'cgit'},
+  {name: 'git.ti.com', url: 'https://git.ti.com/cgit', kind: 'cgit'},
+  {name: 'git.runxiyu.org', url: 'https://git.runxiyu.org', kind: 'cgit'},
+  {name: 'git.andrewyu.org', url: 'https://git.andrewyu.org', kind: 'cgit'},
+  {name: 'cgit.tilde.town', url: 'https://cgit.tilde.town', kind: 'cgit'},
+  {name: 'code.ryuslash.org', url: 'https://code.ryuslash.org', kind: 'cgit'},
+  {name: 'cgit.v2d.live', url: 'https://cgit.v2d.live', kind: 'cgit'},
+  {name: 'nebula.ed1.club/git', url: 'https://nebula.ed1.club/git', kind: 'cgit'},
   {name: 'GitHub', url: 'https://github.com', kind: 'github'},
   {name: 'GitLab.com', url: 'https://gitlab.com', kind: 'gitlab'},
   {name: 'Bitbucket.org', url: 'https://bitbucket.org', kind: 'bitbucket'},
