@@ -150,28 +150,54 @@ class RepositoryTest < ActiveSupport::TestCase
   end
 
   context 'sync_scorecard method' do
-    should 'call Scorecard.lookup with self' do
+    should 'call Scorecard.lookup with self when enabled' do
+      ENV['SCORECARD_SYNC_ENABLED'] = 'true'
       host = create(:host)
       repository = create(:repository, host: host)
-      
+
       stub_request(:get, "https://api.scorecard.dev/projects/#{repository.html_url.gsub(%r{http(s)?://}, '')}")
         .to_return(status: 200, body: { score: 8.0, repo: { name: repository.full_name } }.to_json)
-      
+
       scorecard = repository.sync_scorecard
-      
+
       assert_not_nil scorecard
       assert_equal repository, scorecard.repository
       assert_equal 8.0, scorecard.score
+    ensure
+      ENV.delete('SCORECARD_SYNC_ENABLED')
+    end
+
+    should 'do nothing when not enabled' do
+      ENV.delete('SCORECARD_SYNC_ENABLED')
+      host = create(:host)
+      repository = create(:repository, host: host)
+
+      Scorecard.expects(:lookup).never
+
+      assert_nil repository.sync_scorecard
     end
   end
 
   context 'sync_scorecard_async method' do
-    should 'call SyncScorecardWorker.perform_async' do
+    should 'call SyncScorecardWorker.perform_async when enabled' do
+      ENV['SCORECARD_SYNC_ENABLED'] = 'true'
       host = create(:host)
       repository = create(:repository, host: host)
-      
+
       SyncScorecardWorker.expects(:perform_async).with(repository.id).once
-      
+
+      repository.sync_scorecard_async
+    ensure
+      ENV.delete('SCORECARD_SYNC_ENABLED')
+    end
+
+    should 'not enqueue worker when not enabled' do
+      ENV.delete('SCORECARD_SYNC_ENABLED')
+      host = create(:host)
+      repository = create(:repository, host: host)
+
+      SyncScorecardWorker.expects(:perform_async).never
+
       repository.sync_scorecard_async
     end
   end

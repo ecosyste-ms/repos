@@ -4,7 +4,12 @@ class Scorecard < ApplicationRecord
   scope :with_repository, -> { where.not(repository_id: nil) }
   scope :without_repository, -> { where(repository_id: nil) }
 
+  def self.sync_enabled?
+    ENV['SCORECARD_SYNC_ENABLED'].present?
+  end
+
   def self.sync_least_recently_synced
+    return unless sync_enabled?
     Scorecard.where(last_synced_at: nil).each(&:fetch_scorecard_async)
     Scorecard.where('last_synced_at < ?', 1.day.ago).each(&:fetch_scorecard_async)
   end
