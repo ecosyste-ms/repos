@@ -659,10 +659,12 @@ class Repository < ApplicationRecord
   end
 
   def sync_scorecard
+    return unless Scorecard.sync_enabled?
     Scorecard.lookup(self)
   end
 
   def sync_scorecard_async
+    return unless Scorecard.sync_enabled?
     SyncScorecardWorker.perform_async(id)
   end
 end

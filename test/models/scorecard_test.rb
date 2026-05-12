@@ -5,6 +5,20 @@ class ScorecardTest < ActiveSupport::TestCase
     should belong_to(:repository).optional
   end
 
+  context 'sync_enabled?' do
+    should 'be false when SCORECARD_SYNC_ENABLED is not set' do
+      ENV.delete('SCORECARD_SYNC_ENABLED')
+      refute Scorecard.sync_enabled?
+    end
+
+    should 'be true when SCORECARD_SYNC_ENABLED is set' do
+      ENV['SCORECARD_SYNC_ENABLED'] = 'true'
+      assert Scorecard.sync_enabled?
+    ensure
+      ENV.delete('SCORECARD_SYNC_ENABLED')
+    end
+  end
+
   context 'lookup method' do
     should 'create scorecard for repository' do
       host = create(:host)
