@@ -1,0 +1,89 @@
+repositories_sync_least_recent:
+  cron: "*/10 * * * *"
+  class: "CronTaskWorker"
+  args:
+    - "repositories:sync_least_recent"
+
+repositories_sync_extra_details:
+  cron: "*/5 * * * *"
+  class: "CronTaskWorker"
+  args:
+    - "repositories:sync_extra_details"
+
+repositories_sync_recently_active:
+  cron: "*/15 * * * *"
+  class: "CronTaskWorker"
+  args:
+    - "repositories:sync_recently_active"
+
+hosts_sync_owners:
+  cron: "*/10 * * * *"
+  class: "CronTaskWorker"
+  args:
+    - "hosts:sync_owners"
+
+repositories_parse_missing_dependencies:
+  cron: "*/15 * * * *"
+  class: "CronTaskWorker"
+  args:
+    - "repositories:parse_missing_dependencies"
+
+repositories_download_tags:
+  cron: "*/20 * * * *"
+  class: "CronTaskWorker"
+  args:
+    - "repositories:download_tags"
+
+repositories_crawl:
+  cron: "*/5 * * * *"
+  class: "CronTaskWorker"
+  args:
+    - "repositories:crawl"
+
+packages_sync_registries:
+  cron: "0 8 * * *"
+  class: "CronTaskWorker"
+  args:
+    - "packages:sync_registries"
+
+packages_sync_packages:
+  cron: "0 9 * * *"
+  class: "CronTaskWorker"
+  args:
+    - "packages:sync_packages"
+
+hosts_check_github_tokens:
+  cron: "0 0 * * *"
+  class: "CronTaskWorker"
+  args:
+    - "hosts:check_github_tokens"
+
+hosts_check_status:
+  cron: "0 2 * * *"
+  class: "CronTaskWorker"
+  args:
+    - "hosts:check_status"
+
+sitemap_refresh_with_lock:
+  cron: "0 6 * * *"
+  class: "CronTaskWorker"
+  args:
+    - "sitemap:refresh_with_lock"
+
+repositories_fetch_dependencies_for_github_actions_tags:
+  cron: "0 4 * * *"
+  class: "CronTaskWorker"
+  args:
+    - "repositories:fetch_dependencies_for_github_actions_tags"
+
+repositories_clean_up_sidekiq_unique_jobs:
+  cron: "0 0 * * 0"
+  class: "CronTaskWorker"
+  args:
+    - "repositories:clean_up_sidekiq_unique_jobs"
+
+gharchive_import_recent:
+  cron: "0 * * * *"
+  class: "CronTaskWorker"
+  args:
+    - "gharchive:import_recent"

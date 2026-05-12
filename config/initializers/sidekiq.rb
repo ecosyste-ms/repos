@@ -1,3 +1,5 @@
+require "sidekiq/cron/job"
+
 SidekiqUniqueJobs.configure do |config|
   config.reaper          = :ruby
   config.reaper_count    = 2_000
@@ -20,6 +22,11 @@ Sidekiq.configure_server do |config|
   end
 
   SidekiqUniqueJobs::Server.configure(config)
+
+  schedule_file = Rails.root.join("config/sidekiq_schedule.yml")
+  if schedule_file.exist?
+    Sidekiq::Cron::Job.load_from_hash(YAML.load_file(schedule_file))
+  end
 end
 
 Sidekiq.configure_client do |config|

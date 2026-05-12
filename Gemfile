@@ -28,6 +28,7 @@ gem "nokogiri"
 gem "oj"
 gem "redis"
 gem "sidekiq"
+gem "sidekiq-cron"
 gem 'sidekiq-unique-jobs'
 gem "pagy", "~> 9.4.0"
 gem "pghero"

@@ -4,7 +4,7 @@ repos.ecosyste.ms tracks repositories across GitHub, GitLab, Gitea, Bitbucket, a
 
 This is all best effort. repos.ecosyste.ms is a free, open source service and there are no guarantees about how fresh any given repository's data will be. The system prioritises recently active repositories and eventually catches up on the rest, but delays happen.
 
-All scheduling is defined in [`app.json`](../app.json) as Heroku-style cron entries. All cron tasks use [`CronLock`](../lib/cron_lock.rb) (a Redis NX SET with TTL) to prevent overlapping executions. Sidekiq processes background jobs across several queues (critical, default, ping, extra, dependencies, tags).
+All scheduling is defined in [`config/sidekiq_schedule.yml`](../config/sidekiq_schedule.yml) and loaded by sidekiq-cron when Sidekiq starts. Scheduled entries enqueue [`CronTaskWorker`](../app/sidekiq/cron_task_worker.rb), which runs a whitelisted rake task. All cron tasks still use [`CronLock`](../lib/cron_lock.rb) (a Redis NX SET with TTL) to prevent overlapping executions. Sidekiq processes background jobs across several queues (critical, default, ping, extra, dependencies, tags).
 
 ## Discovering new repositories
 
