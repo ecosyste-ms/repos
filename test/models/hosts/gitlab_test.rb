@@ -1,6 +1,43 @@
 require "test_helper"
 
 class Hosts::GitlabTest < ActiveSupport::TestCase
+  context 'crawl_repositories' do
+    setup do
+      @host = create(:host, url: 'https://gitlab.example.com', kind: 'gitlab', org: 'public-group')
+      @gitlab_instance = Hosts::Gitlab.new(@host)
+    end
+
+    should 'limit GitLab crawling to configured host org' do
+      repos = [
+        { 'id' => 10, 'path_with_namespace' => 'public-group/project-one' },
+        { 'id' => 11, 'path_with_namespace' => 'public-group/subgroup/project-two' }
+      ]
+      api_client = mock('gitlab-api-client')
+      api_client.expects(:group_projects).with('public-group', per_page: 100, archived: false, simple: true, include_subgroups: true).returns(repos)
+      api_client.expects(:projects).never
+      @gitlab_instance.stubs(:api_client).returns(api_client)
+
+      @host.expects(:sync_repository).with('public-group/project-one', uuid: 10)
+      @host.expects(:sync_repository).with('public-group/subgroup/project-two', uuid: 11)
+
+      assert_equal true, @gitlab_instance.crawl_repositories
+    end
+
+    should 'limit async GitLab crawling to configured host org' do
+      repos = [
+        { 'id' => 10, 'path_with_namespace' => 'public-group/project-one' }
+      ]
+      api_client = mock('gitlab-api-client')
+      api_client.expects(:group_projects).with('public-group', per_page: 100, archived: false, simple: true, include_subgroups: true).returns(repos)
+      api_client.expects(:projects).never
+      @gitlab_instance.stubs(:api_client).returns(api_client)
+
+      @host.expects(:sync_repository_async).with('public-group/project-one')
+
+      assert_equal true, @gitlab_instance.crawl_repositories_async
+    end
+  end
+
   context 'recently_changed_repo_names' do
     setup do
       @host = create(:host, url: 'https://gitlab.com', kind: 'gitlab')
