@@ -4,6 +4,7 @@ default_hosts = [
   {name: 'Bitbucket.org', url: 'https://bitbucket.org', kind: 'bitbucket'},
   {name: 'SourceHut', url: 'https://sr.ht', kind: 'sourcehut'},
   {name: 'Gitea.com', url: 'https://gitea.com', kind: 'gitea'},
+  {name: 'OneDev', url: 'https://code.onedev.io', kind: 'onedev'},
   {name: "Codeberg.org", url: "https://codeberg.org", kind: "forgejo", org: 'Codeberg-org'},
   {name: "git.fsfe.org", url: "https://git.fsfe.org", kind: "gitea", org: 'fsfe'},
   {name: "opendev.org", url: "https://opendev.org", kind: "gitea", org: 'openstack-infra'},
