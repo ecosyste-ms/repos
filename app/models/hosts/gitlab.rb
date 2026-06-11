@@ -304,19 +304,38 @@ module Hosts
     end
 
     def crawl_repositories_async
+      if ! crawl_repositories_backwards_async
+        crawl_repositories_forward_async
+      end
+    end
+
+    def crawl_repositories_backwards_async
       last_id = REDIS.get("gitlab_last_id:#{@host.id}")
       repos = api_client.projects(per_page: 100, archived: false, id_before: last_id, simple: true)
       if repos.present? && repos.any?
         repos.each { |repo| @host.sync_repository_async(repo["path_with_namespace"]) }
         REDIS.set("gitlab_last_id:#{@host.id}", repos.last["id"])
+        return true
+      end
+    rescue *IGNORABLE_EXCEPTIONS
+      nil
+    end
+
+    def crawl_repositories_forward_async
+      recent_id = REDIS.get("gitlab_recent_id:#{@host.id}")
+      recent_id ||= @host.repositories.maximum(:uuid)
+      repos = api_client.projects(per_page: 100, archived: false, id_after: recent_id, simple: true)
+      if repos.present? && repos.any?
+        repos.each { |repo| @host.sync_repository_async(repo["path_with_namespace"]) }
+        REDIS.set("gitlab_recent_id:#{@host.id}", repos.last["id"])
+        return true
       end
     rescue *IGNORABLE_EXCEPTIONS
       nil
     end
 
     def crawl_repositories
-      # legacy way to synchronize on ecosyste.ms
-      crawl_repositories_backwards
+      crawl_repositories_two_ways
     end
 
     def crawl_repositories_two_ways
@@ -349,6 +368,7 @@ module Hosts
       if repos.present? && repos.any?
         repos.each { |repo| @host.sync_repository(repo["path_with_namespace"], uuid: repo["id"]) }
         REDIS.set("gitlab_recent_id:#{@host.id}", repos.last["id"])
+        return true
       end
     rescue *IGNORABLE_EXCEPTIONS
       nil

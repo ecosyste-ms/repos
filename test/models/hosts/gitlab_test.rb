@@ -93,3 +93,39 @@ class Hosts::GitlabTest < ActiveSupport::TestCase
     end
   end
 end
+class Hosts::GitlabCrawlTest < ActiveSupport::TestCase
+  context 'crawl_repositories' do
+    setup do
+      @host = create(:host, url: 'https://gitlab.com', kind: 'gitlab')
+      @gitlab_instance = Hosts::Gitlab.new(@host)
+    end
+
+    should 'crawl forwards for newer projects after backwards crawl is exhausted' do
+      @gitlab_instance.expects(:crawl_repositories_backwards).returns(nil)
+      @gitlab_instance.expects(:crawl_repositories_forward).returns(true)
+
+      assert_equal true, @gitlab_instance.crawl_repositories
+    end
+
+    should 'not crawl forwards when backwards crawl found projects' do
+      @gitlab_instance.expects(:crawl_repositories_backwards).returns(true)
+      @gitlab_instance.expects(:crawl_repositories_forward).never
+
+      assert_equal true, @gitlab_instance.crawl_repositories
+    end
+  end
+
+  context 'crawl_repositories_async' do
+    setup do
+      @host = create(:host, url: 'https://gitlab.com', kind: 'gitlab')
+      @gitlab_instance = Hosts::Gitlab.new(@host)
+    end
+
+    should 'enqueue newer projects after backwards async crawl is exhausted' do
+      @gitlab_instance.expects(:crawl_repositories_backwards_async).returns(nil)
+      @gitlab_instance.expects(:crawl_repositories_forward_async).returns(true)
+
+      assert_equal true, @gitlab_instance.crawl_repositories_async
+    end
+  end
+end
