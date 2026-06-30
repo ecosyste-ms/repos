@@ -1,6 +1,45 @@
 require "test_helper"
 
 class Hosts::GitlabTest < ActiveSupport::TestCase
+  context 'fetch_repository' do
+    setup do
+      @host = create(:host, url: 'https://foss.heptapod.net', kind: 'gitlab')
+      @gitlab_instance = Hosts::Gitlab.new(@host)
+    end
+
+    should 'preserve GitLab vcs_type for Mercurial repositories' do
+      project = OpenStruct.new(
+        id: 123,
+        description: 'Mercurial project',
+        created_at: Time.parse('2026-04-01 00:00:00 UTC'),
+        name: 'hg-project',
+        open_issues_count: 2,
+        forks_count: 3,
+        default_branch: 'branch/default',
+        archived: false,
+        topics: ['hg'],
+        visibility: 'public',
+        path_with_namespace: 'group/hg-project',
+        last_activity_at: Time.parse('2026-04-08 00:00:00 UTC'),
+        star_count: 4,
+        issues_enabled: true,
+        wiki_enabled: false,
+        vcs_type: 'hg',
+        merge_requests_enabled: true,
+        avatar_url: 'https://example.com/avatar.png',
+        license: OpenStruct.new(key: 'mit')
+      )
+
+      api_client = mock('gitlab-api-client')
+      api_client.expects(:project).with('group/hg-project', license: true).returns(project)
+      @gitlab_instance.stubs(:api_client).returns(api_client)
+
+      repository = @gitlab_instance.fetch_repository('group/hg-project')
+
+      assert_equal 'hg', repository[:scm]
+    end
+  end
+
   context 'recently_changed_repo_names' do
     setup do
       @host = create(:host, url: 'https://gitlab.com', kind: 'gitlab')
