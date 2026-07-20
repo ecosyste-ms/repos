@@ -330,8 +330,8 @@ paths:
                   $ref: '#/components/schemas/Repository'
   /hosts:
     get:
-      summary: list registies
-      operationId: getRegistries
+      summary: list hosts
+      operationId: getHosts
       parameters:
         - name: page
           in: query
