@@ -58,7 +58,7 @@ class RepositoriesControllerTest < ActionDispatch::IntegrationTest
     get releases_host_repository_path(host_id: @host.name, id: @repository.full_name)
     assert_response :success
     assert_match '<strong>bold</strong>', response.body
-    assert_match 'New Features</h3>', response.body
+    assert_match '<h3 id="new-features">New Features', response.body
     assert_match '<ul>', response.body
   end
 
