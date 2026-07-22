@@ -98,7 +98,9 @@ Dependency parsing has its own cron entry: [`repositories:parse_missing_dependen
 
 ## Catch-up sweeps
 
-Every 10 minutes, [`repositories:sync_least_recent`](../lib/tasks/repositories.rake#L4) queues the 2000 repositories with the oldest `last_synced_at` values, skipping if the default queue already has 10,000+ jobs.
+Every 10 minutes, [`repositories:sync_inactive`](../lib/tasks/repositories.rake#L4) reads the next 3000 repository IDs from a primary-key cursor stored in Redis, skipping the run if the default queue already has 10,000+ jobs. The sweep captures the highest repository ID at the start of each pass so newly inserted rows do not keep moving its endpoint.
+
+[`SyncInactiveRepositoryWorker`](../app/sidekiq/sync_inactive_repository_worker.rb) skips forks, archived repositories, and repositories synced within the last week. This keeps the database query bounded without maintaining an index on `last_synced_at`.
 
 ## Sync throttling
 
