@@ -1,10 +1,6 @@
 {
   "cron": [
     {
-      "command": "bundle exec rake repositories:sync_least_recent",
-      "schedule": "*/10 * * * *"
-    },
-    {
       "command": "bundle exec rake repositories:sync_extra_details",
       "schedule": "*/5 * * * *"
     },
