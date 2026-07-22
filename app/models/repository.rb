@@ -92,8 +92,7 @@ class Repository < ApplicationRecord
     ids = where(id: (cursor + 1)..sweep_end_id).order(:id).limit(batch_size).pluck(:id)
 
     if ids.empty?
-      REDIS.del(INACTIVE_SYNC_CURSOR_KEY)
-      REDIS.del(INACTIVE_SYNC_END_ID_KEY)
+      REDIS.del(INACTIVE_SYNC_CURSOR_KEY, INACTIVE_SYNC_END_ID_KEY)
       return 0
     end
 
@@ -151,7 +150,7 @@ class Repository < ApplicationRecord
   end
 
   def inactive_sync_due?
-    !fork? && !archived? && (last_synced_at.nil? || last_synced_at < 1.week.ago)
+    !fork? && !archived? && (last_synced_at.nil? || last_synced_at <= 1.week.ago)
   end
 
   def owner_record

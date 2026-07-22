@@ -16,6 +16,15 @@ class SyncInactiveRepositoryWorkerTest < ActiveSupport::TestCase
       SyncInactiveRepositoryWorker.new.perform(repository.id)
     end
 
+    should 'sync a repository last synced exactly one week ago' do
+      travel_to Time.zone.local(2026, 7, 22, 12) do
+        repository = create(:repository, last_synced_at: 1.week.ago)
+        Repository.any_instance.expects(:sync).once
+
+        SyncInactiveRepositoryWorker.new.perform(repository.id)
+      end
+    end
+
     should 'skip a recently synced repository' do
       repository = create(:repository, last_synced_at: 1.day.ago)
       Repository.any_instance.expects(:sync).never
