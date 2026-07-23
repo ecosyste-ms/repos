@@ -1,6 +1,10 @@
 class Repository < ApplicationRecord
   include EcosystemApiClient
 
+  INACTIVE_SYNC_BATCH_SIZE = 3_000
+  INACTIVE_SYNC_CURSOR_KEY = 'repositories:inactive_sync_cursor'
+  INACTIVE_SYNC_END_ID_KEY = 'repositories:inactive_sync_end_id'
+
   belongs_to :host
 
   has_many :manifests, dependent: :destroy
@@ -75,6 +79,34 @@ class Repository < ApplicationRecord
     []
   end
 
+  def self.enqueue_inactive_sync_batch(batch_size: INACTIVE_SYNC_BATCH_SIZE)
+    sweep_end_id = REDIS.get(INACTIVE_SYNC_END_ID_KEY).presence&.to_i
+    unless sweep_end_id
+      sweep_end_id = maximum(:id)
+      return 0 unless sweep_end_id
+
+      REDIS.set(INACTIVE_SYNC_END_ID_KEY, sweep_end_id)
+    end
+
+    cursor = REDIS.get(INACTIVE_SYNC_CURSOR_KEY).to_i
+    ids = where(id: (cursor + 1)..sweep_end_id).order(:id).limit(batch_size).pluck(:id)
+
+    if ids.empty?
+      REDIS.del(INACTIVE_SYNC_CURSOR_KEY, INACTIVE_SYNC_END_ID_KEY)
+      return 0
+    end
+
+    ids.each_slice(1_000) do |batch|
+      Sidekiq::Client.push_bulk(
+        'class' => 'SyncInactiveRepositoryWorker',
+        'queue' => 'default',
+        'args' => batch.map { |id| [id] }
+      )
+    end
+    REDIS.set(INACTIVE_SYNC_CURSOR_KEY, ids.last)
+    ids.size
+  end
+
   def self.parse_dependencies_async
     Repository.where.not(dependency_job_id: nil).limit(2000).select("id, dependencies_parsed_at").each(&:parse_dependencies_async)
     return if Sidekiq::Queue.new("dependencies").size > 2_000
@@ -115,6 +147,10 @@ class Repository < ApplicationRecord
 
   def has_scorecard?
     Scorecard.exists?(repository_id: id)
+  end
+
+  def inactive_sync_due?
+    !fork? && !archived? && (last_synced_at.nil? || last_synced_at <= 1.week.ago)
   end
 
   def owner_record

@@ -50,7 +50,7 @@ Tags and releases are synced through several paths:
 - **During extra details sync.** When a repository's `files_changed` flag is set (because `pushed_at` changed), [`sync_extra_details`](../app/models/repository.rb#L276) calls [`download_tags`](../app/models/repository.rb#L299), which fetches tags from the host API and then releases if any tags exist.
 - **Via GHArchive.** Repositories with `ReleaseEvent` entries get their tags downloaded directly.
 - **Via timeline.** Every 20 minutes, [`repositories:download_tags`](../lib/tasks/repositories.rake#L36) calls [`Hosts::Github#sync_repos_with_tags`](../app/models/hosts/github.rb#L425), which queries timeline.ecosyste.ms for recent `ReleaseEvent` entries and downloads tags for the affected repos.
-- **Bulk catch-up.** [`Repository.download_tags_async`](../app/models/repository.rb#L71) queues up to 5000 non-fork repos ordered by `tags_last_synced_at` ascending, skipping if the tags queue already has over 5000 jobs.
+- **Bulk catch-up.** [`Repository.download_tags_async`](../app/models/repository.rb#L120) queues up to 5000 non-fork repos ordered by `tags_last_synced_at` ascending, skipping if the tags queue already has over 5000 jobs.
 
 For GitHub, tags are fetched via GraphQL ([`fetch_tags_graphql`](../app/models/hosts/github.rb#L259)) with pagination, 100 per page, ordered by commit date descending. Only new tags (not already in the database) are inserted.
 
@@ -98,14 +98,16 @@ Dependency parsing has its own cron entry: [`repositories:parse_missing_dependen
 
 ## Catch-up sweeps
 
-Every 10 minutes, [`repositories:sync_least_recent`](../lib/tasks/repositories.rake#L4) queues the 2000 repositories with the oldest `last_synced_at` values, skipping if the default queue already has 10,000+ jobs.
+Every 10 minutes, [`repositories:sync_inactive`](../lib/tasks/repositories.rake#L4) reads the next 3000 repository IDs from a primary-key cursor stored in Redis, skipping the run if the default queue already has 10,000+ jobs. The sweep captures the highest repository ID at the start of each pass so newly inserted rows do not keep moving its endpoint.
+
+[`SyncInactiveRepositoryWorker`](../app/sidekiq/sync_inactive_repository_worker.rb) skips forks, archived repositories, and repositories synced within the last week. This keeps the database query bounded without maintaining an index on `last_synced_at`.
 
 ## Sync throttling
 
-- [`Repository#sync`](../app/models/repository.rb#L136) skips if synced in the last week (unless forced), scheduling a deferred re-sync 1 day after the last sync.
+- [`Repository#sync`](../app/models/repository.rb#L189) skips if synced in the last week (unless forced), scheduling a deferred re-sync 1 day after the last sync.
 - [`PingWorker`](../app/sidekiq/ping_worker.rb#L10) applies the same 1-week freshness check.
-- [`Repository.parse_dependencies_async`](../app/models/repository.rb#L61) checks the dependencies queue size and bails at 2000.
-- [`Repository.download_tags_async`](../app/models/repository.rb#L71) checks the tags queue size and bails at 5000.
+- [`Repository.parse_dependencies_async`](../app/models/repository.rb#L110) checks the dependencies queue size and bails at 2000.
+- [`Repository.download_tags_async`](../app/models/repository.rb#L120) checks the tags queue size and bails at 5000.
 - Most workers use `sidekiq_options lock: :until_executed, lock_expiration: 1.day.to_i` to prevent duplicate jobs.
 
 ## Owner syncing
@@ -124,7 +126,7 @@ Every 10 minutes, [`hosts:sync_owners`](../lib/tasks/hosts.rake#L12) syncs the 2
 When [`Host#sync_repository`](../app/models/host.rb#L82) runs:
 
 **For an existing repo:**
-1. Call [`Repository#sync`](../app/models/repository.rb#L136), which checks freshness (1 week) and then calls `update_from_host`.
+1. Call [`Repository#sync`](../app/models/repository.rb#L189), which checks freshness (1 week) and then calls `update_from_host`.
 
 **For a new repo:**
 1. Fetch repository data from the host API.

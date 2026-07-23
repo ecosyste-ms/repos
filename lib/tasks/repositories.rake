@@ -1,11 +1,11 @@
 require_relative '../cron_lock'
 
 namespace :repositories do
-  desc 'sync least recently synced repos'
-  task sync_least_recent: :environment do
-    CronLock.acquire("repositories:sync_least_recent", ttl: 20.minutes) do
+  desc 'sync inactive repos'
+  task sync_inactive: :environment do
+    CronLock.acquire("repositories:sync_inactive", ttl: 20.minutes) do
       if Sidekiq::Queue.new('default').size < 10_000
-        Repository.order('last_synced_at ASC').limit(2_000).select('id').each(&:sync_async)
+        Repository.enqueue_inactive_sync_batch
       end
     end
   end
