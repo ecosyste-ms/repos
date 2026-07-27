@@ -70,26 +70,41 @@ namespace :hosts do
     puts "Scopes:     #{Array(json['scopes']).join(', ')}"
   end
 
-  desc 'Read the GitLab token for HOST from redis, rotate it, and write the new one back'
+  desc 'Rotate the redis-stored GitLab token for HOST, or every gitlab host with a token if HOST is unset'
   task refresh_gitlab_token: :environment do
-    host = Host.find_by_name!(ENV['HOST'].presence || 'GitLab')
-    key = "gitlab_token:#{host.id}"
-    current = REDIS.get(key)
-    abort "No token in redis at #{key}" if current.blank?
-
     expires_at = (Date.today + Integer(ENV.fetch('DAYS', '90'))).iso8601
 
-    resp = Faraday.post("#{host.url.chomp('/')}/api/v4/personal_access_tokens/self/rotate") do |req|
-      req.headers['PRIVATE-TOKEN'] = current
-      req.headers['Content-Type'] = 'application/json'
-      req.body = { expires_at: expires_at }.to_json
+    hosts = if ENV['HOST'].present?
+      [Host.find_by_name!(ENV['HOST'])]
+    else
+      Host.where(kind: 'gitlab').order(:name)
     end
 
-    abort "Rotation failed: #{resp.status} #{resp.body}" unless resp.success?
+    hosts.each do |host|
+      key = "gitlab_token:#{host.id}"
+      current = REDIS.get(key)
+      if current.blank?
+        puts "#{host.name}: no token, skipping" unless ENV['HOST'].present?
+        abort "No token in redis at #{key}" if ENV['HOST'].present?
+        next
+      end
 
-    json = JSON.parse(resp.body)
-    puts "New token:  #{json['token']}"
-    puts "Expires at: #{json['expires_at']}"
-    REDIS.set(key, json['token'])
+      resp = Faraday.post("#{host.url.chomp('/')}/api/v4/personal_access_tokens/self/rotate") do |req|
+        req.headers['PRIVATE-TOKEN'] = current
+        req.headers['Content-Type'] = 'application/json'
+        req.body = { expires_at: expires_at }.to_json
+      end
+
+      unless resp.success?
+        warn "#{host.name}: rotation failed: #{resp.status} #{resp.body}"
+        next
+      end
+
+      json = JSON.parse(resp.body)
+      puts "#{host.name}: new token #{json['token']} (expires #{json['expires_at']})"
+      REDIS.set(key, json['token'])
+    rescue => e
+      warn "#{host.name}: #{e.class}: #{e.message}"
+    end
   end
 end

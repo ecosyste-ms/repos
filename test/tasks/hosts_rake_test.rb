@@ -69,9 +69,10 @@ class HostsRakeTest < ActiveSupport::TestCase
     assert_requested stub
   end
 
-  test "refresh_gitlab_token rotates the redis token in place" do
+  test "refresh_gitlab_token rotates the redis token for a named host" do
     host = create(:gitlab_host)
     REDIS.set("gitlab_token:#{host.id}", 'glpat-old')
+    ENV['HOST'] = 'GitLab'
 
     stub_request(:post, "https://gitlab.com/api/v4/personal_access_tokens/self/rotate")
       .with(headers: { 'Private-Token' => 'glpat-old' })
@@ -86,20 +87,45 @@ class HostsRakeTest < ActiveSupport::TestCase
     REDIS.del("gitlab_token:#{host.id}") if host
   end
 
-  test "refresh_gitlab_token leaves redis untouched on failure" do
-    host = create(:gitlab_host)
-    REDIS.set("gitlab_token:#{host.id}", 'glpat-old')
+  test "refresh_gitlab_token without HOST rotates every gitlab host with a token and skips the rest" do
+    with_token = create(:gitlab_host, name: 'gitlab.example.org', url: 'https://gitlab.example.org')
+    without_token = create(:gitlab_host, name: 'gitlab.other.org', url: 'https://gitlab.other.org')
+    create(:github_host)
+    REDIS.set("gitlab_token:#{with_token.id}", 'glpat-a')
 
-    stub_request(:post, "https://gitlab.com/api/v4/personal_access_tokens/self/rotate")
-      .to_return(status: 401, body: '{"message":"401 Unauthorized"}')
+    stub = stub_request(:post, "https://gitlab.example.org/api/v4/personal_access_tokens/self/rotate")
+      .with(headers: { 'Private-Token' => 'glpat-a' })
+      .to_return(status: 200, body: { token: 'glpat-b', expires_at: '2099-01-01' }.to_json)
 
-    assert_raises(SystemExit) do
-      capture_io { Rake::Task["hosts:refresh_gitlab_token"].execute }
-    end
+    out, _ = capture_io { Rake::Task["hosts:refresh_gitlab_token"].execute }
 
-    assert_equal 'glpat-old', REDIS.get("gitlab_token:#{host.id}")
+    assert_requested stub
+    assert_equal 'glpat-b', REDIS.get("gitlab_token:#{with_token.id}")
+    assert_match 'gitlab.example.org: new token glpat-b', out
+    assert_match 'gitlab.other.org: no token, skipping', out
   ensure
-    REDIS.del("gitlab_token:#{host.id}") if host
+    REDIS.del("gitlab_token:#{with_token.id}") if with_token
+  end
+
+  test "refresh_gitlab_token continues past a failing host" do
+    bad = create(:gitlab_host, name: 'bad.example.org', url: 'https://bad.example.org')
+    good = create(:gitlab_host, name: 'good.example.org', url: 'https://good.example.org')
+    REDIS.set("gitlab_token:#{bad.id}", 'glpat-bad')
+    REDIS.set("gitlab_token:#{good.id}", 'glpat-good')
+
+    stub_request(:post, "https://bad.example.org/api/v4/personal_access_tokens/self/rotate")
+      .to_return(status: 401, body: '{"message":"401 Unauthorized"}')
+    stub_request(:post, "https://good.example.org/api/v4/personal_access_tokens/self/rotate")
+      .to_return(status: 200, body: { token: 'glpat-good2', expires_at: '2099-01-01' }.to_json)
+
+    _, err = capture_io { Rake::Task["hosts:refresh_gitlab_token"].execute }
+
+    assert_match 'bad.example.org: rotation failed: 401', err
+    assert_equal 'glpat-bad', REDIS.get("gitlab_token:#{bad.id}")
+    assert_equal 'glpat-good2', REDIS.get("gitlab_token:#{good.id}")
+  ensure
+    REDIS.del("gitlab_token:#{bad.id}") if bad
+    REDIS.del("gitlab_token:#{good.id}") if good
   end
 
   test "rotate_gitlab_token aborts on non-success" do
