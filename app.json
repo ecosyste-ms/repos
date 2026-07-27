@@ -59,6 +59,10 @@
     {
       "command": "bundle exec rake gharchive:import_recent",
       "schedule": "0 * * * *"
+    },
+    {
+      "command": "bundle exec rake hosts:refresh_gitlab_token",
+      "schedule": "0 3 1 * *"
     }
   ]
 }
