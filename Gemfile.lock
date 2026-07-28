@@ -167,7 +167,7 @@ GEM
       prism (~> 1.5)
     mocha (3.1.0)
       ruby2_keywords (>= 0.0.5)
-    msgpack (1.8.3)
+    msgpack (1.8.4)
     multipart-post (2.4.1)
     net-http (0.9.1)
       uri (>= 0.11.1)
@@ -312,7 +312,7 @@ GEM
       concurrent-ruby (~> 1.0, >= 1.0.5)
       sidekiq (>= 7.0.0, < 9.0.0)
       thor (>= 1.0, < 3.0)
-    sitemap_generator (7.1.0)
+    sitemap_generator (7.1.1)
       builder (~> 3.0)
     sprockets (4.2.2)
       concurrent-ruby (~> 1.0)
@@ -496,7 +496,7 @@ CHECKSUMS
   loofah (2.25.2) sha256=2007f746959ac65552456e04b433e83deb22759ab38c838b4445c70e43425918
   minitest (6.0.6) sha256=153ea36d1d987a62942382b61075745042a2b3123b1cd48f4c3675af9cc7d6f1
   mocha (3.1.0) sha256=75f42d69ebfb1f10b32489dff8f8431d37a418120ecdfc07afe3bc183d4e1d56
-  msgpack (1.8.3) sha256=8bda4a6428d3244e50d6bd55854d354edbada88a4e1f4f5731a39a0f86bee6a1
+  msgpack (1.8.4) sha256=4411c22d350dd1c20250f7eada3cca2695438c2f769cf0782f0cd065d90a3e7b
   multipart-post (2.4.1) sha256=9872d03a8e552020ca096adadbf5e3cb1cd1cdd6acd3c161136b8a5737cdb4a8
   net-http (0.9.1) sha256=25ba0b67c63e89df626ed8fac771d0ad24ad151a858af2cc8e6a716ca4336996
   net-http-persistent (4.0.8) sha256=ef3de8319d691537b329053fae3a33195f8b070bbbfae8bf1a58c796081960e6
@@ -565,7 +565,7 @@ CHECKSUMS
   shoulda-matchers (8.0.1) sha256=5dbb46e5765b9da225111b085e0819e8c8a121ff94bba430a153eb1ea2c60288
   sidekiq (8.1.6) sha256=be20cd051124b1a16cf97ea9157137abbd30a515c16a5ae9312d2eadd045e40f
   sidekiq-unique-jobs (8.1.0) sha256=6a7eaa61ac408197a542350df905687b506acae2f485da03b11d28b1c367dc35
-  sitemap_generator (7.1.0) sha256=5e493e67e8846b2a2ffc72799ff0f4a71db6c11c1269f7a9ae3433f40ec0af92
+  sitemap_generator (7.1.1) sha256=ab2a133d512a7b33ed713a27a9977f61d8379c9943e3b79900243fc1c4f7f81d
   sprockets (4.2.2) sha256=761e5a49f1c288704763f73139763564c845a8f856d52fba013458f8af1b59b1
   sprockets-rails (3.5.2) sha256=a9e88e6ce9f8c912d349aa5401509165ec42326baf9e942a85de4b76dbc4119e
   terminal-table (4.0.0) sha256=f504793203f8251b2ea7c7068333053f0beeea26093ec9962e62ea79f94301d2
