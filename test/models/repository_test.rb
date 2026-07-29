@@ -611,6 +611,20 @@ class RepositoryTest < ActiveSupport::TestCase
       assert_equal 'CLA', result[:cla]
     end
 
+    should 'find disclosure files' do
+      file_list = [
+        'DISCLOSURE',
+        'DISCLOSURE.md',
+        'DISCLOSURE.txt',
+        'disclosure',
+        'other.txt'
+      ]
+      @repository.stubs(:get_file_list).returns(file_list)
+
+      result = @repository.fetch_metadata_files_list
+      assert_equal 'DISCLOSURE', result[:disclosure]
+    end
+
     should 'return hash with all keys even when no files match' do
       file_list = ['unrelated.txt', 'random.file']
       @repository.stubs(:get_file_list).returns(file_list)
@@ -643,6 +657,7 @@ class RepositoryTest < ActiveSupport::TestCase
       assert_nil result[:agents]
       assert_nil result[:dco]
       assert_nil result[:cla]
+      assert_nil result[:disclosure]
     end
 
     should 'handle mixed case and find first matching file' do
