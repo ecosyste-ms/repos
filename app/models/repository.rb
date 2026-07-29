@@ -419,7 +419,8 @@ class Repository < ApplicationRecord
       copyright: file_list.find { |file| file.match(/^COPYRIGHT(?:\.(md|txt))?$/i) },
       agents: file_list.find { |file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?AGENTS\.md$/i) },
       dco: file_list.find { |file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?DCO(?:\.(md|txt))?$/i) },
-      cla: file_list.find { |file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?(CLA|CONTRIBUTOR[-_ ]LICENSE[-_ ]AGREEMENT)(?:\.(md|txt))?$/i) }
+      cla: file_list.find { |file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?(CLA|CONTRIBUTOR[-_ ]LICENSE[-_ ]AGREEMENT)(?:\.(md|txt))?$/i) },
+      disclosure: file_list.find { |file| file.match(/^DISCLOSURE(?:\.(md|txt))?$/i) }
     }
   end
 
