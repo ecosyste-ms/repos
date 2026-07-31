@@ -418,6 +418,10 @@ class Repository < ApplicationRecord
       maintainers: file_list.find { |file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?MAINTAINERS(?:\.(md|txt))?$/i) },
       copyright: file_list.find { |file| file.match(/^COPYRIGHT(?:\.(md|txt))?$/i) },
       agents: file_list.find { |file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?AGENTS\.md$/i) },
+      claude: file_list.find { |file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?CLAUDE\.md$/i) },
+      gemini: file_list.find { |file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?GEMINI\.md$/i) },
+      cursor: file_list.find { |file| file.match(/^\.cursorrules$|^\.cursor\/rules\//i) },
+      copilot: file_list.find { |file| file.match(/^\.github\/copilot-instructions\.md$/i) },
       dco: file_list.find { |file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?DCO(?:\.(md|txt))?$/i) },
       cla: file_list.find { |file| file.match(/^(docs\/)?(.github\/)?(.gitlab\/)?(CLA|CONTRIBUTOR[-_ ]LICENSE[-_ ]AGREEMENT)(?:\.(md|txt))?$/i) },
       disclosure: file_list.find { |file| file.match(/^DISCLOSURE(?:\.(md|txt))?$/i) }
