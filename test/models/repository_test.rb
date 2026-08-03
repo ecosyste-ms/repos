@@ -569,9 +569,70 @@ class RepositoryTest < ActiveSupport::TestCase
         'other.txt'
       ]
       @repository.stubs(:get_file_list).returns(file_list)
-      
+
       result = @repository.fetch_metadata_files_list
       assert_equal 'AGENTS.md', result[:agents]
+    end
+
+    should 'find claude files' do
+      file_list = [
+        'CLAUDE.md',
+        'docs/CLAUDE.md',
+        'claude.txt',
+        'other.txt'
+      ]
+      @repository.stubs(:get_file_list).returns(file_list)
+
+      result = @repository.fetch_metadata_files_list
+      assert_equal 'CLAUDE.md', result[:claude]
+    end
+
+    should 'find gemini files' do
+      file_list = [
+        'GEMINI.md',
+        'docs/GEMINI.md',
+        'gemini.txt',
+        'other.txt'
+      ]
+      @repository.stubs(:get_file_list).returns(file_list)
+
+      result = @repository.fetch_metadata_files_list
+      assert_equal 'GEMINI.md', result[:gemini]
+    end
+
+    should 'find cursor rules files' do
+      file_list = [
+        'cursorrules',
+        '.cursorrules',
+        'other.txt'
+      ]
+      @repository.stubs(:get_file_list).returns(file_list)
+
+      result = @repository.fetch_metadata_files_list
+      assert_equal '.cursorrules', result[:cursor]
+    end
+
+    should 'find cursor rules directory entries' do
+      file_list = [
+        '.cursor/rules/general.mdc',
+        'other.txt'
+      ]
+      @repository.stubs(:get_file_list).returns(file_list)
+
+      result = @repository.fetch_metadata_files_list
+      assert_equal '.cursor/rules/general.mdc', result[:cursor]
+    end
+
+    should 'find copilot instructions files' do
+      file_list = [
+        'copilot-instructions.md',
+        '.github/copilot-instructions.md',
+        'other.txt'
+      ]
+      @repository.stubs(:get_file_list).returns(file_list)
+
+      result = @repository.fetch_metadata_files_list
+      assert_equal '.github/copilot-instructions.md', result[:copilot]
     end
 
     should 'find dco files with various extensions' do
@@ -655,6 +716,10 @@ class RepositoryTest < ActiveSupport::TestCase
       assert_nil result[:maintainers]
       assert_nil result[:copyright]
       assert_nil result[:agents]
+      assert_nil result[:claude]
+      assert_nil result[:gemini]
+      assert_nil result[:cursor]
+      assert_nil result[:copilot]
       assert_nil result[:dco]
       assert_nil result[:cla]
       assert_nil result[:disclosure]
