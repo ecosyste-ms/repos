@@ -52,7 +52,7 @@ class Api::V1::OwnersController < Api::V1::ApplicationController
       scope = scope.order('last_synced_at DESC')
     end
 
-    @pagy, @repositories = pagy_countless(scope)
+    @pagy, @repositories = pagy_countless(scope.includes(:host, :scorecard))
     if stale?(@repositories, public: true)
       render 'api/v1/repositories/index'
     end

@@ -20,7 +20,7 @@ class Api::V1::RepositoriesController < Api::V1::ApplicationController
     sort_options = sort.split(',').zip(order.split(',')).to_h
     scope = scope.order(sort_options)
 
-    @pagy, @repositories = pagy_countless(scope)
+    @pagy, @repositories = pagy_countless(scope.includes(:host, :scorecard))
     fresh_when @repositories, public: true
   end
 
