@@ -53,10 +53,7 @@ class Owner < ApplicationRecord
   end
 
   def yaml_funding_links
-    return unless related_dot_github_repo.present? 
-    return unless related_dot_github_repo.metadata['funding'].present?
-    metadata['funding'] = related_dot_github_repo.metadata['funding']
-    return [] if metadata.blank? ||  metadata["funding"].blank?
+    return if metadata.blank? || metadata["funding"].blank?
     return [] unless metadata["funding"].is_a?(Hash)
     metadata["funding"].map do |key,v|
       next if v.blank?
@@ -115,6 +112,17 @@ class Owner < ApplicationRecord
 
   def fetch_total_stars
     repositories.sum(:stargazers_count)
+  end
+
+  def fetch_funding
+    return unless related_dot_github_repo.present?
+    related_dot_github_repo.metadata['funding']
+  end
+
+  def update_funding
+    funding = fetch_funding
+    return if metadata['funding'] == funding
+    update_column(:metadata, metadata.merge('funding' => funding))
   end
 
   def sync_repositories
