@@ -26,6 +26,57 @@ class OwnerTest < ActiveSupport::TestCase
     end
   end
 
+  context 'funding' do
+    setup do
+      @host = FactoryBot.create(:github_host)
+      @owner = FactoryBot.create(:owner, host: @host, login: 'acme', metadata: {})
+    end
+
+    should 'return sponsors link when has_sponsors_listing and no funding metadata' do
+      @owner.metadata['has_sponsors_listing'] = true
+      assert_equal ['https://github.com/sponsors/acme'], @owner.funding_links
+    end
+
+    should 'return empty when no sponsors listing and no funding metadata' do
+      assert_equal [], @owner.funding_links
+    end
+
+    should 'map funding metadata to urls without querying repositories' do
+      @owner.metadata['funding'] = { 'github' => ['acme'], 'open_collective' => 'acme' }
+      queries = 0
+      callback = ->(*, payload) { queries += 1 unless payload[:name] == 'SCHEMA' }
+      ActiveSupport::Notifications.subscribed(callback, 'sql.active_record') do
+        links = @owner.funding_links
+        assert_includes links, 'https://github.com/sponsors/acme'
+        assert_includes links, 'https://opencollective.com/acme'
+      end
+      assert_equal 0, queries
+    end
+
+    should 'fetch_funding reads from related .github repo' do
+      FactoryBot.create(:repository, host: @host, full_name: 'acme/.github', owner: 'acme',
+                        metadata: { 'funding' => { 'github' => ['acme'] } })
+      assert_equal({ 'github' => ['acme'] }, @owner.fetch_funding)
+    end
+
+    should 'fetch_funding returns nil when no .github repo' do
+      assert_nil @owner.fetch_funding
+    end
+
+    should 'update_funding persists funding into metadata' do
+      FactoryBot.create(:repository, host: @host, full_name: 'acme/.github', owner: 'acme',
+                        metadata: { 'funding' => { 'ko_fi' => 'acme' } })
+      @owner.update_funding
+      assert_equal({ 'ko_fi' => 'acme' }, @owner.reload.metadata['funding'])
+    end
+
+    should 'update_funding is a no-op when funding unchanged' do
+      @owner.update_column(:metadata, { 'funding' => nil })
+      @owner.expects(:update_column).never
+      @owner.update_funding
+    end
+  end
+
   context 'sync methods' do
     setup do
       @host = FactoryBot.create(:github_host)
