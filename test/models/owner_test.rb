@@ -93,15 +93,22 @@ class OwnerTest < ActiveSupport::TestCase
       assert_nil other.reload.metadata['funding']
     end
 
-    should 'backfill_funding skips owners whose funding already matches' do
-      @owner.update_column(:metadata, { 'funding' => { 'github' => ['acme'] } })
+    should 'backfill_funding skips owners that already have funding without a repo lookup' do
+      @owner.update_column(:metadata, { 'funding' => { 'github' => ['old'] } })
       FactoryBot.create(:repository, host: @host, full_name: 'acme/.github', owner: 'acme',
-                        metadata: { 'funding' => { 'github' => ['acme'] } })
+                        metadata: { 'funding' => { 'github' => ['new'] } })
 
-      done, updated, _ = Owner.backfill_funding(@host)
+      repo_queries = 0
+      callback = ->(*, payload) { repo_queries += 1 if payload[:sql] =~ /FROM "repositories"/ }
+      done, updated = nil
+      ActiveSupport::Notifications.subscribed(callback, 'sql.active_record') do
+        done, updated, _ = Owner.backfill_funding(@host)
+      end
 
       assert_equal 1, done
       assert_equal 0, updated
+      assert_equal 0, repo_queries
+      assert_equal({ 'github' => ['old'] }, @owner.reload.metadata['funding'])
     end
   end
 
