@@ -22,8 +22,9 @@ class Owner < ApplicationRecord
     t0 = Time.now
     done = 0
     updated = 0
-    connection_pool.with_connection do |conn|
-      host.owners.select(:id, :host_id, :login, :metadata).each_instance(with_hold: true, connection: conn) do |owner|
+    write_conn = connection_pool.checkout
+    begin
+      host.owners.select(:id, :host_id, :login, :metadata).each_instance do |owner|
         done += 1
         if block_given? && (done == 1 || (done % 5_000).zero?)
           yield(done, updated, (done / (Time.now - t0)).round)
@@ -32,10 +33,16 @@ class Owner < ApplicationRecord
         repo = host.repositories.find_by('lower(full_name) = ?', "#{owner.login.downcase}/.github")
         funding = repo && repo.metadata['funding']
         if funding.present?
-          owner.update_column(:metadata, owner.metadata.merge('funding' => funding))
+          write_conn.exec_update(
+            "UPDATE owners SET metadata = $1 WHERE id = $2",
+            "Owner.backfill_funding",
+            [owner.metadata.merge('funding' => funding).to_json, owner.id]
+          )
           updated += 1
         end
       end
+    ensure
+      connection_pool.checkin(write_conn)
     end
     [done, updated, (Time.now - t0).round]
   end
