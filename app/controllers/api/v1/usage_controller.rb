@@ -19,7 +19,7 @@ class Api::V1::UsageController < Api::V1::ApplicationController
   def dependent_repositories
     @usage = find_or_create_usage!
 
-    scope = @usage.repositories.includes(:host)
+    scope = @usage.repositories.includes(:host, :scorecard)
 
     sort = params[:sort] || 'id'
     order = params[:order] || 'asc'
