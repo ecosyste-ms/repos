@@ -137,6 +137,42 @@ class HostsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to host_path(id: @host.name, sort: 'stars')
   end
 
+  test 'default sort orders by id desc without nulls last' do
+    queries = []
+    callback = ->(*, payload) { queries << payload[:sql] if payload[:sql].include?('repositories') }
+    ActiveSupport::Notifications.subscribed(callback, 'sql.active_record') do
+      get host_path(id: @host.name)
+    end
+    assert_response :success
+    repo_query = queries.find { |q| q =~ /ORDER BY/i }
+    assert_match(/ORDER BY "repositories"\."id" DESC/i, repo_query)
+    refute_match(/NULLS LAST/i, repo_query)
+  end
+
+  test 'sort dropdown hidden for GitHub' do
+    get host_path(id: @host.name)
+    assert_response :success
+    assert_no_match(/dropdown-toggle/, response.body)
+  end
+
+  test 'sort dropdown shown for other hosts' do
+    other = Host.create(name: 'Codeberg', url: 'https://codeberg.org', kind: 'gitea')
+    get host_path(id: other.name)
+    assert_response :success
+    assert_match(/dropdown-toggle/, response.body)
+  end
+
+  test 'explicit sort param still applies nulls last' do
+    queries = []
+    callback = ->(*, payload) { queries << payload[:sql] if payload[:sql].include?('repositories') }
+    ActiveSupport::Notifications.subscribed(callback, 'sql.active_record') do
+      get host_path(id: @host.name), params: { sort: 'stargazers_count' }
+    end
+    assert_response :success
+    repo_query = queries.find { |q| q =~ /ORDER BY/i }
+    assert_match(/stargazers_count DESC NULLS LAST/i, repo_query)
+  end
+
   test 'get a host with pagination parameters' do
     get host_path(id: @host.name), params: { page: 2, per_page: 10 }
     assert_response :success
