@@ -75,6 +75,34 @@ class OwnerTest < ActiveSupport::TestCase
       @owner.expects(:update_column).never
       @owner.update_funding
     end
+
+    should 'backfill_funding copies .github repo funding into owner metadata' do
+      @owner.update_column(:metadata, { 'has_sponsors_listing' => true })
+      other = FactoryBot.create(:owner, host: @host, login: 'nofund', metadata: {})
+      FactoryBot.create(:repository, host: @host, full_name: 'acme/.github', owner: 'acme',
+                        metadata: { 'funding' => { 'github' => ['acme'] } })
+      FactoryBot.create(:repository, host: @host, full_name: 'nofund/.github', owner: 'nofund',
+                        metadata: {})
+
+      done, updated, _ = Owner.backfill_funding(@host)
+
+      assert_equal 2, done
+      assert_equal 1, updated
+      assert_equal({ 'github' => ['acme'] }, @owner.reload.metadata['funding'])
+      assert_equal true, @owner.metadata['has_sponsors_listing']
+      assert_nil other.reload.metadata['funding']
+    end
+
+    should 'backfill_funding skips owners whose funding already matches' do
+      @owner.update_column(:metadata, { 'funding' => { 'github' => ['acme'] } })
+      FactoryBot.create(:repository, host: @host, full_name: 'acme/.github', owner: 'acme',
+                        metadata: { 'funding' => { 'github' => ['acme'] } })
+
+      done, updated, _ = Owner.backfill_funding(@host)
+
+      assert_equal 1, done
+      assert_equal 0, updated
+    end
   end
 
   context 'sync methods' do

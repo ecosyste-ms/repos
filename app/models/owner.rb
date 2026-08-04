@@ -18,6 +18,27 @@ class Owner < ApplicationRecord
     Owner.order('last_synced_at asc nulls first').includes(:host).limit(2500).each(&:sync_async)
   end
 
+  def self.backfill_funding(host)
+    t0 = Time.now
+    done = 0
+    updated = 0
+    connection_pool.with_connection do |conn|
+      host.owners.select(:id, :host_id, :login, :metadata).each_instance(with_hold: true, connection: conn) do |owner|
+        repo = host.repositories.find_by('lower(full_name) = ?', "#{owner.login.downcase}/.github")
+        funding = repo && repo.metadata['funding']
+        if funding.present? && owner.metadata['funding'] != funding
+          owner.update_column(:metadata, owner.metadata.merge('funding' => funding))
+          updated += 1
+        end
+        done += 1
+        if block_given? && (done == 1 || (done % 5_000).zero?)
+          yield(done, updated, (done / (Time.now - t0)).round)
+        end
+      end
+    end
+    [done, updated, (Time.now - t0).round]
+  end
+
   def to_s
     name.presence || login
   end
