@@ -2,22 +2,24 @@ namespace :owners do
   desc 'backfill metadata funding from .github repos'
   task backfill_funding: :environment do
     Host.where(kind: 'github').find_each do |host|
+      t0 = Time.now
+      done = 0
       updated = 0
-      scanned = 0
-      host.repositories
-          .where("lower(full_name) LIKE '%/.github'")
-          .where("metadata->>'funding' IS NOT NULL")
-          .each_instance do |repo|
-        scanned += 1
-        owner = host.owners.find_by('lower(login) = ?', repo.owner.downcase)
-        next unless owner
-        funding = repo.metadata['funding']
-        next if owner.metadata['funding'] == funding
-        owner.update_column(:metadata, owner.metadata.merge('funding' => funding))
-        updated += 1
-        puts "#{host.name}: #{updated} owners updated (#{scanned} .github repos scanned)" if (updated % 1000).zero?
+      puts "#{host.name}: declaring cursor over owners"
+      host.owners.select(:id, :host_id, :login, :metadata).each_instance(with_hold: true) do |owner|
+        repo = host.repositories.find_by('lower(full_name) = ?', "#{owner.login.downcase}/.github")
+        funding = repo && repo.metadata['funding']
+        if funding.present? && owner.metadata['funding'] != funding
+          owner.update_column(:metadata, owner.metadata.merge('funding' => funding))
+          updated += 1
+        end
+        done += 1
+        if (done % 10_000).zero?
+          rate = (done / (Time.now - t0)).round
+          puts "#{host.name}: #{done} owners (#{updated} updated) #{rate}/s"
+        end
       end
-      puts "#{host.name}: #{updated} owners updated (#{scanned} .github repos with funding)"
+      puts "#{host.name}: #{done} owners (#{updated} updated) in #{(Time.now - t0).round}s"
     end
   end
 end
