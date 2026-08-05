@@ -8,12 +8,14 @@ class Api::V1::ReleasesControllerTest < ActionDispatch::IntegrationTest
     @release_v1 = create(:release, 
       repository: @repository,
       tag_name: 'v1.0.0',
+      immutable: false,
       published_at: 2.days.ago
     )
     
     @release_v2 = create(:release,
       repository: @repository, 
       tag_name: 'v2.0.0',
+      immutable: true,
       published_at: 1.day.ago
     )
   end
@@ -74,6 +76,8 @@ class Api::V1::ReleasesControllerTest < ActionDispatch::IntegrationTest
     assert release.key?('body')
     assert release.key?('draft')
     assert release.key?('prerelease')
+    assert release.key?('immutable')
+    assert release['immutable']
   end
 
   test "should include release attributes in show" do
@@ -89,6 +93,8 @@ class Api::V1::ReleasesControllerTest < ActionDispatch::IntegrationTest
     assert data.key?('body')
     assert data.key?('draft')
     assert data.key?('prerelease')
+    assert data.key?('immutable')
+    assert_not data['immutable']
   end
 
   test "should set proper cache headers for index" do

@@ -17,6 +17,7 @@ class Hosts::GithubTest < ActiveSupport::TestCase
         body: 'First release',
         draft: false,
         prerelease: false,
+        immutable: true,
         created_at: 1.day.ago,
         published_at: 1.day.ago,
         author: OpenStruct.new(login: 'testuser'),
@@ -37,17 +38,18 @@ class Hosts::GithubTest < ActiveSupport::TestCase
       assert_equal 1, result.length
       assert_equal 1, result.first[:uuid]
       assert_equal 'v1.0.0', result.first[:tag_name]
+      assert result.first[:immutable]
     end
 
     should 'stop after max_pages' do
       release1 = OpenStruct.new(
         id: 1, tag_name: 'v1.0', target_commitish: 'main', name: 'r', body: 'b',
-        draft: false, prerelease: false, created_at: Time.now, published_at: Time.now,
+        draft: false, prerelease: false, immutable: false, created_at: Time.now, published_at: Time.now,
         author: OpenStruct.new(login: 'u'), assets: []
       )
       release2 = OpenStruct.new(
         id: 2, tag_name: 'v2.0', target_commitish: 'main', name: 'r2', body: 'b2',
-        draft: false, prerelease: false, created_at: Time.now, published_at: Time.now,
+        draft: false, prerelease: false, immutable: true, created_at: Time.now, published_at: Time.now,
         author: OpenStruct.new(login: 'u'), assets: []
       )
 
@@ -82,6 +84,42 @@ class Hosts::GithubTest < ActiveSupport::TestCase
       result = @github.fetch_releases(@repository)
 
       assert_equal [], result
+    end
+  end
+
+  context 'download_releases' do
+    should 'store immutability for new releases and refresh existing releases' do
+      existing_release = create(
+        :release,
+        repository: @repository,
+        uuid: '1',
+        tag_name: 'v1.0.0',
+        immutable: false,
+        last_synced_at: 2.days.ago
+      )
+      unchanged_updated_at = 2.days.ago.change(usec: 0)
+      unchanged_release = create(
+        :release,
+        repository: @repository,
+        uuid: '2',
+        tag_name: 'v2.0.0',
+        immutable: false,
+        updated_at: unchanged_updated_at
+      )
+
+      @github.stubs(:fetch_releases).with(@repository).returns([
+        { uuid: 1, tag_name: 'v1.0.0', immutable: true, last_synced_at: Time.current },
+        { uuid: 2, tag_name: 'v2.0.0', immutable: false, last_synced_at: Time.current },
+        { uuid: 3, tag_name: 'v3.0.0', immutable: false, last_synced_at: Time.current }
+      ])
+
+      @github.download_releases(@repository)
+
+      assert_equal 3, @repository.releases.count
+      assert existing_release.reload.immutable
+      assert_not @repository.releases.find_by!(uuid: '3').immutable
+      assert_operator existing_release.last_synced_at, :>, 2.days.ago
+      assert_equal unchanged_updated_at, unchanged_release.reload.updated_at
     end
   end
 

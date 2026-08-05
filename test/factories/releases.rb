@@ -8,6 +8,7 @@ FactoryBot.define do
     target_commitish { 'main' }
     draft { false }
     prerelease { false }
+    immutable { false }
     published_at { rand(1..30).days.ago }
     author { 'octocat' }
     assets { [] }
