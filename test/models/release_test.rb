@@ -40,4 +40,65 @@ class ReleaseTest < ActiveSupport::TestCase
 
     assert_equal 1, (release1 <=> release2)
   end
+
+  test 'backfill_immutability syncs GitHub repositories in bounded cursor batches' do
+    github_host = create(:github_host)
+    first_repository = create(:repository, host: github_host, full_name: 'actions/checkout')
+    second_repository = create(:repository, host: github_host, full_name: 'actions/setup-node')
+    create(:release, repository: first_repository, immutable: nil)
+    create(:release, repository: second_repository, immutable: nil)
+
+    known_repository = create(:repository, host: github_host, full_name: 'actions/known')
+    create(:release, repository: known_repository, immutable: false)
+
+    repository_names = [
+      first_repository.full_name,
+      second_repository.full_name.upcase,
+      known_repository.full_name,
+      'missing/action'
+    ]
+    expected_repository_ids = [first_repository.id, second_repository.id]
+    open_transactions = []
+    Host.any_instance.expects(:download_releases).twice.with do |repository|
+      expected_repository_ids.delete(repository.id)
+      open_transactions << Release.connection.open_transactions
+      true
+    end
+    transaction_count = Release.connection.open_transactions
+
+    processed, repositories_synced, repositories_missing, last_name = Release.backfill_immutability(
+      repository_names: repository_names,
+      block_size: 1
+    )
+
+    assert_empty expected_repository_ids
+    assert_equal [transaction_count, transaction_count], open_transactions
+    assert_equal 4, processed
+    assert_equal 2, repositories_synced
+    assert_equal 1, repositories_missing
+    assert_equal repository_names.sort_by(&:downcase).last, last_name
+  end
+
+  test 'backfill_immutability rejects an empty batch' do
+    error = assert_raises(ArgumentError) do
+      Release.backfill_immutability(repository_names: [], block_size: 0)
+    end
+
+    assert_equal 'block_size must be greater than zero', error.message
+  end
+
+  test 'backfill_immutability stops the release cursor after finding an unknown value' do
+    github_host = mock('github_host')
+    repository = mock('repository')
+    releases = mock('releases')
+    cursor = mock('cursor')
+    Host.expects(:find_by_name).with('GitHub').returns(github_host)
+    github_host.expects(:find_repository).with('actions/checkout').returns(repository)
+    repository.expects(:releases).returns(releases)
+    releases.expects(:select).with(:immutable).returns(cursor)
+    cursor.expects(:each_row).with(block_size: 1_000, until: true).yields({ 'immutable' => nil })
+    repository.expects(:download_releases)
+
+    Release.backfill_immutability(repository_names: ['actions/checkout'])
+  end
 end

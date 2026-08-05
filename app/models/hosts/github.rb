@@ -190,27 +190,43 @@ module Hosts
     def download_releases(repository)
       releases = fetch_releases(repository)
       return unless releases.present?
-      
+
       # Get existing release UUIDs in one query
-      existing_uuids = repository.releases.pluck(:uuid).to_set
-      
+      release_uuids = releases.map { |release| release[:uuid].to_s }
+      existing_releases = repository.releases.where(uuid: release_uuids).pluck(:uuid, :immutable).to_h
+
+      # Refresh immutability when the stored value differs from GitHub
+      changed_releases = releases.select do |release|
+        uuid = release[:uuid].to_s
+        existing_releases.key?(uuid) && existing_releases[uuid] != release[:immutable]
+      end
+      now = Time.current
+      changed_releases.group_by { |release| release[:immutable] }.each do |immutable, grouped_releases|
+        uuids = grouped_releases.map { |release| release[:uuid].to_s }
+        repository.releases.where(uuid: uuids).update_all(
+          immutable: immutable,
+          last_synced_at: now,
+          updated_at: now
+        )
+      end
+
       # Filter out existing releases
-      new_releases = releases.reject { |release| existing_uuids.include?(release[:uuid].to_s) }
-      
+      new_releases = releases.reject { |release| existing_releases.key?(release[:uuid].to_s) }
+
       if new_releases.any?
         # Prepare records for bulk insert
         release_records = new_releases.map do |release|
           release.merge(
             repository_id: repository.id,
-            created_at: Time.current,
-            updated_at: Time.current
+            created_at: now,
+            updated_at: now
           )
         end
-        
+
         # Bulk insert new releases only
         Release.insert_all(release_records)
       end
-      
+
       nil
     rescue *IGNORABLE_EXCEPTIONS, Octokit::NotFound, Octokit::RepositoryUnavailable, Octokit::UnavailableForLegalReasons
       nil
@@ -239,6 +255,7 @@ module Hosts
           body: release.body.try(:delete, "\u0000"),
           draft: release.draft,
           prerelease: release.prerelease,
+          immutable: release.immutable,
           created_at: release.created_at,
           published_at: release.published_at,
           author: release.author.try(:login),

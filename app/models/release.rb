@@ -1,6 +1,45 @@
 class Release < ApplicationRecord
   belongs_to :repository
 
+  def self.backfill_immutability(repository_names:, block_size: 1_000, after_name: nil)
+    raise ArgumentError, 'block_size must be greater than zero' unless block_size.positive?
+
+    host = Host.find_by_name('GitHub')
+    return [0, 0, 0, after_name] unless host
+
+    names = repository_names.compact.uniq.sort_by(&:downcase)
+    names = names.drop_while { |name| name.downcase <= after_name.downcase } if after_name.present?
+    processed = 0
+    repositories_synced = 0
+    repositories_missing = 0
+    last_name = after_name
+
+    names.each do |name|
+      repository = host.find_repository(name)
+      if repository
+        needs_backfill = false
+        repository.releases.select(:immutable).each_row(block_size: block_size, until: true) do |row|
+          needs_backfill = row['immutable'].nil?
+        end
+
+        if needs_backfill
+          repository.download_releases
+          repositories_synced += 1
+        end
+      else
+        repositories_missing += 1
+      end
+
+      processed += 1
+      last_name = name
+      if block_given? && (processed == 1 || (processed % 100).zero?)
+        yield(processed, repositories_synced, repositories_missing, last_name)
+      end
+    end
+
+    [processed, repositories_synced, repositories_missing, last_name]
+  end
+
   def to_s
     name
   end
