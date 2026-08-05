@@ -21,6 +21,17 @@ class TopicsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test 'topic show is disabled and returns 410' do
+    get topic_path(id: 'ruby')
+    assert_response :gone
+  end
+
+  test 'host topic is disabled and returns 410 without loading the host' do
+    get topic_host_path(id: @host.name, topic: 'ruby')
+    assert_response :gone
+    assert_nil assigns(:host)
+  end
+
   test 'topics index excludes blocked topics' do
     Topic.create!(host: @host, name: 'malwarebytes-unlocked-version', repositories_count: 10)
     Topic.create!(host: @host, name: 'good-topic', repositories_count: 5)

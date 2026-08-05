@@ -18,6 +18,6 @@ class TopicsController < ApplicationController
     # topics @> ARRAY query on 297M rows is slow even with GIN index
     # Combined with ORDER BY stargazers_count, it causes 15+ minute queries
     # Needs: composite index, materialized view, or pre-computed topic pages
-    render plain: "Topic pages temporarily unavailable", status: :service_unavailable
+    render plain: "Topic pages have been removed", status: :gone
   end
 end
