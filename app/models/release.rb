@@ -1,44 +1,43 @@
 class Release < ApplicationRecord
   belongs_to :repository
 
-  def self.backfill_immutability(batch_size: 10_000, after_id: 0)
-    raise ArgumentError, 'batch_size must be greater than zero' unless batch_size.positive?
+  def self.backfill_immutability(repository_names:, block_size: 1_000, after_name: nil)
+    raise ArgumentError, 'block_size must be greater than zero' unless block_size.positive?
 
-    scanned = 0
+    host = Host.find_by_name('GitHub')
+    return [0, 0, 0, after_name] unless host
+
+    names = repository_names.compact.uniq.sort_by(&:downcase)
+    names = names.drop_while { |name| name.downcase <= after_name.downcase } if after_name.present?
+    processed = 0
     repositories_synced = 0
-    cursor = after_id
+    repositories_missing = 0
+    last_name = after_name
 
-    loop do
-      rows = []
-      where('id > ?', cursor)
-        .order('releases.id')
-        .limit(batch_size)
-        .select('releases.id', 'releases.repository_id', 'releases.immutable')
-        .each_row(block_size: [batch_size, 1_000].min) do |row|
-          rows << [row['id'].to_i, row['repository_id'].to_i, row['immutable']]
+    names.each do |name|
+      repository = host.find_repository(name)
+      if repository
+        needs_backfill = false
+        repository.releases.select(:immutable).each_row(block_size: block_size) do |row|
+          needs_backfill = true if row['immutable'].nil?
         end
 
-      break if rows.empty?
-
-      cursor = rows.last.first
-      repository_ids = rows.filter_map do |_id, repository_id, immutable|
-        repository_id if immutable.nil?
-      end.uniq
-      repositories = Repository.includes(:host).where(id: repository_ids).index_by(&:id)
-
-      repository_ids.each do |repository_id|
-        repository = repositories[repository_id]
-        next unless repository&.host&.kind == 'github'
-
-        repository.download_releases
-        repositories_synced += 1
+        if needs_backfill
+          repository.download_releases
+          repositories_synced += 1
+        end
+      else
+        repositories_missing += 1
       end
 
-      scanned += rows.size
-      yield(scanned, repositories_synced, cursor) if block_given?
+      processed += 1
+      last_name = name
+      if block_given? && (processed == 1 || (processed % 100).zero?)
+        yield(processed, repositories_synced, repositories_missing, last_name)
+      end
     end
 
-    [scanned, repositories_synced, cursor]
+    [processed, repositories_synced, repositories_missing, last_name]
   end
 
   def to_s

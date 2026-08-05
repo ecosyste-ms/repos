@@ -43,17 +43,20 @@ class ReleaseTest < ActiveSupport::TestCase
 
   test 'backfill_immutability syncs GitHub repositories in bounded cursor batches' do
     github_host = create(:github_host)
-    first_repository = create(:repository, host: github_host)
-    second_repository = create(:repository, host: github_host)
+    first_repository = create(:repository, host: github_host, full_name: 'actions/checkout')
+    second_repository = create(:repository, host: github_host, full_name: 'actions/setup-node')
     create(:release, repository: first_repository, immutable: nil)
     create(:release, repository: second_repository, immutable: nil)
 
-    gitlab_repository = create(:gitlab_repository)
-    create(:release, repository: gitlab_repository, immutable: nil)
-
-    known_repository = create(:repository, host: github_host)
+    known_repository = create(:repository, host: github_host, full_name: 'actions/known')
     create(:release, repository: known_repository, immutable: false)
 
+    repository_names = [
+      first_repository.full_name,
+      second_repository.full_name.upcase,
+      known_repository.full_name,
+      'missing/action'
+    ]
     expected_repository_ids = [first_repository.id, second_repository.id]
     open_transactions = []
     Host.any_instance.expects(:download_releases).twice.with do |repository|
@@ -62,23 +65,25 @@ class ReleaseTest < ActiveSupport::TestCase
       true
     end
     transaction_count = Release.connection.open_transactions
-    release_count = Release.count
-    last_release_id = Release.maximum(:id)
 
-    scanned, repositories_synced, last_id = Release.backfill_immutability(batch_size: 1)
+    processed, repositories_synced, repositories_missing, last_name = Release.backfill_immutability(
+      repository_names: repository_names,
+      block_size: 1
+    )
 
     assert_empty expected_repository_ids
     assert_equal [transaction_count, transaction_count], open_transactions
-    assert_equal release_count, scanned
+    assert_equal 4, processed
     assert_equal 2, repositories_synced
-    assert_equal last_release_id, last_id
+    assert_equal 1, repositories_missing
+    assert_equal repository_names.sort_by(&:downcase).last, last_name
   end
 
   test 'backfill_immutability rejects an empty batch' do
     error = assert_raises(ArgumentError) do
-      Release.backfill_immutability(batch_size: 0)
+      Release.backfill_immutability(repository_names: [], block_size: 0)
     end
 
-    assert_equal 'batch_size must be greater than zero', error.message
+    assert_equal 'block_size must be greater than zero', error.message
   end
 end

@@ -559,32 +559,8 @@ class Repository < ApplicationRecord
   end
 
   def self.parse_dependencies_for_github_actions_tags
-    conn = ecosystem_connection(PACKAGES_DOMAIN)
-
-    repo_names = Set.new
-
-    response = conn.get("/api/v1/registries/github%20actions/packages?sort=updated_at&order=desc")
-    return nil unless response.success?
-
-    links = parse_link_header(response.headers)
-
-    while links["next"].present?
-      json = response.body.is_a?(String) ? Oj.load(response.body) : response.body
-
-      json.each do |package|
-        repo_names << package["name"]
-      end
-
-      response = conn.get(links["next"].gsub(PACKAGES_DOMAIN, ''))
-      return nil unless response.success?
-      links = parse_link_header(response.headers)
-    end
-
-    # Process the final page
-    json = response.body.is_a?(String) ? Oj.load(response.body) : response.body
-    json.each do |package|
-      repo_names << package["name"]
-    end
+    repo_names = github_actions_package_names
+    return nil unless repo_names
 
     host = Host.find_by_name("GitHub")
 
@@ -599,6 +575,27 @@ class Repository < ApplicationRecord
         tag.parse_dependencies_async if tag.dependencies_parsed_at.nil?
       end
     end
+  end
+
+  def self.github_actions_package_names
+    conn = ecosystem_connection(PACKAGES_DOMAIN)
+    path = "/api/v1/registries/github%20actions/package_names?per_page=10000&sort=name&order=asc"
+    repo_names = Set.new
+
+    loop do
+      response = conn.get(path)
+      return nil unless response.success?
+
+      names = response.body.is_a?(String) ? Oj.load(response.body) : response.body
+      repo_names.merge(names)
+
+      next_path = parse_link_header(response.headers)["next"]
+      break unless next_path.present?
+
+      path = next_path.gsub(PACKAGES_DOMAIN, '')
+    end
+
+    repo_names
   end
 
   def self.parse_link_header(headers)

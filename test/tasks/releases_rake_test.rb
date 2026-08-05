@@ -7,16 +7,18 @@ class ReleasesRakeTest < ActiveSupport::TestCase
     Rake::Task['releases:backfill_immutability'].reenable
   end
 
-  test 'backfill_immutability passes batch and resume arguments' do
+  test 'backfill_immutability loads Action names and passes cursor arguments' do
+    repository_names = Set.new(['actions/checkout'])
+    Repository.expects(:github_actions_package_names).returns(repository_names)
     Release.expects(:backfill_immutability)
-      .with(batch_size: 250, after_id: 1_000)
-      .yields(250, 20, 1_250)
-      .returns([250, 20, 1_250])
+      .with(repository_names: repository_names, block_size: 250, after_name: 'actions/cache')
+      .yields(1, 1, 0, 'actions/checkout')
+      .returns([1, 1, 0, 'actions/checkout'])
 
     output = capture_io do
-      Rake::Task['releases:backfill_immutability'].invoke(250, 1_000)
+      Rake::Task['releases:backfill_immutability'].invoke(250, 'actions/cache')
     end.first
 
-    assert_includes output, 'last id 1250'
+    assert_includes output, 'last name actions/checkout'
   end
 end
