@@ -90,6 +90,13 @@ class ApiV1RepositoriesControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
+  test 'lookup with an unparseable url returns 400' do
+    get api_v1_repositories_lookup_path(url: 'https://MenuellaFoodSafety (#14684)')
+    assert_response :bad_request
+    assert_equal 'application/json; charset=utf-8', @response.content_type
+    assert_match 'Invalid url', JSON.parse(@response.body)['error']
+  end
+
   test 'get a repository by purl' do
     get api_v1_repositories_lookup_path(purl: 'pkg:github/testuser/awesome-project')
     assert_response :success

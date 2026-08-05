@@ -79,7 +79,11 @@ class Api::V1::RepositoriesController < Api::V1::ApplicationController
   def lookup
     if params[:url].present?
       url = params[:url]
-      parsed_url = Addressable::URI.parse(url)
+      begin
+        parsed_url = Addressable::URI.parse(url)
+      rescue Addressable::URI::InvalidURIError => e
+        render json: { error: "Invalid url: #{e.message}" }, status: :bad_request and return
+      end
       @host = Host.find_by_domain(parsed_url.host)
       raise ActiveRecord::RecordNotFound unless @host
       path = parsed_url.path.delete_prefix('/').chomp('/')
