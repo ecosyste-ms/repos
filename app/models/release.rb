@@ -18,8 +18,8 @@ class Release < ApplicationRecord
       repository = host.find_repository(name)
       if repository
         needs_backfill = false
-        repository.releases.select(:immutable).each_row(block_size: block_size) do |row|
-          needs_backfill = true if row['immutable'].nil?
+        repository.releases.select(:immutable).each_row(block_size: block_size, until: true) do |row|
+          needs_backfill = row['immutable'].nil?
         end
 
         if needs_backfill

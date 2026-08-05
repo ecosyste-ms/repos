@@ -86,4 +86,19 @@ class ReleaseTest < ActiveSupport::TestCase
 
     assert_equal 'block_size must be greater than zero', error.message
   end
+
+  test 'backfill_immutability stops the release cursor after finding an unknown value' do
+    github_host = mock('github_host')
+    repository = mock('repository')
+    releases = mock('releases')
+    cursor = mock('cursor')
+    Host.expects(:find_by_name).with('GitHub').returns(github_host)
+    github_host.expects(:find_repository).with('actions/checkout').returns(repository)
+    repository.expects(:releases).returns(releases)
+    releases.expects(:select).with(:immutable).returns(cursor)
+    cursor.expects(:each_row).with(block_size: 1_000, until: true).yields({ 'immutable' => nil })
+    repository.expects(:download_releases)
+
+    Release.backfill_immutability(repository_names: ['actions/checkout'])
+  end
 end
