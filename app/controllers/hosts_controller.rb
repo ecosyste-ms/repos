@@ -1,5 +1,5 @@
 class HostsController < ApplicationController
-  before_action :find_host_by_id, only: [:show, :topics, :topic]
+  before_action :find_host_by_id, only: [:show, :topics]
 
   def index
     redirect_to root_path
@@ -45,6 +45,6 @@ class HostsController < ApplicationController
     # TODO(DB_PERF): hosts#topic disabled 2026-01-10
     # topics @> ARRAY query on 297M rows is slow even with GIN index
     # Needs: composite index, materialized view, or pre-computed topic pages
-    render plain: "Topic pages temporarily unavailable", status: :service_unavailable
+    render plain: "Topic pages have been removed", status: :gone
   end
 end
