@@ -5,16 +5,18 @@ class Release < ApplicationRecord
     raise ArgumentError, 'block_size must be greater than zero' unless block_size.positive?
 
     host = Host.find_by_name('GitHub')
-    return [0, 0, 0, after_name] unless host
+    return [0, 0, 0, after_name, 0] unless host
 
     names = repository_names.compact.uniq.sort_by(&:downcase)
     names = names.drop_while { |name| name.downcase <= after_name.downcase } if after_name.present?
     processed = 0
     repositories_synced = 0
     repositories_missing = 0
+    repositories_failed = 0
     last_name = after_name
 
     names.each do |name|
+      sync_error = nil
       repository = host.find_repository(name)
       if repository
         needs_backfill = false
@@ -23,8 +25,13 @@ class Release < ApplicationRecord
         end
 
         if needs_backfill
-          repository.download_releases
-          repositories_synced += 1
+          begin
+            repository.download_releases
+            repositories_synced += 1
+          rescue Octokit::ServerError, Faraday::TimeoutError, Faraday::ConnectionFailed, Net::OpenTimeout, Socket::ResolutionError => error
+            repositories_failed += 1
+            sync_error = error
+          end
         end
       else
         repositories_missing += 1
@@ -32,12 +39,12 @@ class Release < ApplicationRecord
 
       processed += 1
       last_name = name
-      if block_given? && (processed == 1 || (processed % 100).zero?)
-        yield(processed, repositories_synced, repositories_missing, last_name)
+      if block_given? && (sync_error || processed == 1 || (processed % 100).zero?)
+        yield(processed, repositories_synced, repositories_missing, last_name, repositories_failed, sync_error)
       end
     end
 
-    [processed, repositories_synced, repositories_missing, last_name]
+    [processed, repositories_synced, repositories_missing, last_name, repositories_failed]
   end
 
   def to_s

@@ -66,7 +66,7 @@ class ReleaseTest < ActiveSupport::TestCase
     end
     transaction_count = Release.connection.open_transactions
 
-    processed, repositories_synced, repositories_missing, last_name = Release.backfill_immutability(
+    processed, repositories_synced, repositories_missing, last_name, repositories_failed = Release.backfill_immutability(
       repository_names: repository_names,
       block_size: 1
     )
@@ -77,6 +77,7 @@ class ReleaseTest < ActiveSupport::TestCase
     assert_equal 2, repositories_synced
     assert_equal 1, repositories_missing
     assert_equal repository_names.sort_by(&:downcase).last, last_name
+    assert_equal 0, repositories_failed
   end
 
   test 'backfill_immutability rejects an empty batch' do
@@ -100,5 +101,32 @@ class ReleaseTest < ActiveSupport::TestCase
     repository.expects(:download_releases)
 
     Release.backfill_immutability(repository_names: ['actions/checkout'])
+  end
+
+  test 'backfill_immutability continues after a GitHub server error' do
+    github_host = create(:github_host)
+    failing_repository = create(:repository, host: github_host, full_name: 'actions/failing')
+    following_repository = create(:repository, host: github_host, full_name: 'actions/following')
+    create(:release, repository: failing_repository, immutable: nil)
+    create(:release, repository: following_repository, immutable: nil)
+    error = Octokit::ServerError.new(status: 504, body: 'timeout')
+
+    Host.stubs(:find_by_name).with('GitHub').returns(github_host)
+    github_host.stubs(:find_repository).with(failing_repository.full_name).returns(failing_repository)
+    github_host.stubs(:find_repository).with(following_repository.full_name).returns(following_repository)
+    failing_repository.expects(:download_releases).raises(error)
+    following_repository.expects(:download_releases)
+    progress = []
+
+    result = Release.backfill_immutability(
+      repository_names: [failing_repository.full_name, following_repository.full_name]
+    ) do |*values|
+      progress << values
+    end
+
+    assert_equal [2, 1, 0, following_repository.full_name, 1], result
+    assert_equal failing_repository.full_name, progress.first[3]
+    assert_equal 1, progress.first[4]
+    assert_equal error, progress.first[5]
   end
 end
