@@ -154,41 +154,44 @@ module Hosts
     end
 
     def download_tags(repository)
-      tags = fetch_tags(repository)
+      tags, complete = fetch_tags(repository)
       return unless tags.present?
-      
-      # Get existing tag names in one query
-      existing_names = repository.tags.pluck(:name).to_set
-      
-      # Filter out existing tags
-      new_tags = Array(tags).reject { |tag| existing_names.include?(tag[:name]) }
-      
-      if new_tags.any?
-        # Prepare records for bulk insert
-        tag_records = new_tags.map do |tag|
-          tag.merge(
-            repository_id: repository.id,
-            created_at: Time.current,
-            updated_at: Time.current
-          )
-        end
-        
-        # Bulk insert new tags only
-        Tag.insert_all(tag_records)
-        
-        # Update count incrementally
-        new_count = (repository.tags_count || 0) + new_tags.size
-        repository.update_columns(tags_last_synced_at: Time.current, tags_count: new_count)
-      else
-        # No new tags, just update sync time
-        repository.update_columns(tags_last_synced_at: Time.current)
+
+      now = Time.current
+      existing_tags = repository.tags.pluck(:name, :sha).to_h
+      remote_names = tags.map { |tag| tag[:name] }
+
+      moved_tags = tags.select do |tag|
+        existing_tags.key?(tag[:name]) && existing_tags[tag[:name]] != tag[:sha]
       end
+      moved_tags.each do |tag|
+        repository.tags.where(name: tag[:name]).update_all(
+          sha: tag[:sha],
+          kind: tag[:kind],
+          published_at: tag[:published_at],
+          dependencies_parsed_at: nil,
+          dependency_job_id: nil,
+          updated_at: now
+        )
+      end
+
+      new_tags = tags.reject { |tag| existing_tags.key?(tag[:name]) }
+      if new_tags.any?
+        tag_records = new_tags.map do |tag|
+          tag.merge(repository_id: repository.id, created_at: now, updated_at: now)
+        end
+        Tag.insert_all(tag_records)
+      end
+
+      repository.tags.where.not(name: remote_names).delete_all if complete
+
+      repository.update_columns(tags_last_synced_at: now, tags_count: repository.tags.count)
     rescue *IGNORABLE_EXCEPTIONS, Octokit::NotFound, Octokit::RepositoryUnavailable, Octokit::UnavailableForLegalReasons
       nil
     end
 
     def download_releases(repository)
-      releases = fetch_releases(repository)
+      releases, complete = fetch_releases(repository)
       return unless releases.present?
 
       # Get existing release UUIDs in one query
@@ -227,6 +230,8 @@ module Hosts
         Release.insert_all(release_records)
       end
 
+      repository.releases.where.not(uuid: release_uuids).delete_all if complete
+
       nil
     rescue *IGNORABLE_EXCEPTIONS, Octokit::NotFound, Octokit::RepositoryUnavailable, Octokit::UnavailableForLegalReasons
       nil
@@ -245,8 +250,9 @@ module Hosts
         releases.concat(last_resp.data)
         pages_fetched += 1
       end
+      complete = last_resp.rels[:next].blank?
 
-      releases.map do |release|
+      mapped = releases.map do |release|
         {
           uuid: release.id,
           tag_name: release.tag_name,
@@ -263,8 +269,9 @@ module Hosts
           last_synced_at: Time.now
         }
       end
+      [mapped, complete]
     rescue *IGNORABLE_EXCEPTIONS, Octokit::NotFound, Octokit::UnprocessableEntity, Octokit::RepositoryUnavailable, Octokit::UnavailableForLegalReasons
-      []
+      [[], false]
     end
 
     def load_owner_repos_names(owner, max_pages: 10)
@@ -288,17 +295,18 @@ module Hosts
 
     def fetch_tags(repository, max_pages: 10)
       tags = []
-      fetch_tags_graphql(repository).tap do |res|
-        return if res[:data].nil? || res[:data][:repository].nil? || res[:data][:repository][:refs].nil?
+      res = fetch_tags_graphql(repository)
+      return [nil, false] if res[:data].nil? || res[:data][:repository].nil? || res[:data][:repository][:refs].nil?
+
+      tags += map_tags(res)
+      pages_fetched = 1
+      while pages_fetched < max_pages && res.dig(:data, :repository, :refs, :pageInfo, :hasNextPage)
+        res = fetch_tags_graphql(repository, res[:data][:repository][:refs][:pageInfo][:endCursor])
         tags += map_tags(res)
-        pages_fetched = 1
-        while pages_fetched < max_pages && res.dig(:data, :repository, :refs, :pageInfo, :hasNextPage)
-          res = fetch_tags_graphql(repository, res[:data][:repository][:refs][:pageInfo][:endCursor])
-          tags += map_tags(res)
-          pages_fetched += 1
-        end
+        pages_fetched += 1
       end
-      tags
+      complete = !res.dig(:data, :repository, :refs, :pageInfo, :hasNextPage)
+      [tags, complete]
     end
 
     def fetch_tags_graphql(repository, cursor = nil)

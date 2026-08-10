@@ -33,12 +33,13 @@ class Hosts::GithubTest < ActiveSupport::TestCase
 
       @github.stubs(:api_client).with(nil, auto_paginate: false).returns(client)
 
-      result = @github.fetch_releases(@repository)
+      result, complete = @github.fetch_releases(@repository)
 
       assert_equal 1, result.length
       assert_equal 1, result.first[:uuid]
       assert_equal 'v1.0.0', result.first[:tag_name]
       assert result.first[:immutable]
+      assert complete
     end
 
     should 'stop after max_pages' do
@@ -69,11 +70,32 @@ class Hosts::GithubTest < ActiveSupport::TestCase
 
       @github.stubs(:api_client).with(nil, auto_paginate: false).returns(client)
 
-      result = @github.fetch_releases(@repository, max_pages: 2)
+      result, complete = @github.fetch_releases(@repository, max_pages: 2)
 
       assert_equal 2, result.length
       assert_equal 'v1.0', result.first[:tag_name]
       assert_equal 'v2.0', result.last[:tag_name]
+      assert complete
+    end
+
+    should 'report incomplete when max_pages leaves a next link' do
+      release = OpenStruct.new(
+        id: 1, tag_name: 'v1.0', target_commitish: 'main', name: 'r', body: 'b',
+        draft: false, prerelease: false, immutable: false, created_at: Time.now, published_at: Time.now,
+        author: OpenStruct.new(login: 'u'), assets: []
+      )
+      next_rel = mock('next_rel')
+      last_response = mock('last_response')
+      last_response.stubs(:rels).returns({ next: next_rel })
+      client = mock('client')
+      client.expects(:releases).with('testuser/testrepo', per_page: 100).returns([release])
+      client.stubs(:last_response).returns(last_response)
+      @github.stubs(:api_client).with(nil, auto_paginate: false).returns(client)
+
+      result, complete = @github.fetch_releases(@repository, max_pages: 1)
+
+      assert_equal 1, result.length
+      assert_not complete
     end
 
     should 'return empty array on error' do
@@ -81,9 +103,10 @@ class Hosts::GithubTest < ActiveSupport::TestCase
       client.expects(:releases).raises(Octokit::NotFound)
       @github.stubs(:api_client).with(nil, auto_paginate: false).returns(client)
 
-      result = @github.fetch_releases(@repository)
+      result, complete = @github.fetch_releases(@repository)
 
       assert_equal [], result
+      assert_not complete
     end
   end
 
@@ -107,11 +130,11 @@ class Hosts::GithubTest < ActiveSupport::TestCase
         updated_at: unchanged_updated_at
       )
 
-      @github.stubs(:fetch_releases).with(@repository).returns([
+      @github.stubs(:fetch_releases).with(@repository).returns([[
         { uuid: 1, tag_name: 'v1.0.0', immutable: true, last_synced_at: Time.current },
         { uuid: 2, tag_name: 'v2.0.0', immutable: false, last_synced_at: Time.current },
         { uuid: 3, tag_name: 'v3.0.0', immutable: false, last_synced_at: Time.current }
-      ])
+      ], true])
 
       @github.download_releases(@repository)
 
@@ -120,6 +143,35 @@ class Hosts::GithubTest < ActiveSupport::TestCase
       assert_not @repository.releases.find_by!(uuid: '3').immutable
       assert_operator existing_release.last_synced_at, :>, 2.days.ago
       assert_equal unchanged_updated_at, unchanged_release.reload.updated_at
+    end
+
+    should 'delete releases GitHub no longer returns when the fetch is complete' do
+      kept = create(:release, repository: @repository, uuid: '1', tag_name: 'v2', immutable: false)
+      orphan = create(:release, repository: @repository, uuid: '99', tag_name: 'v2', immutable: nil)
+
+      @github.stubs(:fetch_releases).with(@repository).returns([[
+        { uuid: 1, tag_name: 'v2', immutable: false, last_synced_at: Time.current }
+      ], true])
+
+      @github.download_releases(@repository)
+
+      assert Release.exists?(kept.id)
+      assert_not Release.exists?(orphan.id)
+      assert_equal 1, @repository.releases.count
+    end
+
+    should 'keep releases GitHub did not return when the fetch was truncated' do
+      kept = create(:release, repository: @repository, uuid: '1', tag_name: 'v1')
+      beyond_page_cap = create(:release, repository: @repository, uuid: '99', tag_name: 'v0.1')
+
+      @github.stubs(:fetch_releases).with(@repository).returns([[
+        { uuid: 1, tag_name: 'v1', immutable: false, last_synced_at: Time.current }
+      ], false])
+
+      @github.download_releases(@repository)
+
+      assert Release.exists?(kept.id)
+      assert Release.exists?(beyond_page_cap.id)
     end
   end
 
@@ -140,11 +192,12 @@ class Hosts::GithubTest < ActiveSupport::TestCase
 
       @github.expects(:fetch_tags_graphql).with(@repository).returns(graphql_response)
 
-      result = @github.fetch_tags(@repository)
+      result, complete = @github.fetch_tags(@repository)
 
       assert_equal 1, result.length
       assert_equal 'v1.0.0', result.first[:name]
       assert_equal 'sha1', result.first[:sha]
+      assert complete
     end
 
     should 'stop after max_pages' do
@@ -177,19 +230,57 @@ class Hosts::GithubTest < ActiveSupport::TestCase
       @github.expects(:fetch_tags_graphql).with(@repository).returns(page1_response)
       @github.expects(:fetch_tags_graphql).with(@repository, 'cursor1').returns(page2_response)
 
-      result = @github.fetch_tags(@repository, max_pages: 2)
+      result, complete = @github.fetch_tags(@repository, max_pages: 2)
 
       assert_equal 2, result.length
       assert_equal 'v1.0', result.first[:name]
       assert_equal 'v2.0', result.last[:name]
+      assert_not complete
     end
 
     should 'return nil when graphql returns no data' do
       @github.expects(:fetch_tags_graphql).with(@repository).returns({ data: nil })
 
-      result = @github.fetch_tags(@repository)
+      result, complete = @github.fetch_tags(@repository)
 
       assert_nil result
+      assert_not complete
+    end
+  end
+
+  context 'download_tags' do
+    should 'update moved tags, delete orphans and insert new tags when the fetch is complete' do
+      moved = create(:tag, repository: @repository, name: 'v2', sha: 'oldsha', dependencies_parsed_at: 1.day.ago, dependency_job_id: 'job')
+      orphan = create(:tag, repository: @repository, name: 'gone', sha: 'deadsha')
+      @repository.update_columns(tags_count: 2)
+
+      @github.stubs(:fetch_tags).with(@repository).returns([[
+        { name: 'v2', sha: 'newsha', kind: 'commit', published_at: Time.current },
+        { name: 'v2.1', sha: 'abc', kind: 'commit', published_at: Time.current }
+      ], true])
+
+      @github.download_tags(@repository)
+
+      moved.reload
+      assert_equal 'newsha', moved.sha
+      assert_nil moved.dependencies_parsed_at
+      assert_nil moved.dependency_job_id
+      assert_not Tag.exists?(orphan.id)
+      assert @repository.tags.exists?(name: 'v2.1')
+      assert_equal 2, @repository.reload.tags_count
+    end
+
+    should 'keep tags GitHub did not return when the fetch was truncated' do
+      beyond_page_cap = create(:tag, repository: @repository, name: 'v0.0.1', sha: 'oldsha')
+
+      @github.stubs(:fetch_tags).with(@repository).returns([[
+        { name: 'v2', sha: 'abc', kind: 'commit', published_at: Time.current }
+      ], false])
+
+      @github.download_tags(@repository)
+
+      assert Tag.exists?(beyond_page_cap.id)
+      assert_equal 2, @repository.reload.tags_count
     end
   end
 
