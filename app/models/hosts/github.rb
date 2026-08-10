@@ -183,7 +183,15 @@ module Hosts
         Tag.insert_all(tag_records)
       end
 
-      repository.tags.where.not(name: remote_names).delete_all if complete
+      if complete
+        orphan_tag_ids = repository.tags.where.not(name: remote_names).pluck(:id)
+        if orphan_tag_ids.any?
+          orphan_manifest_ids = Manifest.where(tag_id: orphan_tag_ids).pluck(:id)
+          Dependency.where(manifest_id: orphan_manifest_ids).delete_all if orphan_manifest_ids.any?
+          Manifest.where(id: orphan_manifest_ids).delete_all if orphan_manifest_ids.any?
+          Tag.where(id: orphan_tag_ids).delete_all
+        end
+      end
 
       repository.update_columns(tags_last_synced_at: now, tags_count: repository.tags.count)
     rescue *IGNORABLE_EXCEPTIONS, Octokit::NotFound, Octokit::RepositoryUnavailable, Octokit::UnavailableForLegalReasons

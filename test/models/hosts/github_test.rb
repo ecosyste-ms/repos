@@ -251,7 +251,10 @@ class Hosts::GithubTest < ActiveSupport::TestCase
   context 'download_tags' do
     should 'update moved tags, delete orphans and insert new tags when the fetch is complete' do
       moved = create(:tag, repository: @repository, name: 'v2', sha: 'oldsha', dependencies_parsed_at: 1.day.ago, dependency_job_id: 'job')
+      kept_manifest = create(:manifest, repository: nil, tag: moved)
       orphan = create(:tag, repository: @repository, name: 'gone', sha: 'deadsha')
+      orphan_manifest = create(:manifest, repository: nil, tag: orphan)
+      orphan_dependency = create(:dependency, repository: @repository, manifest: orphan_manifest)
       @repository.update_columns(tags_count: 2)
 
       @github.stubs(:fetch_tags).with(@repository).returns([[
@@ -265,7 +268,10 @@ class Hosts::GithubTest < ActiveSupport::TestCase
       assert_equal 'newsha', moved.sha
       assert_nil moved.dependencies_parsed_at
       assert_nil moved.dependency_job_id
+      assert Manifest.exists?(kept_manifest.id)
       assert_not Tag.exists?(orphan.id)
+      assert_not Manifest.exists?(orphan_manifest.id)
+      assert_not Dependency.exists?(orphan_dependency.id)
       assert @repository.tags.exists?(name: 'v2.1')
       assert_equal 2, @repository.reload.tags_count
     end
