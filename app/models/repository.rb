@@ -435,9 +435,11 @@ class Repository < ApplicationRecord
   def update_metadata_files
     metadata_files = fetch_metadata_files_list
     return if metadata_files.nil?
+    previous_metadata = metadata.deep_stringify_keys
     metadata["files"] = metadata_files
     save
     parse_funding
+    ping_packages_async if metadata.deep_stringify_keys != previous_metadata
   end
 
   def parse_funding

@@ -742,6 +742,31 @@ class RepositoryTest < ActiveSupport::TestCase
     end
   end
 
+  context 'update_metadata_files method' do
+    setup do
+      @repository = create(:repository, metadata: {})
+    end
+
+    should 'ping packages after changed funding metadata is saved' do
+      @repository.stubs(:fetch_metadata_files_list).returns(funding: '.github/FUNDING.yml')
+      @repository.stubs(:related_dot_github_repo).returns(nil)
+      @repository.stubs(:get_file_contents).with('.github/FUNDING.yml').returns(content: "github: example\n")
+      @repository.expects(:ping_packages_async).once
+
+      @repository.update_metadata_files
+
+      assert_equal({ 'github' => 'example' }, @repository.reload.metadata['funding'])
+    end
+
+    should 'not ping packages when metadata is unchanged' do
+      @repository.update!(metadata: { 'files' => { 'funding' => nil } })
+      @repository.stubs(:fetch_metadata_files_list).returns(funding: nil)
+      @repository.expects(:ping_packages_async).never
+
+      @repository.update_metadata_files
+    end
+  end
+
   context 'transform_funding_json method' do
     setup do
       @host = create(:host)
