@@ -1,15 +1,17 @@
-require "base64"
-
 class GithubDmcaSweeper
   DMCA_REPOSITORY = "github/dmca"
+  RAW_CONTENT_URL = "https://raw.githubusercontent.com"
   CURSOR_KEY = "takedown:github_dmca:last_sha"
   MAX_COMPARISON_FILES = 300
   NOTICE_PATH = %r{\A\d{4}/(?:\d{2}/)?.+\.(?:md|markdown)\z}i
   GITHUB_REPOSITORY_URL = %r{https?://github\.com/([a-z0-9][a-z0-9-]*)/([a-z0-9_.-]+)}i
 
-  def initialize(host: nil, client: nil, redis: REDIS, output: $stdout)
+  def initialize(host: nil, client: nil, repository_client: nil, notice_connection: nil,
+                 redis: REDIS, output: $stdout)
     @host = host || Host.find_by_name!("GitHub")
-    @client = client || github_client
+    @client = client || Octokit::Client.new
+    @repository_client = repository_client || github_client
+    @notice_connection = notice_connection || Faraday.new(url: RAW_CONTENT_URL)
     @redis = redis
     @output = output
   end
@@ -40,9 +42,7 @@ class GithubDmcaSweeper
       next unless repository
 
       indexed_count += 1
-      begin
-        @client.repository(repository_name)
-      rescue Octokit::UnavailableForLegalReasons
+      if legally_blocked?(repository_name)
         @output.puts "[repos] removing #{repository.full_name} listed in github/dmca"
         repository.destroy!
         removed_count += 1
@@ -89,13 +89,32 @@ class GithubDmcaSweeper
 
   def repository_names_from(files, head_sha)
     names = files.flat_map do |file|
-      response = @client.contents(DMCA_REPOSITORY, path: file.filename, ref: head_sha)
-      repository_names_in(Base64.decode64(response.content))
+      repository_names_in(notice_contents(file.filename, head_sha))
     end
 
     names.each_with_object({}) do |name, unique_names|
       unique_names[name.downcase] ||= name
     end.values
+  end
+
+  def notice_contents(path, head_sha)
+    response = @notice_connection.get("/#{DMCA_REPOSITORY}/#{head_sha}/#{path}")
+    raise "Unable to download GitHub DMCA notice #{path}: HTTP #{response.status}" unless response.success?
+
+    response.body
+  end
+
+  def legally_blocked?(repository_name)
+    check_repository(@repository_client, repository_name)
+  rescue Octokit::SAMLProtected
+    check_repository(@client, repository_name)
+  end
+
+  def check_repository(client, repository_name)
+    client.repository(repository_name)
+    false
+  rescue Octokit::UnavailableForLegalReasons
+    true
   end
 
   def repository_names_in(content)
