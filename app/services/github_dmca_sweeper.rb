@@ -115,6 +115,8 @@ class GithubDmcaSweeper
     false
   rescue Octokit::UnavailableForLegalReasons
     true
+  rescue Octokit::NotFound
+    false
   end
 
   def repository_names_in(content)

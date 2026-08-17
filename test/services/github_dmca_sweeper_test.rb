@@ -122,6 +122,18 @@ class GithubDmcaSweeperTest < ActiveSupport::TestCase
     assert_equal 1, result[:removed]
   end
 
+  test "skips repositories no longer available on GitHub" do
+    repository = create(:repository, host: @host, full_name: "Missing/Repo", owner: "Missing")
+    expect_comparison("https://github.com/Missing/Repo")
+    @repository_client.expects(:repository).with("Missing/Repo").raises(Octokit::NotFound)
+
+    result = @sweeper.sweep
+
+    assert Repository.exists?(repository.id)
+    assert_equal 1, result[:indexed]
+    assert_equal 0, result[:removed]
+  end
+
   test "refuses a comparison at the GitHub file limit" do
     @redis.expects(:get).with(GithubDmcaSweeper::CURSOR_KEY).returns("base-sha")
     expect_head
