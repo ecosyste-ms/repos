@@ -1,3 +1,9 @@
+# Cap postgres statement_timeout below rack-timeout's 15s so a slow query
+# is cancelled server-side instead of leaving a zombie backend after the
+# request is killed. Only puma reads this file so sidekiq, rake and console
+# keep the database.yml default.
+ENV["STATEMENT_TIMEOUT"] ||= "14s"
+
 # Puma can serve each request in a thread from an internal thread pool.
 # The `threads` method setting takes two numbers: a minimum and maximum.
 # Any libraries that use thread pools should be configured to match
