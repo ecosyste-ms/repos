@@ -57,6 +57,10 @@
       "schedule": "0 0 * * 0"
     },
     {
+      "command": "bundle exec rake takedown:sweep_github_dmca",
+      "schedule": "0 1 * * 0"
+    },
+    {
       "command": "bundle exec rake gharchive:import_recent",
       "schedule": "0 * * * *"
     },

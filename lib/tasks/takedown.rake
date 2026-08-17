@@ -1,4 +1,16 @@
+require_relative '../cron_lock'
+
 namespace :takedown do
+  desc "Remove indexed repositories blocked by new notices in github/dmca"
+  task sweep_github_dmca: :environment do
+    ActiveRecord::Base.connection.execute("SET statement_timeout = 0")
+
+    CronLock.acquire("takedown:sweep_github_dmca", ttl: 1.hour) do
+      result = GithubDmcaSweeper.new.sweep
+      puts "[repos] github/dmca notices=#{result[:notice_files]} candidates=#{result[:candidates]} indexed=#{result[:indexed]} removed=#{result[:removed]}"
+    end
+  end
+
   desc "Hide a user and remove their repositories. LOGIN=username [HOST=GitHub]"
   task hide_user: :environment do
     login = ENV['LOGIN']

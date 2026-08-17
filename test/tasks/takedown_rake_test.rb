@@ -50,4 +50,16 @@ class TakedownRakeTest < ActiveSupport::TestCase
       capture_io { Rake::Task["takedown:hide_user"].execute }
     end
   end
+
+  test "sweep_github_dmca runs the sweeper under a cron lock" do
+    result = {notice_files: 2, candidates: 4, indexed: 3, removed: 1}
+    sweeper = mock("github dmca sweeper")
+    GithubDmcaSweeper.expects(:new).returns(sweeper)
+    sweeper.expects(:sweep).returns(result)
+    CronLock.expects(:acquire).with("takedown:sweep_github_dmca", ttl: 1.hour).yields
+
+    output, = capture_io { Rake::Task["takedown:sweep_github_dmca"].execute }
+
+    assert_includes output, "notices=2 candidates=4 indexed=3 removed=1"
+  end
 end
