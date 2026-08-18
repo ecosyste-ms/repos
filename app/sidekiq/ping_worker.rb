@@ -1,5 +1,6 @@
 class PingWorker
   include Sidekiq::Worker
+  include GithubRateLimitRetry
   sidekiq_options queue: :ping, lock: :until_executed, lock_expiration: 1.day.to_i
 
   def perform(host_name, full_name, force = false)

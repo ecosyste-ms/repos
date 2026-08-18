@@ -1,5 +1,6 @@
 class SyncScorecardWorker
   include Sidekiq::Worker
+  include GithubRateLimitRetry
   sidekiq_options lock: :until_executed, lock_expiration: 1.day.to_i
 
   def perform(repo_id)
