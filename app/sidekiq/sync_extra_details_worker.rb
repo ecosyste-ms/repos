@@ -1,5 +1,6 @@
 class SyncExtraDetailsWorker
   include Sidekiq::Worker
+  include GithubRateLimitRetry
   sidekiq_options queue: 'extra', lock: :until_executed, lock_expiration: 1.day.to_i
 
   def perform(repository_id)
