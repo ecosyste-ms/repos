@@ -23,3 +23,4 @@ production:
     - Gitlab::Error::ServiceUnavailable
     - Faraday::FollowRedirects::RedirectLimitReached
     - Octokit::Unauthorized
+    - GithubRateLimitUnavailable

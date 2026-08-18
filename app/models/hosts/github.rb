@@ -34,7 +34,7 @@ module Hosts
     end
 
     def fetch_random_token
-      REDIS.srandmember(token_set_key)
+      GithubTokenPool.new.fetch(list_tokens)
     end
 
     def add_tokens(tokens)
