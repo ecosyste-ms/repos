@@ -6,6 +6,10 @@ class GithubTokenPoolTest < ActiveSupport::TestCase
     @pool = GithubTokenPool.new(redis: @redis, buffer: 100, now: -> { 1_000 })
   end
 
+  def headers(hash)
+    Faraday::Utils::Headers.new(hash)
+  end
+
   test "returns nil when there are no tokens" do
     assert_nil @pool.fetch([])
   end
@@ -46,8 +50,8 @@ class GithubTokenPoolTest < ActiveSupport::TestCase
     @redis.expects(:set).with(key, "1", ex: 200)
 
     @pool.record_response(
-      request_headers: {"Authorization" => "token token"},
-      response_headers: {"x-ratelimit-remaining" => "100", "x-ratelimit-reset" => "1200"},
+      request_headers: headers("Authorization" => "token token"),
+      response_headers: headers("X-RateLimit-Limit" => "5000", "X-RateLimit-Remaining" => "100", "X-RateLimit-Reset" => "1200"),
       status: 200,
       body: ""
     )
@@ -57,8 +61,19 @@ class GithubTokenPoolTest < ActiveSupport::TestCase
     @redis.expects(:set).never
 
     @pool.record_response(
-      request_headers: {"Authorization" => "token token"},
-      response_headers: {"x-ratelimit-remaining" => "101", "x-ratelimit-reset" => "1200"},
+      request_headers: headers("Authorization" => "token token"),
+      response_headers: headers("X-RateLimit-Limit" => "5000", "X-RateLimit-Remaining" => "101", "X-RateLimit-Reset" => "1200"),
+      status: 200,
+      body: ""
+    )
+  end
+
+  test "ignores rate limit resources whose limit is below the buffer" do
+    @redis.expects(:set).never
+
+    @pool.record_response(
+      request_headers: headers("Authorization" => "token token"),
+      response_headers: headers("X-RateLimit-Limit" => "30", "X-RateLimit-Remaining" => "29", "X-RateLimit-Reset" => "1200"),
       status: 200,
       body: ""
     )
@@ -68,8 +83,8 @@ class GithubTokenPoolTest < ActiveSupport::TestCase
     @redis.expects(:set).with(GithubTokenPool::GLOBAL_PAUSE_KEY, "1", ex: 90)
 
     @pool.record_response(
-      request_headers: {"Authorization" => "Bearer token"},
-      response_headers: {"retry-after" => "90", "x-ratelimit-remaining" => "4000"},
+      request_headers: headers("Authorization" => "Bearer token"),
+      response_headers: headers("Retry-After" => "90", "X-RateLimit-Remaining" => "4000"),
       status: 429,
       body: '{"message":"You have exceeded a secondary rate limit."}'
     )
@@ -79,8 +94,8 @@ class GithubTokenPoolTest < ActiveSupport::TestCase
     @redis.expects(:set).with(GithubTokenPool::GLOBAL_PAUSE_KEY, "1", ex: 60)
 
     @pool.record_response(
-      request_headers: {"Authorization" => "token token"},
-      response_headers: {},
+      request_headers: headers("Authorization" => "token token"),
+      response_headers: headers({}),
       status: 403,
       body: '{"message":"You have exceeded a secondary rate limit."}'
     )

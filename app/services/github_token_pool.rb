@@ -44,10 +44,11 @@ class GithubTokenPool
       return
     end
 
-    remaining = header(response_headers, "x-ratelimit-remaining")
+    remaining = response_headers["x-ratelimit-remaining"]
     return unless remaining && remaining.to_i <= @buffer
+    return if response_headers["x-ratelimit-limit"].to_i <= @buffer
 
-    reset_at = header(response_headers, "x-ratelimit-reset").to_i
+    reset_at = response_headers["x-ratelimit-reset"].to_i
     pause_token(token, [reset_at - @now.call, 1].max)
   end
 
@@ -64,8 +65,7 @@ class GithubTokenPool
   end
 
   def access_token(headers)
-    authorization = header(headers, "authorization").to_s
-    authorization.sub(/\A(?:Bearer|token)\s+/i, "").presence
+    headers["authorization"].to_s.sub(/\A(?:Bearer|token)\s+/i, "").presence
   end
 
   def secondary_limit?(status, body)
@@ -73,12 +73,8 @@ class GithubTokenPool
   end
 
   def retry_after(headers)
-    value = header(headers, "retry-after").to_i
+    value = headers["retry-after"].to_i
     value.positive? ? value : DEFAULT_SECONDARY_PAUSE
-  end
-
-  def header(headers, name)
-    headers[name] || headers[name.downcase] || headers[name.split("-").map(&:capitalize).join("-")]
   end
 
   def global_retry_after
