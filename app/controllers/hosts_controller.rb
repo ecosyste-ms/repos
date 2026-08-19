@@ -15,7 +15,7 @@ class HostsController < ApplicationController
     scope = @host.repositories
 
     if params[:sort].present?
-      sort = sanitize_sort(Repository.sortable_columns, default: 'id')
+      sort = sanitize_sort(Repository.host_sortable_columns, default: 'id')
       if params[:order] == 'asc'
         scope = scope.order(sort.asc.nulls_last)
       else

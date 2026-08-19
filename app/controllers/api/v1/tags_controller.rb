@@ -14,14 +14,7 @@ class Api::V1::TagsController < Api::V1::ApplicationController
 
       scope = @repository.tags
 
-      if params[:sort].present? || params[:order].present?
-        sort = params[:sort] || 'published_at'
-        order = params[:order] || 'desc'
-        sort_options = sort.split(',').zip(order.split(',')).to_h
-        scope = scope.order(sort_options)
-      else
-        scope = scope.order('published_at DESC')
-      end
+      scope = scope.order(*sanitize_orders(Tag.sortable_columns, default: 'published_at'))
 
       @pagy, @tags = pagy_countless(scope)
       fresh_when @tags, public: true

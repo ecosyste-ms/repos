@@ -18,4 +18,17 @@ class ApiV1UsageControllerTest < ActionDispatch::IntegrationTest
     get api_v1_usage_url('npm', 'lodash')
     assert_response :success
   end
+
+  test "invalid dependent repository sort falls back to id ascending" do
+    usage = create(:package_usage, ecosystem: 'npm', name: 'lodash')
+    repositories = create_list(:repository, 2)
+    usage.repositories << repositories.reverse
+
+    get api_v1_usage_dependent_repositories_url('npm', 'lodash'), params: { sort: 'cast(uuid as integer)' }
+    assert_response :success
+
+    actual_response = JSON.parse(@response.body)
+
+    assert_equal repositories.map(&:id).sort, actual_response.pluck('id')
+  end
 end

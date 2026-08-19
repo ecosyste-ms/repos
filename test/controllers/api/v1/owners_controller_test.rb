@@ -20,6 +20,18 @@ class ApiV1OwnersControllerTest < ActionDispatch::IntegrationTest
     assert_equal actual_response.length, 2
   end
 
+  test 'invalid owner sort falls back to last synced descending' do
+    @owner.update!(last_synced_at: 2.days.ago)
+    @hidden_owner.update!(last_synced_at: 1.day.ago)
+
+    get api_v1_host_owners_path(host_id: @host.name), params: { sort: 'cast(uuid as integer)' }
+    assert_response :success
+
+    actual_response = JSON.parse(@response.body)
+
+    assert_equal [@hidden_owner.login, @owner.login], actual_response.pluck('login')
+  end
+
   test 'get a owner for a host' do
     get api_v1_host_owner_path(host_id: @host.name, id: @owner.login)
     assert_response :success
@@ -43,6 +55,18 @@ class ApiV1OwnersControllerTest < ActionDispatch::IntegrationTest
     actual_response = JSON.parse(@response.body)
 
     assert_equal actual_response.length, 0
+  end
+
+  test 'invalid owner repository sort falls back to last synced descending' do
+    older_repository = create(:repository, host: @host, owner: @owner.login, last_synced_at: 2.days.ago)
+    newer_repository = create(:repository, host: @host, owner: @owner.login, last_synced_at: 1.day.ago)
+
+    get repositories_api_v1_host_owner_path(host_id: @host.name, id: @owner.login), params: { sort: 'cast(uuid as integer)' }
+    assert_response :success
+
+    actual_response = JSON.parse(@response.body)
+
+    assert_equal [newer_repository.id, older_repository.id], actual_response.pluck('id')
   end
 
   test 'list repositories for a hidden owner returns 404' do

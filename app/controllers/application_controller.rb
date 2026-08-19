@@ -37,10 +37,28 @@ class ApplicationController < ActionController::Base
     end
   end
 
-  def sanitize_sort(allowed_columns, default: 'updated_at')
-    sort_param = params[:sort].presence || default
+  def sanitize_sort(allowed_columns, default: 'updated_at', sort_param: params[:sort].presence)
+    sort_param ||= default
     sql = allowed_columns[sort_param] || allowed_columns[default] || default
     Arel.sql(sql)
+  end
+
+  def sanitize_orders(allowed_columns, default: 'updated_at', default_order: 'desc')
+    sort_params = params[:sort].present? ? params[:sort].to_s.split(',') : [default]
+    order_params = params[:order].present? ? params[:order].to_s.split(',') : [default_order]
+
+    orders = sort_params.each_with_index.filter_map do |sort_param, index|
+      next unless allowed_columns.key?(sort_param)
+
+      order = order_params[index].to_s.downcase
+      next unless %w[asc desc].include?(order)
+
+      sanitize_sort(allowed_columns, default: default, sort_param: sort_param).public_send(order)
+    end
+
+    return orders if orders.any?
+
+    [sanitize_sort(allowed_columns, default: default, sort_param: default).public_send(default_order)]
   end
 
   def related_topics_for_scope(scope, exclude_topic)

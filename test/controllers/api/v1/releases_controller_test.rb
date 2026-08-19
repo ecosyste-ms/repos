@@ -48,6 +48,16 @@ class Api::V1::ReleasesControllerTest < ActionDispatch::IntegrationTest
     assert_equal ['v2.0.0', 'v1.0.0'], release_tags
   end
 
+  test "invalid release sort falls back to published_at descending" do
+    get api_v1_host_repository_releases_path(@host.name, @repository.full_name), params: { sort: 'cast(uuid as integer)' }
+    assert_response :success
+
+    data = JSON.parse(@response.body)
+    release_tags = data.map { |release| release['tag_name'] }
+
+    assert_equal ['v2.0.0', 'v1.0.0'], release_tags
+  end
+
   test "should show individual release" do
     get api_v1_host_repository_release_path(@host.name, @repository.full_name, @release_v1.tag_name)
     assert_response :success

@@ -11,6 +11,18 @@ class Tag < ApplicationRecord
 
   has_many :manifests, dependent: :destroy
 
+  def self.sortable_columns
+    {
+      'id' => 'tags.id',
+      'name' => 'tags.name',
+      'sha' => 'tags.sha',
+      'kind' => 'tags.kind',
+      'published_at' => 'tags.published_at',
+      'created_at' => 'tags.created_at',
+      'updated_at' => 'tags.updated_at',
+    }
+  end
+
   def to_s
     name
   end
