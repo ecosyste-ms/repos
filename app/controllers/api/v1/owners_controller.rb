@@ -9,14 +9,7 @@ class Api::V1::OwnersController < Api::V1::ApplicationController
     scope = scope.kind(params[:kind]) if params[:kind].present?
     scope = scope.has_sponsors_listing if params[:has_sponsors_listing].present?
 
-    if params[:sort].present? || params[:order].present?
-      sort = params[:sort] || 'last_synced_at'
-      order = params[:order] || 'desc'
-      sort_options = sort.split(',').zip(order.split(',')).to_h
-      scope = scope.order(sort_options)
-    else
-      scope = scope.order('last_synced_at DESC')
-    end
+    scope = scope.order(*sanitize_orders(Owner.sortable_columns, default: 'last_synced_at'))
 
     @pagy, @owners = pagy_countless(scope)
     fresh_when @owners, public: true
@@ -43,14 +36,7 @@ class Api::V1::OwnersController < Api::V1::ApplicationController
     scope = scope.forked(params[:fork]) if params[:fork].present?
     scope = scope.archived(params[:archived]) if params[:archived].present?
 
-    if params[:sort].present? || params[:order].present?
-      sort = params[:sort] || 'last_synced_at'
-      order = params[:order] || 'desc'
-      sort_options = sort.split(',').zip(order.split(',')).to_h
-      scope = scope.order(sort_options)
-    else
-      scope = scope.order('last_synced_at DESC')
-    end
+    scope = scope.order(*sanitize_orders(Repository.sortable_columns, default: 'last_synced_at'))
 
     @pagy, @repositories = pagy_countless(scope.includes(:host, :scorecard))
     if stale?(@repositories, public: true)

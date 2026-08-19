@@ -1,6 +1,18 @@
 class Release < ApplicationRecord
   belongs_to :repository
 
+  def self.sortable_columns
+    {
+      'id' => 'releases.id',
+      'name' => 'releases.name',
+      'tag_name' => 'releases.tag_name',
+      'published_at' => 'releases.published_at',
+      'created_at' => 'releases.created_at',
+      'updated_at' => 'releases.updated_at',
+      'last_synced_at' => 'releases.last_synced_at',
+    }
+  end
+
   def self.backfill_immutability(repository_names:, block_size: 1_000, after_name: nil)
     raise ArgumentError, 'block_size must be greater than zero' unless block_size.positive?
 

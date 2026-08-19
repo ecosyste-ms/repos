@@ -16,4 +16,16 @@ class ApiV1TagsControllerTest < ActionDispatch::IntegrationTest
 
     assert_equal actual_response.length, 1
   end
+
+  test 'invalid tag sort falls back to published at descending' do
+    @tag.update!(published_at: 2.days.ago)
+    newer_tag = @repository.tags.create!(name: '2.0.0', sha: 'feedface', published_at: 1.day.ago)
+
+    get api_v1_host_repository_tags_path(host_id: @host.name, repository_id: @repository.full_name), params: { sort: 'cast(uuid as integer)' }
+    assert_response :success
+
+    actual_response = JSON.parse(@response.body)
+
+    assert_equal [newer_tag.name, @tag.name], actual_response.pluck('name')
+  end
 end

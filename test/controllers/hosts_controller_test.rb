@@ -162,7 +162,7 @@ class HostsControllerTest < ActionDispatch::IntegrationTest
     assert_match(/dropdown-toggle/, response.body)
   end
 
-  test 'explicit sort param still applies nulls last' do
+  test 'unindexed sort falls back to id descending' do
     queries = []
     callback = ->(*, payload) { queries << payload[:sql] if payload[:sql].include?('repositories') }
     ActiveSupport::Notifications.subscribed(callback, 'sql.active_record') do
@@ -170,7 +170,18 @@ class HostsControllerTest < ActionDispatch::IntegrationTest
     end
     assert_response :success
     repo_query = queries.find { |q| q =~ /ORDER BY/i }
-    assert_match(/stargazers_count DESC NULLS LAST/i, repo_query)
+    assert_match(/repositories\.id DESC NULLS LAST/i, repo_query)
+  end
+
+  test 'full name sort uses indexed case insensitive expression' do
+    queries = []
+    callback = ->(*, payload) { queries << payload[:sql] if payload[:sql].include?('repositories') }
+    ActiveSupport::Notifications.subscribed(callback, 'sql.active_record') do
+      get host_path(id: @host.name), params: { sort: 'full_name', order: 'asc' }
+    end
+    assert_response :success
+    repo_query = queries.find { |q| q =~ /ORDER BY/i }
+    assert_match(/lower\(repositories\.full_name\) ASC NULLS LAST/i, repo_query)
   end
 
   test 'get a host with pagination parameters' do

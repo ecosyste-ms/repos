@@ -13,6 +13,22 @@ class Owner < ApplicationRecord
   enum :kind, {:user=>"user", :organization=>"organization"}
 
   scope :has_sponsors_listing, -> { where("metadata->>'has_sponsors_listing' = 'true'") }
+
+  def self.sortable_columns
+    {
+      'id' => 'owners.id',
+      'login' => 'owners.login',
+      'name' => 'owners.name',
+      'kind' => 'owners.kind',
+      'followers' => 'owners.followers',
+      'following' => 'owners.following',
+      'repositories_count' => 'owners.repositories_count',
+      'total_stars' => 'owners.total_stars',
+      'created_at' => 'owners.created_at',
+      'updated_at' => 'owners.updated_at',
+      'last_synced_at' => 'owners.last_synced_at',
+    }
+  end
   
   def self.sync_least_recently_synced
     Owner.order('last_synced_at asc nulls first').includes(:host).limit(2500).each(&:sync_async)

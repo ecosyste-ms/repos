@@ -41,18 +41,26 @@ class Repository < ApplicationRecord
 
   def self.sortable_columns
     {
-      'id' => 'id',
-      'updated_at' => 'updated_at',
-      'created_at' => 'created_at',
-      'stargazers_count' => 'stargazers_count',
-      'forks_count' => 'forks_count',
-      'open_issues_count' => 'open_issues_count',
-      'subscribers_count' => 'subscribers_count',
-      'size' => 'size',
-      'pushed_at' => 'pushed_at',
-      'full_name' => 'full_name',
-      'language' => 'language',
-      'tags_count' => 'tags_count',
+      'id' => 'repositories.id',
+      'updated_at' => 'repositories.updated_at',
+      'created_at' => 'repositories.created_at',
+      'last_synced_at' => 'repositories.last_synced_at',
+      'stargazers_count' => 'repositories.stargazers_count',
+      'forks_count' => 'repositories.forks_count',
+      'open_issues_count' => 'repositories.open_issues_count',
+      'subscribers_count' => 'repositories.subscribers_count',
+      'size' => 'repositories.size',
+      'pushed_at' => 'repositories.pushed_at',
+      'full_name' => 'repositories.full_name',
+      'language' => 'repositories.language',
+      'tags_count' => 'repositories.tags_count',
+    }
+  end
+
+  def self.host_sortable_columns
+    {
+      'id' => 'repositories.id',
+      'full_name' => 'lower(repositories.full_name)',
     }
   end
 
