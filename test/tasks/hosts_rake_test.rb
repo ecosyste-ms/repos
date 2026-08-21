@@ -11,6 +11,10 @@ class HostsRakeTest < ActiveSupport::TestCase
     ENV.delete('URL')
     ENV.delete('DAYS')
     ENV.delete('HOST')
+    ENV.delete('SHODAN_API_KEY')
+    ENV.delete('QUERY')
+    ENV.delete('CREATE')
+    REDIS.del('cron_lock:hosts:discover')
   end
 
   test "get_gitlab_token prints the token from redis" do
@@ -136,6 +140,55 @@ class HostsRakeTest < ActiveSupport::TestCase
 
     assert_raises(SystemExit) do
       capture_io { Rake::Task["hosts:rotate_gitlab_token"].execute }
+    end
+  end
+
+  def stub_shodan_gitea_instance
+    stub_request(:get, "https://api.shodan.io/shodan/host/search")
+      .with(query: { 'key' => 'shodan-key', 'query' => 'test-query', 'page' => '1' })
+      .to_return(status: 200, body: { matches: [{ hostnames: ['git.example.com'] }] }.to_json)
+    stub_request(:get, "https://git.example.com/robots.txt").to_return(status: 404, body: '')
+    stub_request(:get, "https://git.example.com/api/v1/version")
+      .to_return(status: 200, body: { version: '1.22.0' }.to_json)
+    stub_request(:get, "https://git.example.com/api/forgejo/v1/version").to_return(status: 404, body: '')
+    stub_request(:get, "https://git.example.com/api/v1/repos/search?limit=1")
+      .to_return(status: 200, body: { ok: true, data: [{ id: 1 }] }.to_json)
+  end
+
+  test "discover reports candidates without creating them" do
+    ENV['SHODAN_API_KEY'] = 'shodan-key'
+    ENV['QUERY'] = 'test-query'
+    stub_shodan_gitea_instance
+
+    out, _ = capture_io { Rake::Task["hosts:discover"].execute }
+
+    assert_match '[repos] gitea https://git.example.com 1.22.0', out
+    assert_match '{name: "git.example.com", url: "https://git.example.com", kind: "gitea"},', out
+    assert_match 'found=1 probed=1 candidates=1 created=0', out
+    assert_equal 0, Host.count
+  end
+
+  test "discover creates hosts when CREATE is set" do
+    ENV['SHODAN_API_KEY'] = 'shodan-key'
+    ENV['QUERY'] = 'test-query'
+    ENV['CREATE'] = 'true'
+    stub_shodan_gitea_instance
+
+    out, _ = capture_io { Rake::Task["hosts:discover"].execute }
+
+    assert_match 'candidates=1 created=1', out
+    host = Host.sole
+    assert_equal 'git.example.com', host.name
+    assert_equal 'https://git.example.com', host.url
+    assert_equal 'gitea', host.kind
+  end
+
+  test "discover aborts without an api key" do
+    ENV.delete('SHODAN_API_KEY')
+    ENV['QUERY'] = 'test-query'
+
+    assert_raises(SystemExit) do
+      capture_io { Rake::Task["hosts:discover"].execute }
     end
   end
 end
