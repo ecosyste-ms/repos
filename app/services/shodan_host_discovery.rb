@@ -1,3 +1,6 @@
+require 'ipaddr'
+require 'resolv'
+
 # Finds public gitea/forgejo/gitlab instances with shodan.io so they can be indexed.
 #
 # Shodan only supplies candidate domains, each candidate is then probed directly
@@ -22,7 +25,15 @@ class ShodanHostDiscovery
   TIMEOUT = 10
 
   DOMAIN = /\A[a-z0-9]([a-z0-9\-.]*[a-z0-9])?\.[a-z]{2,}\z/
-  RESERVED_DOMAIN = /\.(local|localdomain|internal|intranet|lan|home|test|invalid|example|arpa)\z/
+  RESERVED_DOMAIN = /\.(local|localhost|localdomain|internal|intranet|lan|home|test|invalid|example|arpa)\z/
+
+  # Ranges IPAddr has no predicate for: this network, shared address space and
+  # the unspecified address.
+  UNROUTABLE_RANGES = [
+    IPAddr.new('0.0.0.0/8'),
+    IPAddr.new('100.64.0.0/10'),
+    IPAddr.new('::/128')
+  ].freeze
 
   IGNORABLE_EXCEPTIONS = [
     Faraday::Error,
@@ -116,6 +127,8 @@ class ShodanHostDiscovery
   end
 
   def probe(domain)
+    return nil unless routable?(domain)
+
     url = "https://#{domain}"
     return nil unless crawlable?(url)
 
@@ -134,8 +147,9 @@ class ShodanHostDiscovery
   end
 
   # Listing projects anonymously is the thing we need from gitlab, so it doubles
-  # as the check that this is a gitlab instance worth indexing. The version api
-  # needs a token, so it is left for Host#update_version.
+  # as the check that this is a gitlab instance worth indexing. Gitlab will not
+  # report its version without a token, so it stays blank until one is
+  # configured for the host.
   def gitlab_candidate(domain, url)
     projects = get_json("#{url}/api/v4/projects", per_page: 1, simple: true)
     return nil unless projects.is_a?(Array) && projects.any?
@@ -153,11 +167,38 @@ class ShodanHostDiscovery
     body.is_a?(Hash) ? body['version'].presence : nil
   end
 
+  # Everything we ask a candidate for lives under /api, so this applies the same
+  # rules Host does before it calls an instance's api rather than only checking
+  # the root.
   def crawlable?(url)
     response = get("#{url}/robots.txt")
     return true if response.nil? || !response.success?
 
-    RobotsTxtParser.new(response.body).can_crawl?('/')
+    Host.new(robots_txt_content: response.body).can_crawl_api?(user_agent)
+  end
+
+  # Shodan hands us hostnames nobody has vetted, so a name pointing back inside
+  # our own network is dropped before anything is fetched from it.
+  def routable?(domain)
+    addresses = resolved_addresses(domain)
+    return true if addresses.empty?
+
+    addresses.none? { |address| unroutable?(address) }
+  end
+
+  # A name that will not resolve is left alone, the request itself fails soon
+  # enough.
+  def resolved_addresses(domain)
+    Resolv.getaddresses(domain).filter_map do |address|
+      IPAddr.new(address).native
+    rescue IPAddr::Error
+      nil
+    end
+  end
+
+  def unroutable?(address)
+    address.loopback? || address.private? || address.link_local? ||
+      UNROUTABLE_RANGES.any? { |range| range.include?(address) }
   end
 
   def create_host(candidate)
@@ -191,9 +232,11 @@ class ShodanHostDiscovery
     nil
   end
 
+  # Redirects are deliberately not followed. Every request made here is driven
+  # by a hostname shodan supplied, so a Location header would be an easy way to
+  # move us onto an address that was never checked.
   def connection
     @connection ||= Faraday.new do |conn|
-      conn.use Faraday::FollowRedirects::Middleware
       conn.adapter Faraday.default_adapter
     end
   end

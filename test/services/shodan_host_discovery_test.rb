@@ -101,6 +101,40 @@ class ShodanHostDiscoveryTest < ActiveSupport::TestCase
     assert_not_requested :get, "https://private.example.com/api/v1/version"
   end
 
+  test "skips instances that disallow the api in robots.txt" do
+    stub_search([{ 'hostnames' => ['api-blocked.example.com'] }])
+    stub_request(:get, "https://api-blocked.example.com/robots.txt")
+      .to_return(status: 200, body: "User-agent: *\nDisallow: /api\n")
+
+    assert_empty discovery.discover[:candidates]
+    assert_not_requested :get, "https://api-blocked.example.com/api/v1/version"
+  end
+
+  test "skips domains that resolve inside our own network" do
+    stub_search([{ 'hostnames' => ['git.example.com'] }])
+    service = discovery
+    service.stubs(:resolved_addresses).with('git.example.com').returns([IPAddr.new('127.0.0.1')])
+
+    result = service.discover
+
+    assert_equal 1, result[:probed]
+    assert_empty result[:candidates]
+    assert_not_requested :get, "https://git.example.com/robots.txt"
+  end
+
+  test "does not follow redirects off the candidate" do
+    metadata = 'http://169.254.169.254/latest/meta-data/'
+    stub_search([{ 'hostnames' => ['redirect.example.com'] }])
+    stub_request(:get, "https://redirect.example.com/robots.txt").to_return(status: 404, body: '')
+    stub_request(:get, "https://redirect.example.com/api/v1/version")
+      .to_return(status: 302, headers: { 'Location' => metadata })
+    stub_request(:get, "https://redirect.example.com/api/v4/projects?per_page=1&simple=true")
+      .to_return(status: 302, headers: { 'Location' => metadata })
+
+    assert_empty discovery.discover[:candidates]
+    assert_not_requested :get, metadata
+  end
+
   test "skips hosts that are already known" do
     create(:host, name: 'Known', url: 'https://git.example.com', kind: 'gitea')
     stub_search([{ 'hostnames' => ['git.example.com'] }])
@@ -113,7 +147,7 @@ class ShodanHostDiscoveryTest < ActiveSupport::TestCase
   end
 
   test "ignores ip addresses and unroutable hostnames" do
-    stub_search([{ 'hostnames' => ['192.168.0.1', 'git.local', 'localhost', 'gitea'], 'http' => { 'host' => '10.0.0.1' } }])
+    stub_search([{ 'hostnames' => ['192.168.0.1', 'git.local', 'git.localhost', 'localhost', 'gitea'], 'http' => { 'host' => '10.0.0.1' } }])
 
     assert_equal 0, discovery.discover[:found]
   end
