@@ -38,6 +38,33 @@ namespace :hosts do
     end
   end
 
+  desc 'Find public gitea/forgejo/gitlab instances with shodan.io. CREATE=true adds them'
+  task discover: :environment do
+    CronLock.acquire("hosts:discover", ttl: 1.hour) do
+      create = ENV['CREATE'] == 'true'
+
+      result = ShodanHostDiscovery.new(
+        create: create,
+        queries: ENV['QUERY'].presence || ShodanHostDiscovery::QUERIES,
+        pages: ENV.fetch('PAGES', ShodanHostDiscovery::DEFAULT_PAGES),
+        limit: ENV.fetch('LIMIT', ShodanHostDiscovery::DEFAULT_LIMIT)
+      ).discover
+
+      result[:candidates].each do |candidate|
+        puts "[repos] #{candidate.kind} #{candidate.url}#{" #{candidate.version}" if candidate.version}"
+      end
+
+      if result[:candidates].any? && !create
+        puts "[repos] add to db/seeds.rb or re-run with CREATE=true:"
+        result[:candidates].each { |candidate| puts candidate.to_seed_line }
+      end
+
+      puts "[repos] shodan discovery found=#{result[:found]} probed=#{result[:probed]} candidates=#{result[:candidates].length} created=#{result[:created].length}"
+    end
+  rescue ShodanHostDiscovery::MissingApiKey, ShodanHostDiscovery::ApiError => e
+    abort "[repos] #{e.message}"
+  end
+
   desc 'Print the GitLab token stored in redis for HOST'
   task get_gitlab_token: :environment do
     host = Host.find_by_name!(ENV['HOST'].presence || 'GitLab')
