@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_05_110000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_04_123825) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -206,6 +206,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_05_110000) do
     t.datetime "usage_updated_at"
     t.string "uuid"
     t.index "host_id, lower((full_name)::text)", name: "index_repositories_on_host_id_lower_full_name", unique: true
+    t.index ["host_id", "language"], name: "index_repositories_on_host_language_nonfork", where: "(fork = false)"
     t.index ["host_id", "uuid"], name: "index_repositories_on_host_id_uuid", unique: true
     t.index ["owner"], name: "index_repositories_on_owner"
   end
