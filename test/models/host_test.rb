@@ -113,6 +113,24 @@ class HostTest < ActiveSupport::TestCase
       assert_equal 3, @host1.compute_repositories_count
     end
 
+    should 'ignore a decrease smaller than the drop tolerance' do
+      @host1.update_column(:repositories_count, 10_000_000)
+      Host.stubs(:repositories_count_estimates).returns({ @host1.id => 9_800_000 })
+      assert_equal 10_000_000, @host1.reload.compute_repositories_count
+    end
+
+    should 'accept a decrease larger than the drop tolerance' do
+      @host1.update_column(:repositories_count, 10_000_000)
+      Host.stubs(:repositories_count_estimates).returns({ @host1.id => 8_000_000 })
+      assert_equal 8_000_000, @host1.reload.compute_repositories_count
+    end
+
+    should 'always accept an increase' do
+      @host1.update_column(:repositories_count, 10_000_000)
+      Host.stubs(:repositories_count_estimates).returns({ @host1.id => 10_000_001 })
+      assert_equal 10_000_001, @host1.reload.compute_repositories_count
+    end
+
     should 'keep existing value and continue when a count times out' do
       @host1.update_column(:repositories_count, 111)
       Host.stubs(:repositories_count_estimates).returns({})

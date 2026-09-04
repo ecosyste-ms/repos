@@ -9,6 +9,7 @@ class Host < ApplicationRecord
   scope :kind, ->(kind) { where(kind: kind) }
 
   ESTIMATE_THRESHOLD = 1_000_000
+  ESTIMATE_DROP_TOLERANCE = 0.05
 
   def self.repositories_count_estimates
     reltuples = connection.select_value("SELECT reltuples::bigint FROM pg_class WHERE oid = 'repositories'::regclass").to_i
@@ -34,11 +35,14 @@ class Host < ApplicationRecord
 
   def compute_repositories_count(estimates = nil)
     estimates ||= self.class.repositories_count_estimates
-    if repositories_count.to_i >= ESTIMATE_THRESHOLD && estimates[id]
+    current = repositories_count.to_i
+    new_count = if current >= ESTIMATE_THRESHOLD && estimates[id]
       estimates[id]
     else
       repositories.count
     end
+    return current if new_count < current && (current - new_count) < current * ESTIMATE_DROP_TOLERANCE
+    new_count
   end
 
   def self.find_by_name(name)
