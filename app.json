@@ -45,6 +45,10 @@
       "schedule": "0 2 * * *"
     },
     {
+      "command": "bundle exec rake hosts:update_repositories_counts",
+      "schedule": "0 5 * * *"
+    },
+    {
       "command": "bundle exec rake sitemap:refresh_with_lock",
       "schedule": "0 6 * * *"
     },

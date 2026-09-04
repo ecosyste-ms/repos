@@ -8,6 +8,39 @@ class Host < ApplicationRecord
 
   scope :kind, ->(kind) { where(kind: kind) }
 
+  ESTIMATE_THRESHOLD = 1_000_000
+
+  def self.repositories_count_estimates
+    reltuples = connection.select_value("SELECT reltuples::bigint FROM pg_class WHERE oid = 'repositories'::regclass").to_i
+    row = connection.select_one("SELECT most_common_vals::text AS v, array_to_string(most_common_freqs, ',') AS f FROM pg_stats WHERE tablename = 'repositories' AND attname = 'host_id'")
+    return {} if row.nil? || row['v'].blank?
+    ids = row['v'].delete('{}').split(',').map(&:to_i)
+    freqs = row['f'].split(',').map(&:to_f)
+    ids.zip(freqs).to_h.transform_values { |f| (reltuples * f).round }
+  end
+
+  def self.update_repositories_counts
+    estimates = repositories_count_estimates
+    find_each do |host|
+      host.update_column(:repositories_count, host.compute_repositories_count(estimates))
+    rescue ActiveRecord::QueryCanceled => e
+      Rails.logger.warn "repositories_count timeout for host #{host.id} (#{host.name}), keeping #{host.repositories_count}: #{e.message}"
+    end
+  end
+
+  def update_repositories_count
+    update_column(:repositories_count, compute_repositories_count)
+  end
+
+  def compute_repositories_count(estimates = nil)
+    estimates ||= self.class.repositories_count_estimates
+    if repositories_count.to_i >= ESTIMATE_THRESHOLD && estimates[id]
+      estimates[id]
+    else
+      repositories.count
+    end
+  end
+
   def self.find_by_name(name)
     return nil if name.blank?
     host = Host.find_by('lower(name) = ?', name.downcase)

@@ -11,7 +11,7 @@
     <div class="col-md-2 col-6 mb-3">
       <div class="card text-center">
         <div class="card-body">
-          <h4 class="card-title text-success mb-1"><%= number_with_delimiter @hosts.sum(&:repositories_count) %></h4>
+          <h4 class="card-title text-success mb-1"><%= number_to_human @hosts.sum(&:repositories_count) %></h4>
           <p class="card-text small text-muted mb-0"><%= Repository.model_name.human(count: 2) %></p>
         </div>
       </div>
@@ -19,7 +19,7 @@
     <div class="col-md-2 col-6 mb-3">
       <div class="card text-center">
         <div class="card-body">
-          <h4 class="card-title text-warning mb-1"><%= number_with_delimiter @hosts.sum(&:owners_count) %></h4>
+          <h4 class="card-title text-warning mb-1"><%= number_to_human @hosts.sum(&:owners_count) %></h4>
           <p class="card-text small text-muted mb-0"><%= Owner.model_name.human(count: 2) %></p>
         </div>
       </div>
@@ -27,7 +27,7 @@
     <div class="col-md-2 col-6 mb-3">
       <div class="card text-center">
         <div class="card-body">
-          <h4 class="card-title text-info mb-1"><%= number_with_delimiter Tag.fast_total %></h4>
+          <h4 class="card-title text-info mb-1"><%= number_to_human Tag.fast_total %></h4>
           <p class="card-text small text-muted mb-0"><%= Tag.model_name.human(count: 2) %></p>
         </div>
       </div>
@@ -35,7 +35,7 @@
     <div class="col-md-2 col-6 mb-3">
       <div class="card text-center">
         <div class="card-body">
-          <h4 class="card-title text-secondary mb-1"><%= number_with_delimiter Manifest.fast_total %></h4>
+          <h4 class="card-title text-secondary mb-1"><%= number_to_human Manifest.fast_total %></h4>
           <p class="card-text small text-muted mb-0"><%= Manifest.model_name.human(count: 2) %></p>
         </div>
       </div>
@@ -43,7 +43,7 @@
     <div class="col-md-2 col-6 mb-3">
       <div class="card text-center">
         <div class="card-body">
-          <h4 class="card-title text-dark mb-1"><%= number_with_delimiter Dependency.fast_total %></h4>
+          <h4 class="card-title text-dark mb-1"><%= number_to_human Dependency.fast_total %></h4>
           <p class="card-text small text-muted mb-0"><%= Dependency.model_name.human(count: 2) %></p>
         </div>
       </div>
@@ -57,7 +57,7 @@
         <%= link_to t(kind), kind_hosts_path(kind), class: 'text-decoration-none' %>
         <span class="text-black-50">
           <%= number_with_delimiter(hosts.length) %> <%= t('virtual.models.instance', count: hosts.length) %> -
-          <%= number_with_delimiter(hosts.sum(&:repositories_count)) %> <%= Repository.model_name.human(count: hosts.sum(&:repositories_count)) %>
+          <%= number_to_human(hosts.sum(&:repositories_count)) %> <%= Repository.model_name.human(count: hosts.sum(&:repositories_count)) %>
         </span>
       </div>
        <ul class="list-group list-group-flush">
@@ -65,7 +65,7 @@
           <li class="list-group-item">
             <%= link_to host.name.downcase, host %>
             <span class="text-black-50">
-              <%= number_with_delimiter(host.repositories_count) %> <%= Repository.model_name.human(count: host.repositories_count) %>
+              <%= number_to_human(host.repositories_count) %> <%= Repository.model_name.human(count: host.repositories_count) %>
             </span>
           </li>
         <% end %>

@@ -73,6 +73,62 @@ class HostTest < ActiveSupport::TestCase
     end
   end
 
+  context 'update_repositories_counts' do
+    setup do
+      @host1 = create(:host)
+      @host2 = create(:host)
+      create_list(:repository, 3, host: @host1)
+      create_list(:repository, 5, host: @host2)
+    end
+
+    should 'return empty hash from repositories_count_estimates when pg_stats has no data' do
+      Host.connection.stubs(:select_one).returns(nil)
+      assert_equal({}, Host.repositories_count_estimates)
+    end
+
+    should 'parse pg_stats into id => estimate hash' do
+      Host.connection.stubs(:select_value).returns(1000)
+      Host.connection.stubs(:select_one).returns({ 'v' => '{1,2,3}', 'f' => '0.5,0.3,0.2' })
+      assert_equal({ 1 => 500, 2 => 300, 3 => 200 }, Host.repositories_count_estimates)
+    end
+
+    should 'use real count when current repositories_count is below threshold' do
+      Host.stubs(:repositories_count_estimates).returns({ @host1.id => 999 })
+      Host.update_repositories_counts
+      assert_equal 3, @host1.reload.repositories_count
+      assert_equal 5, @host2.reload.repositories_count
+    end
+
+    should 'use pg_stats estimate when current repositories_count is at or above threshold' do
+      @host1.update_column(:repositories_count, Host::ESTIMATE_THRESHOLD)
+      Host.stubs(:repositories_count_estimates).returns({ @host1.id => 5_000_000 })
+      Host.update_repositories_counts
+      assert_equal 5_000_000, @host1.reload.repositories_count
+      assert_equal 5, @host2.reload.repositories_count
+    end
+
+    should 'fall back to real count when above threshold but no estimate available' do
+      @host1.update_column(:repositories_count, Host::ESTIMATE_THRESHOLD)
+      Host.stubs(:repositories_count_estimates).returns({})
+      assert_equal 3, @host1.compute_repositories_count
+    end
+
+    should 'keep existing value and continue when a count times out' do
+      @host1.update_column(:repositories_count, 111)
+      Host.stubs(:repositories_count_estimates).returns({})
+      Host.any_instance.stubs(:compute_repositories_count).raises(ActiveRecord::QueryCanceled.new('timeout')).then.returns(5)
+      assert_nothing_raised { Host.update_repositories_counts }
+      assert_equal 111, @host1.reload.repositories_count
+      assert_equal 5, @host2.reload.repositories_count
+    end
+
+    should 'update a single host via instance method' do
+      Host.stubs(:repositories_count_estimates).returns({})
+      @host1.update_repositories_count
+      assert_equal 3, @host1.reload.repositories_count
+    end
+  end
+
   context 'associations' do
     should have_many(:repositories)
     should have_many(:owners)
