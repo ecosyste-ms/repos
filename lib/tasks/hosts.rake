@@ -1,6 +1,13 @@
 require_relative '../cron_lock'
 
 namespace :hosts do
+  desc 'update repositories_count for all hosts'
+  task update_repositories_counts: :environment do
+    CronLock.acquire("hosts:update_repositories_counts", ttl: 23.hours) do
+      Host.update_repositories_counts
+    end
+  end
+
   desc 'check github tokens'
   task check_github_tokens: :environment do
     CronLock.acquire("hosts:check_github_tokens", ttl: 23.hours) do
