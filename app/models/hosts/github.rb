@@ -462,20 +462,21 @@ module Hosts
     end
 
     def recently_changed_repo_names(since = 1.hour)
-      names = []
-
       first_response = load_repo_names
       return [] if first_response.blank?
+      names = Array(first_response["names"])
       most_recent = first_response["newest"]["created_at"]
       target_time = Time.parse(most_recent) - since
       next_id = first_response["oldest"]["id"]
 
       next_response = load_repo_names(next_id)
+      return names.uniq if next_response.blank?
       names = (names + next_response["names"]).uniq
       next_id = next_response["oldest"]["id"]
 
       while Time.parse(next_response["oldest"]["created_at"]) > target_time
         next_response = load_repo_names(next_id)
+        break if next_response.blank?
         names = (names + next_response["names"]).uniq
         next_id = next_response["oldest"]["id"]
       end

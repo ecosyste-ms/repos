@@ -290,6 +290,58 @@ class Hosts::GithubTest < ActiveSupport::TestCase
     end
   end
 
+  context 'recently_changed_repo_names' do
+    setup do
+      @now = Time.now.utc
+      @first = {
+        "newest" => { "created_at" => @now.iso8601 },
+        "oldest" => { "id" => 100, "created_at" => @now.iso8601 },
+        "names" => ["x/y"]
+      }
+    end
+
+    should 'return empty when first page is blank' do
+      @github.stubs(:load_repo_names).with.returns({})
+
+      assert_equal [], @github.recently_changed_repo_names
+    end
+
+    should 'return first page names when second page is blank' do
+      @github.stubs(:load_repo_names).with.returns(@first)
+      @github.stubs(:load_repo_names).with(100).returns({})
+
+      assert_equal ["x/y"], @github.recently_changed_repo_names
+    end
+
+    should 'return names collected so far when a later page is blank' do
+      page2 = {
+        "names" => ["a/b", "c/d"],
+        "oldest" => { "id" => 90, "created_at" => (@now - 10.minutes).iso8601 }
+      }
+      @github.stubs(:load_repo_names).with.returns(@first)
+      @github.stubs(:load_repo_names).with(100).returns(page2)
+      @github.stubs(:load_repo_names).with(90).returns({})
+
+      assert_equal ["x/y", "a/b", "c/d"], @github.recently_changed_repo_names(1.hour)
+    end
+
+    should 'paginate until oldest is past the target time' do
+      page2 = {
+        "names" => ["a/b"],
+        "oldest" => { "id" => 90, "created_at" => (@now - 10.minutes).iso8601 }
+      }
+      page3 = {
+        "names" => ["c/d", "a/b"],
+        "oldest" => { "id" => 80, "created_at" => (@now - 2.hours).iso8601 }
+      }
+      @github.stubs(:load_repo_names).with.returns(@first)
+      @github.stubs(:load_repo_names).with(100).returns(page2)
+      @github.stubs(:load_repo_names).with(90).returns(page3)
+
+      assert_equal ["x/y", "a/b", "c/d"], @github.recently_changed_repo_names(1.hour)
+    end
+  end
+
   context 'load_owner_repos_names' do
     setup do
       @owner = OpenStruct.new(login: 'testuser')
