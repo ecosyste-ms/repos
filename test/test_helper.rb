@@ -8,8 +8,7 @@ require 'factory_bot_rails'
 require 'database_cleaner/active_record'
 
 require 'sidekiq_unique_jobs/testing'
-require 'sidekiq/testing'
-Sidekiq::Testing.fake!
+Sidekiq.testing!(:fake)
 
 DatabaseCleaner.strategy = :truncation
 
