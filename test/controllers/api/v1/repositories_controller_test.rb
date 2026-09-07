@@ -43,31 +43,31 @@ class ApiV1RepositoriesControllerTest < ActionDispatch::IntegrationTest
     assert_equal actual_response.length, 3
   end
 
-  test 'invalid repository sort falls back to id descending' do
+  test 'invalid repository sort falls back to full_name ascending' do
     get api_v1_host_repositories_path(host_id: @host.name), params: { sort: 'cast(uuid as integer)' }
     assert_response :success
 
     actual_response = JSON.parse(@response.body)
 
-    assert_equal @host.repositories.order(id: :desc).pluck(:id), actual_response.pluck('id')
+    assert_equal @host.repositories.order(Arel.sql('lower(full_name) ASC')).pluck(:id), actual_response.pluck('id')
   end
 
-  test 'unindexed repository sort falls back to id descending' do
+  test 'unindexed repository sort falls back to full_name ascending' do
     get api_v1_host_repositories_path(host_id: @host.name), params: { sort: 'stargazers_count', order: 'desc' }
     assert_response :success
 
     actual_response = JSON.parse(@response.body)
 
-    assert_equal @host.repositories.order(id: :desc).pluck(:id), actual_response.pluck('id')
+    assert_equal @host.repositories.order(Arel.sql('lower(full_name) ASC')).pluck(:id), actual_response.pluck('id')
   end
 
-  test 'invalid repository order falls back to id descending' do
+  test 'invalid repository order falls back to full_name ascending' do
     get api_v1_host_repositories_path(host_id: @host.name), params: { sort: 'id', order: '1' }
     assert_response :success
 
     actual_response = JSON.parse(@response.body)
 
-    assert_equal @host.repositories.order(id: :desc).pluck(:id), actual_response.pluck('id')
+    assert_equal @host.repositories.order(Arel.sql('lower(full_name) ASC')).pluck(:id), actual_response.pluck('id')
   end
 
   test 'repository sort allows case insensitive full name ordering' do
@@ -101,13 +101,13 @@ class ApiV1RepositoriesControllerTest < ActionDispatch::IntegrationTest
     assert_includes actual_response, 'hiddenuser/secret-project'
   end
 
-  test 'invalid repository names sort falls back to id descending' do
+  test 'invalid repository names sort falls back to full_name ascending' do
     get repository_names_api_v1_host_path(id: @host.name), params: { sort: 'cast(uuid as integer)' }
     assert_response :success
 
     actual_response = JSON.parse(@response.body)
 
-    assert_equal @host.repositories.order(id: :desc).pluck(:full_name), actual_response
+    assert_equal @host.repositories.order(Arel.sql('lower(full_name) ASC')).pluck(:full_name), actual_response
   end
 
   test 'get a repository for a host' do

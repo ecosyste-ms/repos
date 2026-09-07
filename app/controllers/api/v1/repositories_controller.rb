@@ -15,7 +15,7 @@ class Api::V1::RepositoriesController < Api::V1::ApplicationController
     scope = scope.forked(params[:fork]) if params[:fork].present?
     scope = scope.archived(params[:archived]) if params[:archived].present?
 
-    scope = scope.order(*sanitize_orders(Repository.host_sortable_columns, default: 'id'))
+    scope = scope.order(*sanitize_orders(Repository.host_sortable_columns, default: 'full_name', default_order: 'asc'))
 
     @pagy, @repositories = pagy_countless(scope.includes(:host, :scorecard))
     fresh_when @repositories, public: true
@@ -34,7 +34,7 @@ class Api::V1::RepositoriesController < Api::V1::ApplicationController
     scope = scope.forked(params[:fork]) if params[:fork].present?
     scope = scope.archived(params[:archived]) if params[:archived].present?
 
-    scope = scope.order(*sanitize_orders(Repository.host_sortable_columns, default: 'id'))
+    scope = scope.order(*sanitize_orders(Repository.host_sortable_columns, default: 'full_name', default_order: 'asc'))
 
     @pagy, @repositories = pagy_countless(scope, limit_max: 10000)
     if stale?(@repositories, public: true)
