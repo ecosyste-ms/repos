@@ -4,7 +4,8 @@ class Api::V1::ReleasesController < Api::V1::ApplicationController
   def index
     @repository = @host.find_repository(params[:repository_id].downcase)
     if @repository.nil?
-      @host.sync_repository_async(params[:id])
+      return if render_shadowed_repository(params[:repository_id], 'releases')
+      @host.sync_repository_async(params[:repository_id])
       raise ActiveRecord::RecordNotFound
     else
       unless @repository.full_name.downcase == params[:repository_id].downcase

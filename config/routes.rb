@@ -39,10 +39,10 @@ Rails.application.routes.draw do
           end
         end
         resources :repositories, constraints: { id: /.*/ }, defaults: { format: :json }, only: [:index, :show] do
-          resources :tags do
+          resources :tags, only: [:index, :show] do
             resources :manifests, only: [:index]
           end
-          resources :releases
+          resources :releases, only: [:index, :show]
           resources :manifests, only: [:index]
           member do
             get :sbom

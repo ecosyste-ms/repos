@@ -120,6 +120,16 @@ class ApiV1RepositoriesControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
+  test 'sbom route falls back to repository show when full_name ends in sbom' do
+    repo = create(:repository, host: @host, full_name: 'group/subgroup/sbom')
+
+    get "/api/v1/hosts/#{@host.name}/repositories/#{repo.full_name}"
+    assert_response :success
+
+    body = JSON.parse(@response.body)
+    assert_equal 'group/subgroup/sbom', body['full_name']
+  end
+
   test 'lookup a repository for a host' do
     get api_v1_repositories_lookup_path(url: 'https://github.com/testuser/awesome-project/')
     assert_response :success

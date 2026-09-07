@@ -39,6 +39,16 @@ class Api::V1::ReleasesControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
+  test "falls back to repository show when full_name ends in releases" do
+    repo = create(:repository, host: @host, full_name: 'group/subgroup/releases')
+
+    get "/api/v1/hosts/#{@host.name}/repositories/#{repo.full_name}"
+    assert_response :success
+
+    body = JSON.parse(@response.body)
+    assert_equal 'group/subgroup/releases', body['full_name']
+  end
+
   test "should order releases by published_at desc by default" do
     get api_v1_host_repository_releases_path(@host.name, @repository.full_name)
     assert_response :success

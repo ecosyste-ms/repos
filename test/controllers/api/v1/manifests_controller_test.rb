@@ -16,4 +16,14 @@ class ApiV1ManifestsControllerTest < ActionDispatch::IntegrationTest
 
     assert_equal actual_response.length, 1
   end
+
+  test 'falls back to repository show when full_name ends in manifests' do
+    repo = @host.repositories.create!(full_name: 'group/subgroup/manifests', created_at: Time.now, updated_at: Time.now)
+
+    get "/api/v1/hosts/#{@host.name}/repositories/#{repo.full_name}"
+    assert_response :success
+
+    body = JSON.parse(@response.body)
+    assert_equal 'group/subgroup/manifests', body['full_name']
+  end
 end

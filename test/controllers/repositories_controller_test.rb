@@ -15,6 +15,22 @@ class RepositoriesControllerTest < ActionDispatch::IntegrationTest
     assert_template 'repositories/show', file: 'repositories/show.html.erb'
   end
 
+  test 'shadowed member route falls back to show when full_name ends in the action name' do
+    %w[dependencies readme releases scorecard].each do |suffix|
+      repo = create(:repository, host: @host, full_name: "group/subgroup/#{suffix}", owner: 'group')
+
+      get "/hosts/#{@host.name}/repositories/#{repo.full_name}"
+      assert_response :success, "expected show fallback for #{suffix}"
+      assert_template 'repositories/show'
+      assert_equal repo, assigns(:repository)
+    end
+  end
+
+  test 'shadowed member route still 404s when neither repo exists' do
+    get "/hosts/#{@host.name}/repositories/nope/nada/releases"
+    assert_response :not_found
+  end
+
   test 'get a repository with hidden owner returns 404' do
     get host_repository_path(host_id: @host.name, id: @hidden_repository.full_name)
     assert_response :not_found

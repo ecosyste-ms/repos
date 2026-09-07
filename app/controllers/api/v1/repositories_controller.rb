@@ -66,6 +66,7 @@ class Api::V1::RepositoriesController < Api::V1::ApplicationController
         render json: @repository.sbom, status: :ok
       end
     else
+      return if render_shadowed_repository(params[:id], 'sbom')
       render json: { error: 'Repository not found' }, status: :not_found
     end
   end
