@@ -59,7 +59,6 @@ class Repository < ApplicationRecord
 
   def self.host_sortable_columns
     {
-      'id' => 'repositories.id',
       'full_name' => 'lower(repositories.full_name)',
     }
   end

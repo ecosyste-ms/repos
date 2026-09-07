@@ -62,7 +62,7 @@ class ApiV1RepositoriesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test 'invalid repository order falls back to full_name ascending' do
-    get api_v1_host_repositories_path(host_id: @host.name), params: { sort: 'id', order: '1' }
+    get api_v1_host_repositories_path(host_id: @host.name), params: { sort: 'full_name', order: '1' }
     assert_response :success
 
     actual_response = JSON.parse(@response.body)
@@ -70,23 +70,13 @@ class ApiV1RepositoriesControllerTest < ActionDispatch::IntegrationTest
     assert_equal @host.repositories.order(Arel.sql('lower(full_name) ASC')).pluck(:id), actual_response.pluck('id')
   end
 
-  test 'repository sort allows case insensitive full name ordering' do
-    get api_v1_host_repositories_path(host_id: @host.name), params: { sort: 'full_name', order: 'asc' }
+  test 'repository sort allows explicit full_name descending' do
+    get api_v1_host_repositories_path(host_id: @host.name), params: { sort: 'full_name', order: 'desc' }
     assert_response :success
 
     actual_response = JSON.parse(@response.body)
 
-    assert_equal @host.repositories.order(Arel.sql('lower(full_name) ASC')).pluck(:id), actual_response.pluck('id')
-  end
-
-  test 'repository sort allows multiple indexed columns' do
-    get api_v1_host_repositories_path(host_id: @host.name), params: { sort: 'full_name,id', order: 'asc,desc' }
-    assert_response :success
-
-    actual_response = JSON.parse(@response.body)
-    expected_ids = @host.repositories.order(Arel.sql('lower(full_name) ASC'), id: :desc).pluck(:id)
-
-    assert_equal expected_ids, actual_response.pluck('id')
+    assert_equal @host.repositories.order(Arel.sql('lower(full_name) DESC')).pluck(:id), actual_response.pluck('id')
   end
 
   test 'get repository names for a host' do

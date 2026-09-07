@@ -137,18 +137,6 @@ class HostsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to host_path(id: @host.name, sort: 'stars')
   end
 
-  test 'default sort orders by id desc without nulls last' do
-    queries = []
-    callback = ->(*, payload) { queries << payload[:sql] if payload[:sql].include?('repositories') }
-    ActiveSupport::Notifications.subscribed(callback, 'sql.active_record') do
-      get host_path(id: @host.name)
-    end
-    assert_response :success
-    repo_query = queries.find { |q| q =~ /ORDER BY/i }
-    assert_match(/ORDER BY "repositories"\."id" DESC/i, repo_query)
-    refute_match(/NULLS LAST/i, repo_query)
-  end
-
   test 'sort dropdown hidden for GitHub' do
     get host_path(id: @host.name)
     assert_response :success
@@ -162,7 +150,7 @@ class HostsControllerTest < ActionDispatch::IntegrationTest
     assert_match(/dropdown-toggle/, response.body)
   end
 
-  test 'unindexed sort falls back to id descending' do
+  test 'unindexed sort falls back to full_name' do
     queries = []
     callback = ->(*, payload) { queries << payload[:sql] if payload[:sql].include?('repositories') }
     ActiveSupport::Notifications.subscribed(callback, 'sql.active_record') do
@@ -170,7 +158,18 @@ class HostsControllerTest < ActionDispatch::IntegrationTest
     end
     assert_response :success
     repo_query = queries.find { |q| q =~ /ORDER BY/i }
-    assert_match(/repositories\.id DESC NULLS LAST/i, repo_query)
+    assert_match(/lower\(repositories\.full_name\) DESC NULLS LAST/i, repo_query)
+  end
+
+  test 'no sort defaults to full_name ascending' do
+    queries = []
+    callback = ->(*, payload) { queries << payload[:sql] if payload[:sql].include?('repositories') }
+    ActiveSupport::Notifications.subscribed(callback, 'sql.active_record') do
+      get host_path(id: @host.name)
+    end
+    assert_response :success
+    repo_query = queries.find { |q| q =~ /ORDER BY/i }
+    assert_match(/lower\(repositories\.full_name\) ASC/i, repo_query)
   end
 
   test 'full name sort uses indexed case insensitive expression' do
