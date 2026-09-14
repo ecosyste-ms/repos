@@ -12,7 +12,7 @@ gem "actionpack", "~> 8.1.1"
 gem "actionview", "~> 8.1.1"
 # activesupport 8.1.3.1 passes positional opts to JSON.parse; json 3.0 is
 # kwargs-only. Remove once a Rails release includes rails/rails#58601.
-gem "json", "< 3"
+gem "json", "< 4"
 
 gem "secure_headers"
 gem "sprockets-rails"
