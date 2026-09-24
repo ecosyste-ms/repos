@@ -4,15 +4,12 @@ git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 ruby '4.0.7'
 
 # Rails components
-gem "railties", "~> 8.1.1"
-gem "activesupport", "~> 8.1.1"
-gem "activemodel", "~> 8.1.1"
-gem "activerecord", "~> 8.1.1"
-gem "actionpack", "~> 8.1.1"
-gem "actionview", "~> 8.1.1"
-# activesupport 8.1.3.1 passes positional opts to JSON.parse; json 3.0 is
-# kwargs-only. Remove once a Rails release includes rails/rails#58601.
-gem "json", "< 3"
+gem "railties", "~> 8.1.4"
+gem "activesupport", "~> 8.1.4"
+gem "activemodel", "~> 8.1.4"
+gem "activerecord", "~> 8.1.4"
+gem "actionpack", "~> 8.1.4"
+gem "actionview", "~> 8.1.4"
 
 gem "secure_headers"
 gem "sprockets-rails"
