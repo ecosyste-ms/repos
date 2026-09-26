@@ -20,7 +20,4 @@
       <%= t('virtual.models.topic.other') %>
     </a>
   </li>
-  <% if controller_name == 'hosts' && action_name == 'show' && @host.name != 'GitHub' %>
-    <%= render 'hosts/sort' %>
-  <% end %>
 </ul>

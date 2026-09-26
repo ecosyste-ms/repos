@@ -59,11 +59,6 @@ fr:
   hosts:
     kind:
       title: Hôtes %{kind}
-    sort:
-      forks: Forks
-      recently_pushed: Récemments synchronisés
-      sort: Trier
-      stars: Étoiles
   layouts:
     application:
       about: À propos
