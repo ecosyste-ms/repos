@@ -22,12 +22,7 @@ class OwnersController < ApplicationController
     scope = @host.repositories.owner(@owner).includes(:host)
 
     if params[:sort].present? || params[:order].present?
-      sort = sanitize_sort(Repository.sortable_columns)
-      if params[:order] == 'asc'
-        scope = scope.order(sort.asc.nulls_last)
-      else
-        scope = scope.order(sort.desc.nulls_last)
-      end
+      scope = scope.order(*sanitize_orders(Repository.sortable_columns, model: Repository))
     else
       scope = scope.order('updated_at desc')
     end

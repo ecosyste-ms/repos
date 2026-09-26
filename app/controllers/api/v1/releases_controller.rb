@@ -15,7 +15,7 @@ class Api::V1::ReleasesController < Api::V1::ApplicationController
 
       scope = @repository.releases
 
-      scope = scope.order(*sanitize_orders(Release.sortable_columns, default: 'published_at'))
+      scope = scope.order(*sanitize_orders(Release.sortable_columns, default: 'published_at', model: Release))
 
       @pagy, @releases = pagy_countless(scope)
       fresh_when @releases, public: true

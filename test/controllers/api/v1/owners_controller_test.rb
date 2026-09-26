@@ -69,6 +69,23 @@ class ApiV1OwnersControllerTest < ActionDispatch::IntegrationTest
     assert_equal [newer_repository.id, older_repository.id], actual_response.pluck('id')
   end
 
+  test 'owner repositories put never-synced repositories last' do
+    older = create(:repository, host: @host, owner: @owner.login, last_synced_at: 2.days.ago)
+    newer = create(:repository, host: @host, owner: @owner.login, last_synced_at: 1.day.ago)
+    unsynced = create(:repository, host: @host, owner: @owner.login, last_synced_at: nil)
+
+    queries = []
+    callback = ->(*, payload) { queries << payload[:sql] if payload[:sql] =~ /FROM "repositories".*ORDER BY/im }
+    ActiveSupport::Notifications.subscribed(callback, 'sql.active_record') do
+      get repositories_api_v1_host_owner_path(host_id: @host.name, id: @owner.login)
+    end
+    assert_response :success
+
+    assert_equal 1, queries.size, queries.inspect
+    assert_match(/ORDER BY repositories\.last_synced_at DESC NULLS LAST/i, queries.first)
+    assert_equal [newer.id, older.id, unsynced.id], JSON.parse(@response.body).pluck('id')
+  end
+
   test 'list repositories for a hidden owner returns 404' do
     get repositories_api_v1_host_owner_path(host_id: @host.name, id: @hidden_owner.login)
     assert_response :not_found

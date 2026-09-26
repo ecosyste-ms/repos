@@ -36,7 +36,7 @@ class Api::V1::OwnersController < Api::V1::ApplicationController
     scope = scope.forked(params[:fork]) if params[:fork].present?
     scope = scope.archived(params[:archived]) if params[:archived].present?
 
-    scope = scope.order(*sanitize_orders(Repository.sortable_columns, default: 'last_synced_at'))
+    scope = scope.order(*sanitize_orders(Repository.sortable_columns, default: 'last_synced_at', model: Repository))
 
     @pagy, @repositories = pagy_countless(scope.includes(:host, :scorecard))
     if stale?(@repositories, public: true)

@@ -15,7 +15,7 @@ class Api::V1::TagsController < Api::V1::ApplicationController
 
       scope = @repository.tags
 
-      scope = scope.order(*sanitize_orders(Tag.sortable_columns, default: 'published_at'))
+      scope = scope.order(*sanitize_orders(Tag.sortable_columns, default: 'published_at', model: Tag))
 
       @pagy, @tags = pagy_countless(scope)
       fresh_when @tags, public: true
