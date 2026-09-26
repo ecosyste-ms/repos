@@ -91,7 +91,7 @@ class RepositoriesController < ApplicationController
 
   def setup_repository_data
     fresh_when(@repository, public: true)
-    @tags = @repository.tags.order('published_at DESC').limit(100)
+    @tags = @repository.tags.order('published_at DESC NULLS LAST').limit(100)
     @sha = params[:sha] || @repository.default_branch
   end
 end

@@ -29,6 +29,22 @@ class Api::V1::ReleasesControllerTest < ActionDispatch::IntegrationTest
     assert_equal 2, data.length
   end
 
+  test "published_at sort puts undated releases last and matches the index ordering" do
+    undated = create(:release, repository: @repository, tag_name: 'v3.0.0', published_at: nil)
+
+    queries = []
+    callback = ->(*, payload) { queries << payload[:sql] if payload[:sql] =~ /FROM "releases".*ORDER BY/im }
+    ActiveSupport::Notifications.subscribed(callback, 'sql.active_record') do
+      get api_v1_host_repository_releases_path(@host.name, @repository.full_name)
+    end
+    assert_response :success
+
+    assert_equal 1, queries.size, queries.inspect
+    assert_match(/ORDER BY releases\.published_at DESC NULLS LAST/i, queries.first)
+    expected = [@release_v2.tag_name, @release_v1.tag_name, undated.tag_name]
+    assert_equal expected, JSON.parse(@response.body).pluck('tag_name')
+  end
+
   test "should return 404 for non-existent host" do
     get api_v1_host_repository_releases_path('NonExistentHost', @repository.full_name)
     assert_response :not_found

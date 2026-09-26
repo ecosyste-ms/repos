@@ -137,17 +137,13 @@ class HostsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to host_path(id: @host.name, sort: 'stars')
   end
 
-  test 'sort dropdown hidden for GitHub' do
-    get host_path(id: @host.name)
-    assert_response :success
-    assert_no_match(/dropdown-toggle/, response.body)
-  end
-
-  test 'sort dropdown shown for other hosts' do
+  test 'no sort dropdown offered on host pages' do
     other = Host.create(name: 'Codeberg', url: 'https://codeberg.org', kind: 'gitea')
-    get host_path(id: other.name)
-    assert_response :success
-    assert_match(/dropdown-toggle/, response.body)
+    [@host, other].each do |host|
+      get host_path(id: host.name)
+      assert_response :success
+      assert_no_match(/dropdown-toggle/, response.body)
+    end
   end
 
   test 'unindexed sort falls back to full_name' do
@@ -158,7 +154,8 @@ class HostsControllerTest < ActionDispatch::IntegrationTest
     end
     assert_response :success
     repo_query = queries.find { |q| q =~ /ORDER BY/i }
-    assert_match(/lower\(repositories\.full_name\) DESC NULLS LAST/i, repo_query)
+    assert_match(/lower\(repositories\.full_name\) DESC/i, repo_query)
+    refute_match(/NULLS LAST/i, repo_query)
   end
 
   test 'no sort defaults to full_name ascending' do
@@ -180,7 +177,8 @@ class HostsControllerTest < ActionDispatch::IntegrationTest
     end
     assert_response :success
     repo_query = queries.find { |q| q =~ /ORDER BY/i }
-    assert_match(/lower\(repositories\.full_name\) ASC NULLS LAST/i, repo_query)
+    assert_match(/lower\(repositories\.full_name\) ASC/i, repo_query)
+    refute_match(/NULLS LAST/i, repo_query)
   end
 
   test 'get a host with pagination parameters' do

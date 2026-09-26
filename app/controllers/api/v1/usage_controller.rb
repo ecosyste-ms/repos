@@ -21,7 +21,7 @@ class Api::V1::UsageController < Api::V1::ApplicationController
 
     scope = @usage.repositories.includes(:host, :scorecard)
 
-    scope = scope.order(*sanitize_orders(Repository.sortable_columns, default: 'id', default_order: 'asc'))
+    scope = scope.order(*sanitize_orders(Repository.sortable_columns, default: 'id', default_order: 'asc', model: Repository))
 
     if params[:after_id].present?
       scope = scope.where('repositories.id > ?', params[:after_id])

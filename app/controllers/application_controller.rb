@@ -43,9 +43,14 @@ class ApplicationController < ActionController::Base
     Arel.sql(sql)
   end
 
-  def sanitize_orders(allowed_columns, default: 'updated_at', default_order: 'desc')
+  def sanitize_orders(allowed_columns, default: 'updated_at', default_order: 'desc', model: nil)
     sort_params = params[:sort].present? ? params[:sort].to_s.split(',') : [default]
     order_params = params[:order].present? ? params[:order].to_s.split(',') : [default_order]
+
+    ordering = lambda do |sort_param, order|
+      sort = sanitize_sort(allowed_columns, default: default, sort_param: sort_param)
+      model ? model.column_sort_order(sort, order.to_sym) : sort.public_send(order)
+    end
 
     orders = sort_params.each_with_index.filter_map do |sort_param, index|
       next unless allowed_columns.key?(sort_param)
@@ -53,12 +58,12 @@ class ApplicationController < ActionController::Base
       order = order_params[index].to_s.downcase
       next unless %w[asc desc].include?(order)
 
-      sanitize_sort(allowed_columns, default: default, sort_param: sort_param).public_send(order)
+      ordering.call(sort_param, order)
     end
 
     return orders if orders.any?
 
-    [sanitize_sort(allowed_columns, default: default, sort_param: default).public_send(default_order)]
+    [ordering.call(default, default_order)]
   end
 
   def related_topics_for_scope(scope, exclude_topic)

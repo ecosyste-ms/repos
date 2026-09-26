@@ -59,11 +59,6 @@ en:
   hosts:
     kind:
       title: "%{kind} Hosts"
-    sort:
-      forks: Forks
-      recently_pushed: Recently synced
-      sort: Sort
-      stars: Stars
   layouts:
     application:
       about: About
