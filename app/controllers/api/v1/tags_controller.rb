@@ -13,7 +13,7 @@ class Api::V1::TagsController < Api::V1::ApplicationController
         return
       end
 
-      scope = @repository.tags
+      scope = @repository.tags.includes(:release)
 
       scope = scope.order(*sanitize_orders(Tag.sortable_columns, default: 'published_at', model: Tag))
 

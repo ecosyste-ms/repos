@@ -29,6 +29,19 @@ class Api::V1::ReleasesControllerTest < ActionDispatch::IntegrationTest
     assert_equal 2, data.length
   end
 
+  test "releases include their linked tag" do
+    tag = create(:tag, repository: @repository, name: 'v1.0.0', sha: 'deadbeef')
+    @repository.link_releases_to_tags
+
+    get api_v1_host_repository_releases_path(@host.name, @repository.full_name)
+    assert_response :success
+
+    data = JSON.parse(@response.body).index_by { |release| release['tag_name'] }
+    assert_equal 'v1.0.0', data['v1.0.0']['tag']['name']
+    assert_equal tag.sha, data['v1.0.0']['tag']['sha']
+    assert_nil data['v2.0.0']['tag']
+  end
+
   test "published_at sort puts undated releases last and matches the index ordering" do
     undated = create(:release, repository: @repository, tag_name: 'v3.0.0', published_at: nil)
 
