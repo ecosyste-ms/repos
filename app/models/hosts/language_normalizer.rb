@@ -4,7 +4,7 @@ module Hosts
   # known Linguist language to its canonical spelling so values group and
   # filter consistently. Unknown names are returned unchanged.
   module LanguageNormalizer
-    CANONICAL_NAMES = YAML.load_file(Rails.root.join('config', 'linguist_languages.yml')).freeze
+    CANONICAL_NAMES = Linguist::Language.all.map(&:name).freeze
     BY_DOWNCASED_NAME = CANONICAL_NAMES.index_by(&:downcase).freeze
 
     def self.normalize(language)
