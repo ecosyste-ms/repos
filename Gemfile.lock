@@ -56,6 +56,7 @@ GEM
       nokogiri (~> 1)
     builder (3.3.0)
     cgi (0.5.2)
+    charlock_holmes (0.7.9)
     chartkick (5.2.1)
     commonmarker (2.10.0)
       rb_sys (~> 0.9)
@@ -119,6 +120,11 @@ GEM
     ffi (1.17.4-x86_64-darwin)
     ffi (1.17.4-x86_64-linux-gnu)
     ffi (1.17.4-x86_64-linux-musl)
+    github-linguist (9.7.0)
+      cgi
+      charlock_holmes (~> 0.7.7)
+      mini_mime (~> 1.0)
+      rugged (~> 1.0)
     gitlab-faraday (5.1.0)
       base64
       faraday (>= 1.0, < 3.0)
@@ -166,6 +172,7 @@ GEM
     loofah (2.25.2)
       crass (~> 1.0.2)
       nokogiri (>= 1.12.0)
+    mini_mime (1.1.5)
     mini_portile2 (2.8.9)
     minitest (6.0.6)
       drb (~> 2.0)
@@ -293,6 +300,7 @@ GEM
       railties (>= 5.2, < 8.2)
     ruby-progressbar (1.13.0)
     ruby2_keywords (0.0.5)
+    rugged (1.9.6)
     sanitize-url (0.1.4)
     sassc (2.4.0)
       ffi (~> 1.9)
@@ -392,6 +400,7 @@ DEPENDENCIES
   faraday-multipart
   faraday-net_http_persistent
   faraday-retry
+  github-linguist
   gitlab-faraday
   groupdate
   http_accept_language
@@ -453,6 +462,7 @@ CHECKSUMS
   builder (3.3.0) sha256=497918d2f9dca528fdca4b88d84e4ef4387256d984b8154e9d5d3fe5a9c8835f
   bundler (4.1.0.beta1) sha256=8a2dac8ca276ff4eff5efc2c6457b0044080fc1e431534ad7c5cc6187232b800
   cgi (0.5.2) sha256=61ca30298171190fd4fa0d8018e57ada456eae9b7a2b78526debf7f0a0e6f8bb
+  charlock_holmes (0.7.9) sha256=b49e8a11ce1921e2c5b65511bb864ae51720ce9bd1c336ccf0e89e6c8ae62db0
   chartkick (5.2.1) sha256=2848d7de87189f30f28d077eb0bbdebc8a1f0f6f81de1ded95008fe564369949
   commonmarker (2.10.0) sha256=1884529957bf59bcd4f19fcc29e931f2042760ced273353e8010a20fe4ae68cb
   commonmarker (2.10.0-aarch64-linux-musl) sha256=e95d9e87ea6306e21ffa11855a7bb55518538143b23a227fe3bb00b41873ce25
@@ -492,6 +502,7 @@ CHECKSUMS
   ffi (1.17.4-x86_64-darwin) sha256=aa70390523cf3235096cf64962b709b4cfbd5c082a2cb2ae714eb0fe2ccda496
   ffi (1.17.4-x86_64-linux-gnu) sha256=9d3db14c2eae074b382fa9c083fe95aec6e0a1451da249eab096c34002bc752d
   ffi (1.17.4-x86_64-linux-musl) sha256=3fdf9888483de005f8ef8d1cf2d3b20d86626af206cbf780f6a6a12439a9c49e
+  github-linguist (9.7.0) sha256=39a5e077e946029ef0ddbdc1344a53802455f4920f8c758d2a6b114d963d7734
   gitlab-faraday (5.1.0) sha256=68aa7157e5ca7848043a2d35615ffb06b44f9afa8915d15199a3c7efc7521976
   groupdate (6.8.0) sha256=16f90ea18ca981c38e41e592416480b28353aa5e5cc3e7cb13a68b8fb5d40510
   hashdiff (1.2.1) sha256=9c079dbc513dfc8833ab59c0c2d8f230fa28499cc5efb4b8dd276cf931457cd1
@@ -507,6 +518,7 @@ CHECKSUMS
   logger (1.7.0) sha256=196edec7cc44b66cfb40f9755ce11b392f21f7967696af15d274dde7edff0203
   lograge (0.15.1) sha256=b8a6b3d45f15855f3b038ce01019317e783fa9ddf774eb20818c751438c5c761
   loofah (2.25.2) sha256=2007f746959ac65552456e04b433e83deb22759ab38c838b4445c70e43425918
+  mini_mime (1.1.5) sha256=8681b7e2e4215f2a159f9400b5816d85e9d8c6c6b491e96a12797e798f8bccef
   mini_portile2 (2.8.9) sha256=0cd7c7f824e010c072e33f68bc02d85a00aeb6fce05bb4819c03dfd3c140c289
   minitest (6.0.6) sha256=153ea36d1d987a62942382b61075745042a2b3123b1cd48f4c3675af9cc7d6f1
   mocha (3.1.0) sha256=75f42d69ebfb1f10b32489dff8f8431d37a418120ecdfc07afe3bc183d4e1d56
@@ -570,6 +582,7 @@ CHECKSUMS
   rswag-ui (2.17.0) sha256=5f707b9b5e8171ddf9f519f6e401e79e419bd1d07387508603e76124f2443212
   ruby-progressbar (1.13.0) sha256=80fc9c47a9b640d6834e0dc7b3c94c9df37f08cb072b7761e4a71e22cff29b33
   ruby2_keywords (0.0.5) sha256=ffd13740c573b7301cf7a2e61fc857b2a8e3d3aff32545d6f8300d8bae10e3ef
+  rugged (1.9.6) sha256=c6e45250e51cdf19f6130d050e280ba8d6af475d4c76580f91377a59fe23d3c7
   sanitize-url (0.1.4) sha256=2fbc735dfbc2ca8f6f111ac045e848b974a0de6767dde8e1202406be6a3eaf8a
   sassc (2.4.0) sha256=4c60a2b0a3b36685c83b80d5789401c2f678c1652e3288315a1551d811d9f83e
   sassc-rails (2.1.2) sha256=5f4fdf3881fc9bdc8e856ffbd9850d70a2878866feae8114aa45996179952db5
