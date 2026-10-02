@@ -149,7 +149,7 @@ module Hosts
         uuid: data['id'],
         full_name: data['full_name']&.strip,
         owner: data['owner']&.[]('login'),
-        language: data['language'],
+        language: Hosts::LanguageNormalizer.normalize(data['language']),
         archived: data['archived'],
         fork: data['fork'],
         description: data['description'],
