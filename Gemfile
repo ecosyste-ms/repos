@@ -25,6 +25,7 @@ gem "faraday-follow_redirects"
 gem "faraday-multipart"
 gem 'faraday-net_http_persistent'
 gem "nokogiri"
+gem "github-linguist", require: "linguist"
 gem "oj"
 gem "redis"
 gem "sidekiq"
