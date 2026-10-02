@@ -32,6 +32,22 @@ class ApiV1OwnersControllerTest < ActionDispatch::IntegrationTest
     assert_equal [@hidden_owner.login, @owner.login], actual_response.pluck('login')
   end
 
+  test 'list owners created after a timestamp in ascending creation order' do
+    cutoff = 1.day.ago.change(usec: 0)
+    @owner.update!(created_at: cutoff)
+    @hidden_owner.update!(created_at: cutoff - 1.hour)
+    newer = create(:owner, host: @host, created_at: cutoff + 2.hours)
+    older = create(:owner, host: @host, created_at: cutoff + 1.hour)
+    create(:owner, created_at: cutoff + 30.minutes)
+
+    get api_v1_host_owners_path(host_id: @host.name), params: {
+      created_after: cutoff.iso8601, sort: 'created_at', order: 'asc', per_page: 1000
+    }
+
+    assert_response :success
+    assert_equal [older.login, newer.login], JSON.parse(@response.body).pluck('login')
+  end
+
   test 'get a owner for a host' do
     get api_v1_host_owner_path(host_id: @host.name, id: @owner.login)
     assert_response :success
