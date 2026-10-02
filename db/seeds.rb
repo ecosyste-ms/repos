@@ -2062,6 +2062,9 @@ default_hosts = [
 {:name=>"lab.weave.nl", :url=>"https://lab.weave.nl", :kind=>"gitlab"},
 {:name=>"gitlab.sonono.ch", :url=>"https://gitlab.sonono.ch", :kind=>"gitlab"},
 {:name=>"gitlab.doc.gold.ac.uk", :url=>"https://gitlab.doc.gold.ac.uk", :kind=>"gitlab"},
+{:name=>"gitlab.eumetsat.int", :url=>"https://gitlab.eumetsat.int", :kind=>"gitlab"},
+{:name=>"gitlab.orfeo-toolbox.org", :url=>"https://gitlab.orfeo-toolbox.org", :kind=>"gitlab"},
+{:name=>"git.pyrocko.org", :url=>"https://git.pyrocko.org", :kind=>"gitea"},
 ]
 
 default_hosts.each do |host|
