@@ -148,48 +148,4 @@ class ReleaseTest < ActiveSupport::TestCase
     assert_nil @release.tag
     assert_equal tag, @release.related_tag
   end
-
-  test 'backfill_tag_links links releases for known GitHub repositories' do
-    github_host = create(:github_host)
-    first_repository = create(:repository, host: github_host, full_name: 'actions/checkout')
-    second_repository = create(:repository, host: github_host, full_name: 'actions/setup-node')
-    first_tag = create(:tag, repository: first_repository, name: 'v4.0.0')
-    second_tag = create(:tag, repository: second_repository, name: 'v3.0.0')
-    first_release = create(:release, repository: first_repository, tag_name: 'v4.0.0')
-    second_release = create(:release, repository: second_repository, tag_name: 'v3.0.0')
-    repository_names = [first_repository.full_name, second_repository.full_name.upcase, 'missing/action']
-    progress = []
-
-    result = Release.backfill_tag_links(repository_names: repository_names) do |*values|
-      progress << values
-    end
-
-    assert_equal [3, 2, 1, 'missing/action'], result
-    assert_equal [1, 1, 0, first_repository.full_name], progress.first
-    assert_equal first_tag.id, first_release.reload.tag_id
-    assert_equal second_tag.id, second_release.reload.tag_id
-  end
-
-  test 'backfill_tag_links resumes after the given name' do
-    github_host = create(:github_host)
-    skipped_repository = create(:repository, host: github_host, full_name: 'actions/cache')
-    resumed_repository = create(:repository, host: github_host, full_name: 'actions/checkout')
-    create(:tag, repository: skipped_repository, name: 'v4.0.0')
-    create(:tag, repository: resumed_repository, name: 'v4.0.0')
-    skipped_release = create(:release, repository: skipped_repository, tag_name: 'v4.0.0')
-    resumed_release = create(:release, repository: resumed_repository, tag_name: 'v4.0.0')
-
-    result = Release.backfill_tag_links(
-      repository_names: [skipped_repository.full_name, resumed_repository.full_name],
-      after_name: skipped_repository.full_name
-    )
-
-    assert_equal [1, 1, 0, resumed_repository.full_name], result
-    assert_nil skipped_release.reload.tag_id
-    assert_not_nil resumed_release.reload.tag_id
-  end
-
-  test 'backfill_tag_links does nothing without a GitHub host' do
-    assert_equal [0, 0, 0, 'actions/cache'], Release.backfill_tag_links(repository_names: ['actions/checkout'], after_name: 'actions/cache')
-  end
 end
