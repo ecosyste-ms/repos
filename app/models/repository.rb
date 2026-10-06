@@ -413,6 +413,7 @@ class Repository < ApplicationRecord
       citation: file_list.find { |file| file.match(/^CITATION/i) },
       codeowners: file_list.find { |file| file.match(/^(docs\/)?(\.github\/)?(\.gitlab\/)?CODEOWNERS/i) },
       security: file_list.find { |file| file.match(/^(docs\/)?(\.github\/)?(\.gitlab\/)?SECURITY/i) },
+      accessibility: file_list.find { |file| file.match(/^(docs\/)?(\.github\/)?(\.gitlab\/)?ACCESSIBILITY/i) },
       support: file_list.find { |file| file.match(/^(docs\/)?(\.github\/)?(\.gitlab\/)?SUPPORT/i) },
       governance: file_list.find { |file| file.match(/^(docs\/)?(\.github\/)?(\.gitlab\/)?GOVERNANCE/i) },
       roadmap: file_list.find { |file| file.match(/^(docs\/)?(\.github\/)?(\.gitlab\/)?ROADMAP/i) },

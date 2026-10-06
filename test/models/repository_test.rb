@@ -274,6 +274,20 @@ class RepositoryTest < ActiveSupport::TestCase
       assert_equal 'CONTRIBUTING.md', result[:contributing]
     end
 
+    should 'find accessibility files in each supported location regardless of case' do
+      ['ACCESSIBILITY.md', 'docs/ACCESSIBILITY.md', '.github/ACCESSIBILITY.md', '.gitlab/ACCESSIBILITY.md', 'accessibility.md'].each do |path|
+        @repository.stubs(:get_file_list).returns(['src/ACCESSIBILITY.md', path, 'README.md'])
+
+        assert_equal path, @repository.fetch_metadata_files_list[:accessibility]
+      end
+    end
+
+    should 'ignore accessibility files outside supported locations' do
+      @repository.stubs(:get_file_list).returns(['src/ACCESSIBILITY.md'])
+
+      assert_nil @repository.fetch_metadata_files_list[:accessibility]
+    end
+
     should 'find funding files' do
       file_list = [
         'FUNDING.yml',
@@ -704,6 +718,7 @@ class RepositoryTest < ActiveSupport::TestCase
       assert_nil result[:citation]
       assert_nil result[:codeowners]
       assert_nil result[:security]
+      assert_nil result[:accessibility]
       assert_nil result[:support]
       assert_nil result[:governance]
       assert_nil result[:roadmap]
