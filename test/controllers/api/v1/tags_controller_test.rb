@@ -17,6 +17,19 @@ class ApiV1TagsControllerTest < ActionDispatch::IntegrationTest
     assert_equal actual_response.length, 1
   end
 
+  test 'tags include the url of their linked release' do
+    release = @repository.releases.create!(tag_name: @tag.name, uuid: '1')
+    unreleased_tag = @repository.tags.create!(name: '2.0.0', sha: 'feedface')
+    @repository.link_releases_to_tags
+
+    get api_v1_host_repository_tags_path(host_id: @host.name, repository_id: @repository.full_name)
+    assert_response :success
+
+    actual_response = JSON.parse(@response.body).index_by { |tag| tag['name'] }
+    assert_equal api_v1_host_repository_release_url(@host, @repository, release), actual_response[@tag.name]['release_url']
+    assert_nil actual_response[unreleased_tag.name]['release_url']
+  end
+
   test 'invalid tag sort falls back to published at descending' do
     @tag.update!(published_at: 2.days.ago)
     newer_tag = @repository.tags.create!(name: '2.0.0', sha: 'feedface', published_at: 1.day.ago)

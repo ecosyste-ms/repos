@@ -1,6 +1,11 @@
 require "test_helper"
 
 class ReleaseTest < ActiveSupport::TestCase
+  context 'associations' do
+    should belong_to(:repository)
+    should belong_to(:tag).optional
+  end
+
   setup do
     @repository = create(:repository)
     @release = create(:release, repository: @repository, tag_name: 'v1.0.0')
@@ -128,5 +133,19 @@ class ReleaseTest < ActiveSupport::TestCase
     assert_equal failing_repository.full_name, progress.first[3]
     assert_equal 1, progress.first[4]
     assert_equal error, progress.first[5]
+  end
+
+  test 'related_tag prefers the linked tag' do
+    tag = create(:tag, repository: @repository, name: 'v1.0.0')
+    @release.update_column(:tag_id, tag.id)
+
+    assert_equal tag, @release.related_tag
+  end
+
+  test 'related_tag falls back to the tag name when unlinked' do
+    tag = create(:tag, repository: @repository, name: 'v1.0.0')
+
+    assert_nil @release.tag
+    assert_equal tag, @release.related_tag
   end
 end

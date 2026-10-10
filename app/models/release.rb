@@ -1,5 +1,6 @@
 class Release < ApplicationRecord
   belongs_to :repository
+  belongs_to :tag, optional: true
 
   def self.sortable_columns
     {
@@ -76,7 +77,7 @@ class Release < ApplicationRecord
   end
 
   def related_tag
-    repository.tags.find_by(name: tag_name)
+    tag || repository.tags.find_by(name: tag_name)
   end
 
   def semantic_version

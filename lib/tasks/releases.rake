@@ -16,4 +16,38 @@ namespace :releases do
     end
     puts "Done: processed #{processed} names, synced #{repositories_synced} repositories, missing #{repositories_missing}, failed #{repositories_failed}; last name #{last_name}"
   end
+
+  desc 'Backfill links from GitHub Actions releases to their tags'
+  task :backfill_tag_links, [:after_name] => :environment do |_task, args|
+    host = Host.find_by_name('GitHub')
+    abort 'Unable to find the GitHub host' unless host
+
+    repository_names = Repository.github_actions_package_names
+    abort 'Unable to load GitHub Actions package names' unless repository_names
+
+    puts "Loaded #{repository_names.size} GitHub Actions package names"
+    after_name = args[:after_name]
+    names = repository_names.compact.uniq.sort_by(&:downcase)
+    names = names.drop_while { |name| name.downcase <= after_name.downcase } if after_name.present?
+    processed = 0
+    releases_linked = 0
+    repositories_missing = 0
+    last_name = after_name
+
+    names.each do |name|
+      repository = host.find_repository(name)
+      if repository
+        releases_linked += repository.link_releases_to_tags
+      else
+        repositories_missing += 1
+      end
+
+      processed += 1
+      last_name = name
+      if processed == 1 || (processed % 100).zero?
+        puts "Processed #{processed} names, linked #{releases_linked} releases, missing #{repositories_missing}, last name #{last_name}"
+      end
+    end
+    puts "Done: processed #{processed} names, linked #{releases_linked} releases, missing #{repositories_missing}; last name #{last_name}"
+  end
 end
