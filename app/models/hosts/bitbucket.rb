@@ -121,6 +121,7 @@ module Hosts
 
       repo_hash.merge!({
         owner: user_name,
+        language: Hosts::LanguageNormalizer.normalize(project['language']),
         homepage: project['website'],
         fork: project['parent'].present?,
         created_at: project['created_on'],
