@@ -174,6 +174,10 @@ module Hosts
           updated_at: now
         )
       end
+      if moved_tags.any?
+        moved_tag_ids = repository.tags.where(name: moved_tags.map { |tag| tag[:name] }).select(:id)
+        repository.releases.where(tag_id: moved_tag_ids).update_all(updated_at: now)
+      end
 
       new_tags = tags.reject { |tag| existing_tags.key?(tag[:name]) }
       if new_tags.any?
@@ -238,7 +242,11 @@ module Hosts
         Release.insert_all(release_records)
       end
 
-      repository.releases.where.not(uuid: release_uuids).delete_all if complete
+      if complete
+        removed_releases = repository.releases.where.not(uuid: release_uuids)
+        repository.tags.where(id: removed_releases.select(:tag_id)).update_all(updated_at: now)
+        removed_releases.delete_all
+      end
 
       nil
     rescue *IGNORABLE_EXCEPTIONS, Octokit::NotFound, Octokit::RepositoryUnavailable, Octokit::UnavailableForLegalReasons

@@ -173,6 +173,23 @@ class Hosts::GithubTest < ActiveSupport::TestCase
       assert Release.exists?(kept.id)
       assert Release.exists?(beyond_page_cap.id)
     end
+
+    should 'touch only the tags whose linked release was deleted' do
+      linked_tag = create(:tag, repository: @repository, name: 'v1', updated_at: 1.day.ago)
+      kept_tag = create(:tag, repository: @repository, name: 'v2', updated_at: 1.day.ago)
+      create(:release, repository: @repository, uuid: '1', tag_name: 'v1', tag: linked_tag)
+      create(:release, repository: @repository, uuid: '2', tag_name: 'v2', tag: kept_tag)
+      unchanged_updated_at = kept_tag.reload.updated_at
+
+      @github.stubs(:fetch_releases).with(@repository).returns([[
+        { uuid: 2, tag_name: 'v2', immutable: false, last_synced_at: Time.current }
+      ], true])
+
+      @github.download_releases(@repository)
+
+      assert_operator linked_tag.reload.updated_at, :>, 1.hour.ago
+      assert_equal unchanged_updated_at, kept_tag.reload.updated_at
+    end
   end
 
   context 'fetch_tags' do
@@ -287,6 +304,24 @@ class Hosts::GithubTest < ActiveSupport::TestCase
 
       assert Tag.exists?(beyond_page_cap.id)
       assert_equal 2, @repository.reload.tags_count
+    end
+
+    should 'touch only the releases linked to moved tags' do
+      moved = create(:tag, repository: @repository, name: 'v2', sha: 'oldsha')
+      unmoved = create(:tag, repository: @repository, name: 'v1', sha: 'samesha')
+      moved_release = create(:release, repository: @repository, tag_name: 'v2', tag: moved, updated_at: 1.day.ago)
+      unmoved_release = create(:release, repository: @repository, tag_name: 'v1', tag: unmoved, updated_at: 1.day.ago)
+      unchanged_updated_at = unmoved_release.reload.updated_at
+
+      @github.stubs(:fetch_tags).with(@repository).returns([[
+        { name: 'v2', sha: 'newsha', kind: 'commit', published_at: Time.current },
+        { name: 'v1', sha: 'samesha', kind: 'commit', published_at: Time.current }
+      ], true])
+
+      @github.download_tags(@repository)
+
+      assert_operator moved_release.reload.updated_at, :>, 1.hour.ago
+      assert_equal unchanged_updated_at, unmoved_release.reload.updated_at
     end
   end
 

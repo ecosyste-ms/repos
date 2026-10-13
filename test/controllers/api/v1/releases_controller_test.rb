@@ -163,4 +163,30 @@ class Api::V1::ReleasesControllerTest < ActionDispatch::IntegrationTest
     assert_not_nil @response.headers['Cache-Control']
     assert_includes @response.headers['Cache-Control'], 'public'
   end
+  test "moving a linked tag invalidates the cached release responses" do
+    tag = create(:tag, repository: @repository, name: 'v1.0.0', sha: 'oldsha')
+    @repository.link_releases_to_tags
+    show_path = api_v1_host_repository_release_path(@host.name, @repository.full_name, @release_v1.tag_name)
+    index_path = api_v1_host_repository_releases_path(@host.name, @repository.full_name)
+
+    get show_path
+    show_etag = @response.headers['ETag']
+    assert_equal 'oldsha', JSON.parse(@response.body)['tag']['sha']
+    get index_path
+    index_etag = @response.headers['ETag']
+
+    Hosts::Github.any_instance.stubs(:fetch_tags).returns([[
+      { name: tag.name, sha: 'newsha', kind: 'commit', published_at: tag.published_at }
+    ], true])
+    Hosts::Github.any_instance.stubs(:fetch_releases).returns([[], false])
+    @repository.download_tags
+
+    get show_path, headers: { 'If-None-Match' => show_etag }
+    assert_response :success
+    assert_equal 'newsha', JSON.parse(@response.body)['tag']['sha']
+
+    get index_path, headers: { 'If-None-Match' => index_etag }
+    assert_response :success
+    assert_equal 'newsha', JSON.parse(@response.body).index_by { |release| release['tag_name'] }['v1.0.0']['tag']['sha']
+  end
 end
