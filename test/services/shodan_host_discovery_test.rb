@@ -5,6 +5,7 @@ class ShodanHostDiscoveryTest < ActiveSupport::TestCase
 
   setup do
     @query = 'http.html:"Powered by Gitea"'
+    Resolv.stubs(:getaddresses).returns(['203.0.113.10'])
   end
 
   def stub_search(matches, query: @query, page: 1, status: 200, body: nil)
@@ -112,14 +113,64 @@ class ShodanHostDiscoveryTest < ActiveSupport::TestCase
 
   test "skips domains that resolve inside our own network" do
     stub_search([{ 'hostnames' => ['git.example.com'] }])
-    service = discovery
-    service.stubs(:resolved_addresses).with('git.example.com').returns([IPAddr.new('127.0.0.1')])
+    Resolv.stubs(:getaddresses).with('git.example.com').returns(['127.0.0.1'])
 
-    result = service.discover
+    result = discovery.discover
 
     assert_equal 1, result[:probed]
     assert_empty result[:candidates]
     assert_not_requested :get, "https://git.example.com/robots.txt"
+  end
+
+  test "skips domains with any address inside our own network" do
+    stub_search([{ 'hostnames' => ['git.example.com'] }])
+    Resolv.stubs(:getaddresses).with('git.example.com').returns(['203.0.113.10', '10.0.0.1'])
+
+    assert_empty discovery.discover[:candidates]
+    assert_not_requested :get, "https://git.example.com/robots.txt"
+  end
+
+  test "skips domains that do not resolve" do
+    stub_search([{ 'hostnames' => ['git.example.com'] }])
+    Resolv.stubs(:getaddresses).with('git.example.com').returns([])
+
+    assert_empty discovery.discover[:candidates]
+    assert_not_requested :get, "https://git.example.com/robots.txt"
+  end
+
+  test "connects to the vetted address even when a proxy is configured" do
+    stub_search([{ 'hostnames' => ['git.example.com'] }])
+    dialed = []
+    TCPSocket.stubs(:open).with { |address, *| dialed << address }.raises(Errno::ECONNREFUSED)
+    WebMock.disable_net_connect!(allow: 'git.example.com')
+    previous_proxy = ENV['https_proxy']
+    ENV['https_proxy'] = 'http://proxy.example.com:3128'
+
+    assert_empty discovery.discover[:candidates]
+    assert_equal ['203.0.113.10'], dialed.uniq
+  ensure
+    ENV['https_proxy'] = previous_proxy
+    WebMock.disable_net_connect!
+  end
+
+  test "reports gitea when robots.txt rules out the forgejo api" do
+    stub_search([{ 'hostnames' => ['forge.example.com'] }])
+    stub_gitea('forge.example.com', forgejo: true)
+    stub_request(:get, "https://forge.example.com/robots.txt")
+      .to_return(status: 200, body: "User-agent: *\nDisallow: /api/forgejo/\n")
+
+    assert_equal 'gitea', discovery.discover[:candidates].sole.kind
+    assert_not_requested :get, "https://forge.example.com/api/forgejo/v1/version"
+  end
+
+  test "skips gitlab when robots.txt rules out the projects api" do
+    stub_search([{ 'hostnames' => ['gitlab.example.com'] }])
+    stub_gitlab('gitlab.example.com')
+    stub_request(:get, "https://gitlab.example.com/robots.txt")
+      .to_return(status: 200, body: "User-agent: *\nDisallow: /api/v4/projects\n")
+
+    assert_empty discovery.discover[:candidates]
+    assert_not_requested :get, "https://gitlab.example.com/api/v4/projects?per_page=1&simple=true"
   end
 
   test "does not follow redirects off the candidate" do

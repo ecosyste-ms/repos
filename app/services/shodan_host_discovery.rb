@@ -24,6 +24,11 @@ class ShodanHostDiscovery
   DEFAULT_LIMIT = 50
   TIMEOUT = 10
 
+  GITEA_VERSION_PATH = '/api/v1/version'
+  FORGEJO_VERSION_PATH = '/api/forgejo/v1/version'
+  GITEA_REPOSITORIES_PATH = '/api/v1/repos/search?limit=1'
+  GITLAB_PROJECTS_PATH = '/api/v4/projects?per_page=1&simple=true'
+
   DOMAIN = /\A[a-z0-9]([a-z0-9\-.]*[a-z0-9])?\.[a-z]{2,}\z/
   RESERVED_DOMAIN = /\.(local|localhost|localdomain|internal|intranet|lan|home|test|invalid|example|arpa)\z/
 
@@ -49,6 +54,10 @@ class ShodanHostDiscovery
       %(  {name: "#{domain}", url: "#{url}", kind: "#{kind}"},)
     end
   end
+
+  # A domain being probed: the address it was vetted at and the robots.txt it
+  # published, if any.
+  Site = Struct.new(:domain, :url, :address, :robots, keyword_init: true)
 
   def initialize(api_key: ENV['SHODAN_API_KEY'], queries: QUERIES, pages: DEFAULT_PAGES,
                  limit: DEFAULT_LIMIT, create: false, output: $stdout)
@@ -90,7 +99,7 @@ class ShodanHostDiscovery
   end
 
   def search(query, page)
-    response = get("#{SHODAN_API_URL}/shodan/host/search", key: @api_key, query: query, page: page)
+    response = get("#{SHODAN_API_URL}/shodan/host/search", { key: @api_key, query: query, page: page })
     raise ApiError, "shodan search for #{query} failed: no response" if response.nil?
     raise ApiError, "shodan search for #{query} failed: #{shodan_error(response)}" unless response.success?
 
@@ -127,67 +136,74 @@ class ShodanHostDiscovery
   end
 
   def probe(domain)
-    return nil unless routable?(domain)
+    address = public_address(domain)
+    return nil unless address
 
     url = "https://#{domain}"
-    return nil unless crawlable?(url)
+    site = Site.new(domain: domain, url: url, address: address, robots: robots_for(url, address))
 
-    gitea_candidate(domain, url) || gitlab_candidate(domain, url)
+    gitea_candidate(site) || gitlab_candidate(site)
   end
 
   # Gitea and forgejo share the same api, only forgejo answers on its own
-  # versioned namespace.
-  def gitea_candidate(domain, url)
-    version = version_from("#{url}/api/v1/version")
+  # versioned namespace. If robots.txt rules that namespace out the instance is
+  # reported as gitea, which indexes it through the same api.
+  def gitea_candidate(site)
+    version = version_from(site, GITEA_VERSION_PATH)
     return nil if version.blank?
-    return nil unless gitea_public_repositories?(url)
+    return nil unless gitea_public_repositories?(site)
 
-    kind = version_from("#{url}/api/forgejo/v1/version").present? ? 'forgejo' : 'gitea'
-    Candidate.new(domain: domain, url: url, kind: kind, version: version)
+    kind = version_from(site, FORGEJO_VERSION_PATH).present? ? 'forgejo' : 'gitea'
+    Candidate.new(domain: site.domain, url: site.url, kind: kind, version: version)
   end
 
   # Listing projects anonymously is the thing we need from gitlab, so it doubles
   # as the check that this is a gitlab instance worth indexing. Gitlab will not
   # report its version without a token, so it stays blank until one is
   # configured for the host.
-  def gitlab_candidate(domain, url)
-    projects = get_json("#{url}/api/v4/projects", per_page: 1, simple: true)
+  def gitlab_candidate(site)
+    projects = site_json(site, GITLAB_PROJECTS_PATH)
     return nil unless projects.is_a?(Array) && projects.any?
 
-    Candidate.new(domain: domain, url: url, kind: 'gitlab', version: nil)
+    Candidate.new(domain: site.domain, url: site.url, kind: 'gitlab', version: nil)
   end
 
-  def gitea_public_repositories?(url)
-    body = get_json("#{url}/api/v1/repos/search", limit: 1)
+  def gitea_public_repositories?(site)
+    body = site_json(site, GITEA_REPOSITORIES_PATH)
     body.is_a?(Hash) && Array(body['data']).any?
   end
 
-  def version_from(url)
-    body = get_json(url)
+  def version_from(site, path)
+    body = site_json(site, path)
     body.is_a?(Hash) ? body['version'].presence : nil
   end
 
-  # Everything we ask a candidate for lives under /api, so this applies the same
-  # rules Host does before it calls an instance's api rather than only checking
-  # the root.
-  def crawlable?(url)
-    response = get("#{url}/robots.txt")
-    return true if response.nil? || !response.success?
+  # Every path is checked against robots.txt right before it is requested, so a
+  # rule on a specific api path is honoured as well as one on /api or /.
+  def site_json(site, path)
+    return nil unless site.robots.nil? || site.robots.can_crawl?(path, user_agent)
 
-    Host.new(robots_txt_content: response.body).can_crawl_api?(user_agent)
+    get_json("#{site.url}#{path}", address: site.address)
   end
 
-  # Shodan hands us hostnames nobody has vetted, so a name pointing back inside
-  # our own network is dropped before anything is fetched from it.
-  def routable?(domain)
+  def robots_for(url, address)
+    response = get("#{url}/robots.txt", address: address)
+    return nil if response.nil? || !response.success?
+
+    RobotsTxtParser.new(response.body)
+  end
+
+  # Shodan hands us hostnames nobody has vetted. The name is resolved once here
+  # and every request to the candidate then connects to the address returned,
+  # so a later DNS answer cannot move us inside our own network. A name that
+  # resolves to nothing, or to anything unroutable, is dropped.
+  def public_address(domain)
     addresses = resolved_addresses(domain)
-    return true if addresses.empty?
+    return nil if addresses.empty? || addresses.any? { |address| unroutable?(address) }
 
-    addresses.none? { |address| unroutable?(address) }
+    (addresses.find(&:ipv4?) || addresses.first).to_s
   end
 
-  # A name that will not resolve is left alone, the request itself fails soon
-  # enough.
   def resolved_addresses(domain)
     Resolv.getaddresses(domain).filter_map do |address|
       IPAddr.new(address).native
@@ -208,15 +224,15 @@ class ShodanHostDiscovery
     nil
   end
 
-  def get_json(url, params = {})
-    response = get(url, params)
+  def get_json(url, params = {}, address: nil)
+    response = get(url, params, address: address)
     return nil if response.nil? || !response.success?
 
     parse_json(response.body)
   end
 
-  def get(url, params = {})
-    connection.get(url) do |req|
+  def get(url, params = {}, address: nil)
+    connection(address).get(url) do |req|
       req.params.update(params.stringify_keys) if params.present?
       req.options.timeout = TIMEOUT
       req.options.open_timeout = TIMEOUT
@@ -235,9 +251,19 @@ class ShodanHostDiscovery
   # Redirects are deliberately not followed. Every request made here is driven
   # by a hostname shodan supplied, so a Location header would be an easy way to
   # move us onto an address that was never checked.
-  def connection
-    @connection ||= Faraday.new do |conn|
-      conn.adapter Faraday.default_adapter
+  #
+  # Requests to a candidate connect to the address it was vetted at. Net::HTTP
+  # still sends the hostname for SNI and verifies the certificate against it.
+  # A proxy from the environment would resolve the name again, so none is used.
+  def connection(address = nil)
+    @connections ||= {}
+    @connections[address] ||= Faraday.new do |conn|
+      if address
+        conn.proxy = nil
+        conn.adapter(:net_http) { |http| http.ipaddr = address }
+      else
+        conn.adapter Faraday.default_adapter
+      end
     end
   end
 

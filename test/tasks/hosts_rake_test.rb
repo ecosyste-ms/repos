@@ -143,11 +143,16 @@ class HostsRakeTest < ActiveSupport::TestCase
     end
   end
 
-  def stub_shodan_gitea_instance
+  def stub_shodan_search
     stub_request(:get, "https://api.shodan.io/shodan/host/search")
       .with(query: { 'key' => 'shodan-key', 'query' => 'test-query', 'page' => '1' })
       .to_return(status: 200, body: { matches: [{ hostnames: ['git.example.com'] }] }.to_json)
-    stub_request(:get, "https://git.example.com/robots.txt").to_return(status: 404, body: '')
+  end
+
+  def stub_shodan_gitea_instance(robots: '')
+    stub_shodan_search
+    Resolv.stubs(:getaddresses).with('git.example.com').returns(['203.0.113.10'])
+    stub_request(:get, "https://git.example.com/robots.txt").to_return(status: robots.empty? ? 404 : 200, body: robots)
     stub_request(:get, "https://git.example.com/api/v1/version")
       .to_return(status: 200, body: { version: '1.22.0' }.to_json)
     stub_request(:get, "https://git.example.com/api/forgejo/v1/version").to_return(status: 404, body: '')
@@ -190,5 +195,48 @@ class HostsRakeTest < ActiveSupport::TestCase
     assert_raises(SystemExit) do
       capture_io { Rake::Task["hosts:discover"].execute }
     end
+  end
+  test "discover only connects to the address it validated" do
+    ENV['SHODAN_API_KEY'] = 'shodan-key'
+    ENV['QUERY'] = 'test-query'
+    stub_shodan_search
+    Resolv.stubs(:getaddresses).with('git.example.com').returns(['203.0.113.10']).then.returns(['127.0.0.1'])
+    dialed = []
+    TCPSocket.stubs(:open).with { |address, *| dialed << address }.raises(Errno::ECONNREFUSED)
+    WebMock.disable_net_connect!(allow: 'git.example.com')
+
+    out, _ = capture_io { Rake::Task["hosts:discover"].execute }
+
+    assert_match 'found=1 probed=1 candidates=0', out
+    assert_not_empty dialed
+    assert_equal ['203.0.113.10'], dialed.uniq
+  ensure
+    WebMock.disable_net_connect!
+  end
+
+  test "discover skips domains that do not resolve" do
+    ENV['SHODAN_API_KEY'] = 'shodan-key'
+    ENV['QUERY'] = 'test-query'
+    stub_shodan_search
+    Resolv.stubs(:getaddresses).with('git.example.com').returns([])
+
+    out, _ = capture_io { Rake::Task["hosts:discover"].execute }
+
+    assert_match 'found=1 probed=1 candidates=0', out
+    assert_not_requested :get, "https://git.example.com/robots.txt"
+  end
+
+  test "discover checks robots.txt against each api path it requests" do
+    ENV['SHODAN_API_KEY'] = 'shodan-key'
+    ENV['QUERY'] = 'test-query'
+    stub_shodan_gitea_instance(robots: "User-agent: *\nDisallow: /api/v1/\n")
+    stub_request(:get, "https://git.example.com/api/v4/projects?per_page=1&simple=true").to_return(status: 404, body: '')
+
+    out, _ = capture_io { Rake::Task["hosts:discover"].execute }
+
+    assert_match 'found=1 probed=1 candidates=0', out
+    assert_not_requested :get, "https://git.example.com/api/v1/version"
+    assert_not_requested :get, "https://git.example.com/api/v1/repos/search?limit=1"
+    assert_requested :get, "https://git.example.com/api/v4/projects?per_page=1&simple=true"
   end
 end
