@@ -10,6 +10,7 @@ class Tag < ApplicationRecord
   scope :published, -> { where('published_at IS NOT NULL') }
 
   has_many :manifests, dependent: :destroy
+  has_one :release, dependent: :nullify
 
   def self.sortable_columns
     {
