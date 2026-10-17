@@ -1200,6 +1200,10 @@ components:
           type: string
         metadata:
           type: object
+        funding_links:
+          type: array
+          items:
+            type: string
         created_at:
           type: string
           format: date-time
