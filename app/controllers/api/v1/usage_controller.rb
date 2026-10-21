@@ -8,7 +8,7 @@ class Api::V1::UsageController < Api::V1::ApplicationController
     @ecosystem = params[:ecosystem]
     @scope = PackageUsage.where(ecosystem: @ecosystem).order('dependents_count DESC')
     @pagy, @package_usages = pagy_countless(@scope)
-    fresh_when @package_usages, public: true
+    fresh_when etag: @package_usages, last_modified: @package_usages.filter_map(&:updated_at).max, public: true
   end
 
   def show
