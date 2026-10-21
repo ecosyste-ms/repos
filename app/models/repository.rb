@@ -197,17 +197,25 @@ class Repository < ApplicationRecord
     return if host.nil?
     return if owner_record&.hidden?
 
-    if !force && last_synced_at && last_synced_at > 1.week.ago
-      # if recently synced, schedule for syncing 1 day later
-      delay = (last_synced_at + 1.day) - Time.now
-      UpdateRepositoryWorker.perform_in(delay, id)
-      return
-    end
+    return unless force || sync_due?
+
     host.host_instance.update_from_host(self)
   end
 
   def sync_async(force = false)
-    UpdateRepositoryWorker.perform_async(id, force)
+    if !force && !sync_due?
+      UpdateRepositoryWorker.perform_at(next_sync_at, id, force)
+    else
+      UpdateRepositoryWorker.perform_async(id, force)
+    end
+  end
+
+  def next_sync_at
+    last_synced_at && last_synced_at + 1.week
+  end
+
+  def sync_due?
+    next_sync_at.nil? || next_sync_at <= Time.current
   end
 
   def html_url
