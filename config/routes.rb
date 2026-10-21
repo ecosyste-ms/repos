@@ -46,7 +46,7 @@ Rails.application.routes.draw do
           resources :manifests, only: [:index]
           member do
             get :sbom
-            get :ping
+            match :ping, via: [:get, :post]
           end
         end
 
