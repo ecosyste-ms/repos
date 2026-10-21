@@ -1,6 +1,5 @@
 class Api::V1::RepositoriesController < Api::V1::ApplicationController
-  before_action :disable_refresh_cache, only: [:lookup, :ping]
-  before_action :find_host, only: [:index, :show, :sbom]
+  before_action :find_host, only: [:index, :show, :sbom, :ping]
   before_action :find_host_by_id, only: [:names]
 
   def index
@@ -47,11 +46,13 @@ class Api::V1::RepositoriesController < Api::V1::ApplicationController
     @repository = @host.find_repository(params[:id].downcase)
     if @repository
       render json: { error: 'Repository not found' }, status: :not_found and return if @repository.owner_hidden?
-      unless @repository.full_name.downcase == params[:id].downcase
-        redirect_to api_v1_host_repository_path(@host, @repository.full_name), status: :moved_permanently
-        return
+      if stale?(@repository, public: true)
+        unless @repository.full_name.downcase == params[:id].downcase
+          redirect_to api_v1_host_repository_path(@host, @repository.full_name), status: :moved_permanently
+          return
+        end
+        render :show
       end
-      render_repository
     else
       render json: { error: 'Repository not found' }, status: :not_found
     end
@@ -99,12 +100,13 @@ class Api::V1::RepositoriesController < Api::V1::ApplicationController
     end
     if @repository
       render json: { error: 'Repository not found' }, status: :not_found and return if @repository.owner_hidden?
-      if force_sync?
+      force = params[:force].present?
+      if force
         @repository.sync_async(true)
       else
         @repository.sync_async unless @repository.last_synced_at.present? && @repository.last_synced_at > 1.hour.ago
       end
-      render_repository
+      render :show if stale?(@repository, public: true)
     else
       @host.sync_repository_async(path) if path.present?
       render json: { error: 'Repository not found' }, status: :not_found
@@ -112,29 +114,7 @@ class Api::V1::RepositoriesController < Api::V1::ApplicationController
   end
 
   def ping
-    @host = Host.find_by_name!(params[:host_id])
-    PingWorker.perform_async(@host.name, params[:id], force_sync?)
+    PingWorker.perform_async(params[:host_id], params[:id], params[:force].present?)
     render json: { message: 'pong' }
-  end
-
-  def force_sync?
-    ActiveModel::Type::Boolean.new.cast(params[:force]) == true
-  end
-
-  def disable_refresh_cache
-    return unless action_name == 'ping' || force_sync? || params[:_refresh].present?
-
-    no_store
-    response.headers['CDN-Cache-Control'] = 'no-store'
-    response.headers['Cloudflare-CDN-Cache-Control'] = 'no-store'
-    request.delete_header('HTTP_IF_NONE_MATCH')
-    request.delete_header('HTTP_IF_MODIFIED_SINCE')
-  end
-
-  def render_repository
-    body = render_to_string(:show)
-    return unless response.cache_control[:no_store] || stale?(etag: body, public: true)
-
-    render body: body, content_type: 'application/json'
   end
 end

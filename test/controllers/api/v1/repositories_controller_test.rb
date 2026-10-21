@@ -43,6 +43,33 @@ class ApiV1RepositoriesControllerTest < ActionDispatch::IntegrationTest
     assert_equal actual_response.length, 3
   end
 
+  test 'post ping queues a repository refresh' do
+    PingWorker.expects(:perform_async).with(@host.name, @repository.full_name, false)
+
+    post ping_api_v1_host_repository_path(host_id: @host.name, id: @repository.full_name)
+
+    assert_response :success
+    assert_equal({ 'message' => 'pong' }, response.parsed_body)
+  end
+
+  test 'post ping supports forced refreshes' do
+    PingWorker.expects(:perform_async).with(@host.name, @repository.full_name, true)
+
+    post ping_api_v1_host_repository_path(host_id: @host.name, id: @repository.full_name, force: true)
+
+    assert_response :success
+    assert_equal({ 'message' => 'pong' }, response.parsed_body)
+  end
+
+  test 'get ping still queues a repository refresh' do
+    PingWorker.expects(:perform_async).with(@host.name, @repository.full_name, false)
+
+    get ping_api_v1_host_repository_path(host_id: @host.name, id: @repository.full_name)
+
+    assert_response :success
+    assert_equal({ 'message' => 'pong' }, response.parsed_body)
+  end
+
   test 'invalid repository sort falls back to full_name ascending' do
     get api_v1_host_repositories_path(host_id: @host.name), params: { sort: 'cast(uuid as integer)' }
     assert_response :success
