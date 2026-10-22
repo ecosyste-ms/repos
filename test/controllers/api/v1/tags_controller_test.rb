@@ -17,6 +17,19 @@ class ApiV1TagsControllerTest < ActionDispatch::IntegrationTest
     assert_equal actual_response.length, 1
   end
 
+  test 'tags include the url of their linked release' do
+    release = @repository.releases.create!(tag_name: @tag.name, uuid: '1')
+    unreleased_tag = @repository.tags.create!(name: '2.0.0', sha: 'feedface')
+    @repository.link_releases_to_tags
+
+    get api_v1_host_repository_tags_path(host_id: @host.name, repository_id: @repository.full_name)
+    assert_response :success
+
+    actual_response = JSON.parse(@response.body).index_by { |tag| tag['name'] }
+    assert_equal api_v1_host_repository_release_url(@host, @repository, release), actual_response[@tag.name]['release_url']
+    assert_nil actual_response[unreleased_tag.name]['release_url']
+  end
+
   test 'invalid tag sort falls back to published at descending' do
     @tag.update!(published_at: 2.days.ago)
     newer_tag = @repository.tags.create!(name: '2.0.0', sha: 'feedface', published_at: 1.day.ago)
@@ -71,5 +84,31 @@ class ApiV1TagsControllerTest < ActionDispatch::IntegrationTest
 
     get api_v1_host_repository_tags_path(host_id: @host.name, repository_id: 'missing/owner')
     assert_response :not_found
+  end
+  test 'deleting a linked release invalidates the cached tag responses' do
+    @repository.releases.create!(tag_name: @tag.name, uuid: '1')
+    @repository.releases.create!(tag_name: 'unlinked', uuid: '2')
+    @repository.link_releases_to_tags
+    show_path = api_v1_host_repository_tag_path(host_id: @host.name, repository_id: @repository.full_name, id: @tag.name)
+    index_path = api_v1_host_repository_tags_path(host_id: @host.name, repository_id: @repository.full_name)
+
+    get show_path
+    show_etag = @response.headers['ETag']
+    assert_not_nil JSON.parse(@response.body)['release_url']
+    get index_path
+    index_etag = @response.headers['ETag']
+
+    Hosts::Github.any_instance.stubs(:fetch_releases).returns([[
+      { uuid: 2, tag_name: 'unlinked', immutable: false, last_synced_at: Time.current }
+    ], true])
+    @repository.download_releases
+
+    get show_path, headers: { 'If-None-Match' => show_etag }
+    assert_response :success
+    assert_nil JSON.parse(@response.body)['release_url']
+
+    get index_path, headers: { 'If-None-Match' => index_etag }
+    assert_response :success
+    assert_nil JSON.parse(@response.body).first['release_url']
   end
 end

@@ -627,6 +627,19 @@ class Repository < ApplicationRecord
     end
   end
 
+  def link_releases_to_tags(tag_names: nil, now: Time.current)
+    conditions = "releases.repository_id = :id AND tags.repository_id = :id AND tags.name = releases.tag_name AND releases.tag_id IS NULL"
+    conditions += " AND tags.name IN (:tag_names)" if tag_names
+    sql = Release.sanitize_sql([
+      "UPDATE releases SET tag_id = tags.id, updated_at = :now FROM tags WHERE #{conditions} RETURNING tags.id",
+      { id: id, tag_names: tag_names, now: now }
+    ])
+    linked_tag_ids = Release.connection.select_values(sql)
+    tags.where(id: linked_tag_ids.uniq).update_all(updated_at: now) if linked_tag_ids.any?
+
+    linked_tag_ids.size
+  end
+
   def purl
     @purl ||= PackageURL.new(
       type: host.host_instance.purl_type,

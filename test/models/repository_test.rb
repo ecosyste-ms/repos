@@ -134,6 +134,72 @@ class RepositoryTest < ActiveSupport::TestCase
     end
   end
 
+  context 'link_releases_to_tags method' do
+    setup do
+      @repository = create(:repository)
+    end
+
+    should 'link releases to tags with the same name' do
+      tag = create(:tag, repository: @repository, name: 'v1.0.0')
+      other_tag = create(:tag, repository: @repository, name: 'v2.0.0')
+      release = create(:release, repository: @repository, tag_name: 'v1.0.0')
+      other_release = create(:release, repository: @repository, tag_name: 'v2.0.0')
+
+      assert_equal 2, @repository.link_releases_to_tags
+      assert_equal tag, release.reload.tag
+      assert_equal other_tag, other_release.reload.tag
+      assert_equal release, tag.reload.release
+    end
+
+    should 'not link releases to tags of another repository' do
+      create(:tag, name: 'v1.0.0')
+      release = create(:release, repository: @repository, tag_name: 'v1.0.0')
+
+      assert_equal 0, @repository.link_releases_to_tags
+      assert_nil release.reload.tag_id
+    end
+
+    should 'skip releases that are already linked' do
+      tag = create(:tag, repository: @repository, name: 'v1.0.0')
+      create(:release, repository: @repository, tag_name: 'v1.0.0')
+      @repository.link_releases_to_tags
+
+      assert_no_changes -> { tag.reload.updated_at } do
+        assert_equal 0, @repository.link_releases_to_tags
+      end
+    end
+
+    should 'link a release when its tag arrives later' do
+      release = create(:release, repository: @repository, tag_name: 'v1.0.0')
+      assert_equal 0, @repository.link_releases_to_tags
+
+      tag = create(:tag, repository: @repository, name: 'v1.0.0')
+      assert_equal 1, @repository.link_releases_to_tags
+      assert_equal tag.id, release.reload.tag_id
+    end
+
+    should 'only link the given tag names' do
+      tag = create(:tag, repository: @repository, name: 'v1.0.0')
+      create(:tag, repository: @repository, name: 'v2.0.0')
+      release = create(:release, repository: @repository, tag_name: 'v1.0.0')
+      other_release = create(:release, repository: @repository, tag_name: 'v2.0.0')
+
+      assert_equal 1, @repository.link_releases_to_tags(tag_names: ['v1.0.0'])
+      assert_equal tag.id, release.reload.tag_id
+      assert_nil other_release.reload.tag_id
+    end
+
+    should 'touch linked tags and releases' do
+      tag = create(:tag, repository: @repository, name: 'v1.0.0', updated_at: 1.day.ago)
+      release = create(:release, repository: @repository, tag_name: 'v1.0.0', updated_at: 1.day.ago)
+
+      @repository.link_releases_to_tags
+
+      assert_operator tag.reload.updated_at, :>, 1.hour.ago
+      assert_operator release.reload.updated_at, :>, 1.hour.ago
+    end
+  end
+
   context 'sync method' do
     should 'return early if host is nil' do
       repository = Repository.new(
