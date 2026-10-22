@@ -14,10 +14,13 @@ class ShodanHostDiscovery
   SHODAN_API_URL = 'https://api.shodan.io'
   RESULTS_PER_PAGE = 100
 
+  # The meta keywords are in each project's default page template, so they
+  # match instances that hide or reword the "Powered by" footer. Only the
+  # standard ports are searched, an instance on any other port is skipped.
   QUERIES = [
-    'http.html:"Powered by Gitea"',
-    'http.html:"Powered by Forgejo"',
-    'http.title:"GitLab"'
+    'http.html:"go,git,self-hosted,gitea" port:443,80',
+    'http.html:"git,forge,forgejo" port:443,80',
+    'http.title:"GitLab" port:443,80'
   ].freeze
 
   DEFAULT_PAGES = 1
@@ -30,6 +33,10 @@ class ShodanHostDiscovery
   GITLAB_PROJECTS_PATH = '/api/v4/projects?per_page=1&simple=true'
 
   DOMAIN = /\A[a-z0-9]([a-z0-9\-.]*[a-z0-9])?\.[a-z]{2,}\z/
+  # Reverse dns names built from an address, such as
+  # 222.154.123.34.bc.googleusercontent.com or ec2-3-111-58-77.compute.amazonaws.com,
+  # change when the server does.
+  EMBEDDED_IPV4 = /(?<!\d)\d{1,3}[.-]\d{1,3}[.-]\d{1,3}[.-]\d{1,3}(?!\d)/
   RESERVED_DOMAIN = /\.(local|localhost|localdomain|internal|intranet|lan|home|test|invalid|example|arpa)\z/
 
   # Ranges IPAddr has no predicate for: this network, shared address space and
@@ -49,15 +56,20 @@ class ShodanHostDiscovery
     URI::InvalidURIError
   ].freeze
 
-  Candidate = Struct.new(:domain, :url, :kind, :version, keyword_init: true) do
+  Candidate = Struct.new(:domain, :url, :kind, :version, :canonical_domain, keyword_init: true) do
     def to_seed_line
       %(  {name: "#{domain}", url: "#{url}", kind: "#{kind}"},)
     end
   end
 
-  # A domain being probed: the address it was vetted at and the robots.txt it
-  # published, if any.
-  Site = Struct.new(:domain, :url, :address, :robots, keyword_init: true)
+  # A domain being probed: the address it was vetted at, the robots.txt it
+  # published, if any, and whether it answered a forge api at all.
+  Site = Struct.new(:domain, :url, :address, :robots_txt, :forge, keyword_init: true)
+
+  REJECTION_KEY_PREFIX = 'shodan_discovery:rejected:'
+  REJECTION_TTL = 180.days
+  TRANSIENT_REJECTION_TTL = 14.days
+  TRANSIENT_REJECTIONS = %i[unresolved unreachable].freeze
 
   def initialize(api_key: ENV['SHODAN_API_KEY'], queries: QUERIES, pages: DEFAULT_PAGES,
                  limit: DEFAULT_LIMIT, create: false, output: $stdout)
@@ -72,12 +84,16 @@ class ShodanHostDiscovery
   def discover
     raise MissingApiKey, 'SHODAN_API_KEY is not set' if @api_key.blank?
 
+    @rejections = Hash.new(0)
     found = search_domains
-    unknown = found.reject { |domain| known_domain?(domain) }.first(@limit)
-    candidates = unknown.filter_map { |domain| probe(domain) }
+    unknown = found.reject { |domain| known_domain?(domain) }
+    unchecked = unknown.reject { |domain| recently_rejected?(domain) }
+    probed = unchecked.first(@limit)
+    candidates = probed.filter_map { |domain| probe(domain) }.uniq(&:domain)
     created = @create ? candidates.filter_map { |candidate| create_host(candidate) } : []
 
-    { found: found.length, probed: unknown.length, candidates: candidates, created: created }
+    { found: found.length, previously_rejected: unknown.length - unchecked.length, probed: probed.length,
+      candidates: candidates, created: created, rejections: @rejections }
   end
 
   private
@@ -127,6 +143,7 @@ class ShodanHostDiscovery
     return nil if domain.blank?
     return nil unless domain.match?(DOMAIN)
     return nil if domain.match?(RESERVED_DOMAIN)
+    return nil if domain.match?(EMBEDDED_IPV4)
 
     domain
   end
@@ -135,26 +152,85 @@ class ShodanHostDiscovery
     Host.find_by_domain(domain).present?
   end
 
-  def probe(domain)
-    address = public_address(domain)
-    return nil unless address
+  # Shodan hands us hostnames nobody has vetted. The name is resolved once here
+  # and every request to the candidate then connects to the address returned,
+  # so a later DNS answer cannot move us inside our own network.
+  #
+  # An instance reachable under more than one name links its repositories to
+  # the name it is configured with, so that name is the one reported. Repository
+  # urls are only followed one step and only to a name that passes the same
+  # checks as one from shodan.
+  def probe(domain, follow_alias: true)
+    addresses = resolved_addresses(domain)
+    return reject(domain, :unresolved) if addresses.empty?
+    return reject(domain, :unroutable) if addresses.any? { |address| unroutable?(address) }
 
+    address = (addresses.find(&:ipv4?) || addresses.first).to_s
+    url, robots = reachable(domain, address)
+    return reject(domain, :unreachable) if url.nil?
+
+    site = Site.new(domain: domain, url: url, address: address,
+                    robots_txt: (robots.body if robots.success?))
+    return reject(domain, :disallowed) unless crawlable?(site)
+
+    candidate = gitea_candidate(site) || gitlab_candidate(site)
+    return reject(domain, site.forge ? :no_public_repositories : :not_a_forge) if candidate.nil?
+
+    canonical = candidate.canonical_domain
+    return candidate if canonical.nil? || canonical == domain
+    return reject(domain, :alias_chain) unless follow_alias
+    return reject(domain, :alias_of_known) if known_domain?(canonical)
+
+    probe(canonical, follow_alias: false)
+  end
+
+  # Plain http is only tried when the https connection is refused. A timeout
+  # can be a passing problem with an https instance whose port 80 only
+  # redirects, which would otherwise be cached as not being a forge.
+  # The robots.txt response doubles as the check that anything answers at all.
+  def reachable(domain, address)
     url = "https://#{domain}"
-    site = Site.new(domain: domain, url: url, address: address, robots: robots_for(url, address))
+    [url, request("#{url}/robots.txt", address: address)]
+  rescue *IGNORABLE_EXCEPTIONS => e
+    return nil unless e.is_a?(Faraday::ConnectionFailed) && e.wrapped_exception.is_a?(Errno::ECONNREFUSED)
 
-    gitea_candidate(site) || gitlab_candidate(site)
+    url = "http://#{domain}"
+    response = get("#{url}/robots.txt", address: address)
+    [url, response] if response
+  end
+
+  # Domains that fail a probe are skipped on later runs until the entry
+  # expires. Failures that are likely to clear up expire before the next
+  # monthly run, the rest are rechecked twice a year.
+  def reject(domain, reason)
+    @rejections[reason] += 1
+    ttl = TRANSIENT_REJECTIONS.include?(reason) ? TRANSIENT_REJECTION_TTL : REJECTION_TTL
+    REDIS.set(rejection_key(domain), reason, ex: ttl.to_i)
+    nil
+  end
+
+  def recently_rejected?(domain)
+    REDIS.exists?(rejection_key(domain))
+  end
+
+  def rejection_key(domain)
+    "#{REJECTION_KEY_PREFIX}#{domain}"
   end
 
   # Gitea and forgejo share the same api, only forgejo answers on its own
-  # versioned namespace. If robots.txt rules that namespace out the instance is
-  # reported as gitea, which indexes it through the same api.
+  # versioned namespace.
   def gitea_candidate(site)
     version = version_from(site, GITEA_VERSION_PATH)
     return nil if version.blank?
-    return nil unless gitea_public_repositories?(site)
+
+    site.forge = true
+    body = site_json(site, GITEA_REPOSITORIES_PATH)
+    repository = Array(body['data']).first if body.is_a?(Hash)
+    return nil unless repository.is_a?(Hash)
 
     kind = version_from(site, FORGEJO_VERSION_PATH).present? ? 'forgejo' : 'gitea'
-    Candidate.new(domain: site.domain, url: site.url, kind: kind, version: version)
+    Candidate.new(domain: site.domain, url: site.url, kind: kind, version: version,
+                  canonical_domain: normalize_domain(repository['html_url']))
   end
 
   # Listing projects anonymously is the thing we need from gitlab, so it doubles
@@ -163,14 +239,12 @@ class ShodanHostDiscovery
   # configured for the host.
   def gitlab_candidate(site)
     projects = site_json(site, GITLAB_PROJECTS_PATH)
-    return nil unless projects.is_a?(Array) && projects.any?
+    site.forge ||= projects.is_a?(Array)
+    project = projects.first if projects.is_a?(Array)
+    return nil unless project.is_a?(Hash)
 
-    Candidate.new(domain: site.domain, url: site.url, kind: 'gitlab', version: nil)
-  end
-
-  def gitea_public_repositories?(site)
-    body = site_json(site, GITEA_REPOSITORIES_PATH)
-    body.is_a?(Hash) && Array(body['data']).any?
+    Candidate.new(domain: site.domain, url: site.url, kind: 'gitlab', version: nil,
+                  canonical_domain: normalize_domain(project['web_url']))
   end
 
   def version_from(site, path)
@@ -178,30 +252,14 @@ class ShodanHostDiscovery
     body.is_a?(Hash) ? body['version'].presence : nil
   end
 
-  # Every path is checked against robots.txt right before it is requested, so a
-  # rule on a specific api path is honoured as well as one on /api or /.
   def site_json(site, path)
-    return nil unless site.robots.nil? || site.robots.can_crawl?(path, user_agent)
-
     get_json("#{site.url}#{path}", address: site.address)
   end
 
-  def robots_for(url, address)
-    response = get("#{url}/robots.txt", address: address)
-    return nil if response.nil? || !response.success?
-
-    RobotsTxtParser.new(response.body)
-  end
-
-  # Shodan hands us hostnames nobody has vetted. The name is resolved once here
-  # and every request to the candidate then connects to the address returned,
-  # so a later DNS answer cannot move us inside our own network. A name that
-  # resolves to nothing, or to anything unroutable, is dropped.
-  def public_address(domain)
-    addresses = resolved_addresses(domain)
-    return nil if addresses.empty? || addresses.any? { |address| unroutable?(address) }
-
-    (addresses.find(&:ipv4?) || addresses.first).to_s
+  # Only a site that turns crawlers away entirely is skipped. Rules on api
+  # paths alone are ignored, gitlab's stock robots.txt disallows /api/v*.
+  def crawlable?(site)
+    site.robots_txt.blank? || RobotsTxtParser.new(site.robots_txt).can_crawl?('/', user_agent)
   end
 
   def resolved_addresses(domain)
@@ -232,14 +290,18 @@ class ShodanHostDiscovery
   end
 
   def get(url, params = {}, address: nil)
+    request(url, params, address: address)
+  rescue *IGNORABLE_EXCEPTIONS
+    nil
+  end
+
+  def request(url, params = {}, address: nil)
     connection(address).get(url) do |req|
       req.params.update(params.stringify_keys) if params.present?
       req.options.timeout = TIMEOUT
       req.options.open_timeout = TIMEOUT
       req.headers['User-Agent'] = user_agent
     end
-  rescue *IGNORABLE_EXCEPTIONS
-    nil
   end
 
   def parse_json(body)

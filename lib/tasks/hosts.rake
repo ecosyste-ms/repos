@@ -66,7 +66,11 @@ namespace :hosts do
         result[:candidates].each { |candidate| puts candidate.to_seed_line }
       end
 
-      puts "[repos] shodan discovery found=#{result[:found]} probed=#{result[:probed]} candidates=#{result[:candidates].length} created=#{result[:created].length}"
+      result[:rejections].sort_by { |_, count| -count }.each do |reason, count|
+        puts "[repos] rejected #{reason}=#{count}"
+      end
+
+      puts "[repos] shodan discovery found=#{result[:found]} previously_rejected=#{result[:previously_rejected]} probed=#{result[:probed]} candidates=#{result[:candidates].length} created=#{result[:created].length}"
     end
   rescue ShodanHostDiscovery::MissingApiKey, ShodanHostDiscovery::ApiError => e
     abort "[repos] #{e.message}"

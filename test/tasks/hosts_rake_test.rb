@@ -15,6 +15,7 @@ class HostsRakeTest < ActiveSupport::TestCase
     ENV.delete('QUERY')
     ENV.delete('CREATE')
     REDIS.del('cron_lock:hosts:discover')
+    REDIS.scan_each(match: "#{ShodanHostDiscovery::REJECTION_KEY_PREFIX}*.example.com") { |key| REDIS.del(key) }
   end
 
   test "get_gitlab_token prints the token from redis" do
@@ -169,7 +170,7 @@ class HostsRakeTest < ActiveSupport::TestCase
 
     assert_match '[repos] gitea https://git.example.com 1.22.0', out
     assert_match '{name: "git.example.com", url: "https://git.example.com", kind: "gitea"},', out
-    assert_match 'found=1 probed=1 candidates=1 created=0', out
+    assert_match 'found=1 previously_rejected=0 probed=1 candidates=1 created=0', out
     assert_equal 0, Host.count
   end
 
@@ -196,6 +197,22 @@ class HostsRakeTest < ActiveSupport::TestCase
       capture_io { Rake::Task["hosts:discover"].execute }
     end
   end
+
+  test "discover skips domains rejected on an earlier run" do
+    ENV['SHODAN_API_KEY'] = 'shodan-key'
+    ENV['QUERY'] = 'test-query'
+    stub_shodan_search
+    Resolv.stubs(:getaddresses).with('git.example.com').returns(['203.0.113.10'])
+    robots = stub_request(:get, "https://git.example.com/robots.txt").to_return(status: 200, body: "User-agent: *\nDisallow: /\n")
+
+    first, _ = capture_io { Rake::Task["hosts:discover"].execute }
+    second, _ = capture_io { Rake::Task["hosts:discover"].execute }
+
+    assert_match '[repos] rejected disallowed=1', first
+    assert_match 'found=1 previously_rejected=1 probed=0 candidates=0', second
+    assert_requested robots, times: 1
+  end
+
   test "discover only connects to the address it validated" do
     ENV['SHODAN_API_KEY'] = 'shodan-key'
     ENV['QUERY'] = 'test-query'
@@ -207,7 +224,7 @@ class HostsRakeTest < ActiveSupport::TestCase
 
     out, _ = capture_io { Rake::Task["hosts:discover"].execute }
 
-    assert_match 'found=1 probed=1 candidates=0', out
+    assert_match 'found=1 previously_rejected=0 probed=1 candidates=0', out
     assert_not_empty dialed
     assert_equal ['203.0.113.10'], dialed.uniq
   ensure
@@ -222,21 +239,17 @@ class HostsRakeTest < ActiveSupport::TestCase
 
     out, _ = capture_io { Rake::Task["hosts:discover"].execute }
 
-    assert_match 'found=1 probed=1 candidates=0', out
+    assert_match 'found=1 previously_rejected=0 probed=1 candidates=0', out
     assert_not_requested :get, "https://git.example.com/robots.txt"
   end
 
-  test "discover checks robots.txt against each api path it requests" do
+  test "discover ignores robots.txt rules that only cover the api" do
     ENV['SHODAN_API_KEY'] = 'shodan-key'
     ENV['QUERY'] = 'test-query'
     stub_shodan_gitea_instance(robots: "User-agent: *\nDisallow: /api/v1/\n")
-    stub_request(:get, "https://git.example.com/api/v4/projects?per_page=1&simple=true").to_return(status: 404, body: '')
 
     out, _ = capture_io { Rake::Task["hosts:discover"].execute }
 
-    assert_match 'found=1 probed=1 candidates=0', out
-    assert_not_requested :get, "https://git.example.com/api/v1/version"
-    assert_not_requested :get, "https://git.example.com/api/v1/repos/search?limit=1"
-    assert_requested :get, "https://git.example.com/api/v4/projects?per_page=1&simple=true"
+    assert_match 'found=1 previously_rejected=0 probed=1 candidates=1', out
   end
 end
