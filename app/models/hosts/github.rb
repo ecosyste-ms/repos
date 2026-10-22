@@ -185,11 +185,13 @@ module Hosts
           tag.merge(repository_id: repository.id, created_at: now, updated_at: now)
         end
         Tag.insert_all(tag_records)
+        repository.link_releases_to_tags(tag_names: new_tags.map { |tag| tag[:name] }, now: now)
       end
 
       if complete
         orphan_tag_ids = repository.tags.where.not(name: remote_names).pluck(:id)
         if orphan_tag_ids.any?
+          repository.releases.where(tag_id: orphan_tag_ids).update_all(tag_id: nil, updated_at: now)
           orphan_manifest_ids = Manifest.where(tag_id: orphan_tag_ids).pluck(:id)
           Dependency.where(manifest_id: orphan_manifest_ids).delete_all if orphan_manifest_ids.any?
           Manifest.where(id: orphan_manifest_ids).delete_all if orphan_manifest_ids.any?
@@ -208,7 +210,9 @@ module Hosts
 
       # Get existing release UUIDs in one query
       release_uuids = releases.map { |release| release[:uuid].to_s }
-      existing_releases = repository.releases.where(uuid: release_uuids).pluck(:uuid, :immutable).to_h
+      existing_rows = repository.releases.where(uuid: release_uuids).pluck(:uuid, :immutable, :tag_id)
+      existing_releases = existing_rows.to_h { |uuid, immutable, _tag_id| [uuid, immutable] }
+      unlinked_uuids = existing_rows.select { |_uuid, _immutable, tag_id| tag_id.nil? }.map(&:first).to_set
 
       # Refresh immutability when the stored value differs from GitHub
       changed_releases = releases.select do |release|
@@ -229,10 +233,13 @@ module Hosts
       new_releases = releases.reject { |release| existing_releases.key?(release[:uuid].to_s) }
 
       if new_releases.any?
+        tag_ids = repository.tags.where(name: new_releases.map { |release| release[:tag_name] }).pluck(:name, :id).to_h
+
         # Prepare records for bulk insert
         release_records = new_releases.map do |release|
           release.merge(
             repository_id: repository.id,
+            tag_id: tag_ids[release[:tag_name]],
             created_at: now,
             updated_at: now
           )
@@ -240,7 +247,11 @@ module Hosts
 
         # Bulk insert new releases only
         Release.insert_all(release_records)
+        repository.tags.where(id: tag_ids.values).update_all(updated_at: now) if tag_ids.any?
       end
+
+      unlinked_tag_names = releases.select { |release| unlinked_uuids.include?(release[:uuid].to_s) }.map { |release| release[:tag_name] }
+      repository.link_releases_to_tags(tag_names: unlinked_tag_names, now: now) if unlinked_tag_names.any?
 
       if complete
         removed_releases = repository.releases.where.not(uuid: release_uuids)

@@ -360,12 +360,10 @@ class Repository < ApplicationRecord
     host.download_tags(self)
     host.download_releases(self) if tags_count && tags_count > 0
     cleanup_duplicate_releases
-    link_releases_to_tags
   end
 
   def download_releases
     host.download_releases(self)
-    link_releases_to_tags
   end
 
   def download_tags_async
@@ -628,27 +626,17 @@ class Repository < ApplicationRecord
     end
   end
 
-  def link_releases_to_tags
-    tag_ids = tags.pluck(:name, :id).to_h
-    changes = Hash.new { |hash, key| hash[key] = [] }
-    touched_tag_ids = []
+  def link_releases_to_tags(tag_names: nil, now: Time.current)
+    conditions = "releases.repository_id = :id AND tags.repository_id = :id AND tags.name = releases.tag_name AND releases.tag_id IS NULL"
+    conditions += " AND tags.name IN (:tag_names)" if tag_names
+    sql = Release.sanitize_sql([
+      "UPDATE releases SET tag_id = tags.id, updated_at = :now FROM tags WHERE #{conditions} RETURNING tags.id",
+      { id: id, tag_names: tag_names, now: now }
+    ])
+    linked_tag_ids = Release.connection.select_values(sql)
+    tags.where(id: linked_tag_ids.uniq).update_all(updated_at: now) if linked_tag_ids.any?
 
-    releases.pluck(:id, :tag_name, :tag_id).each do |release_id, tag_name, tag_id|
-      linked_tag_id = tag_ids[tag_name]
-      next if tag_id == linked_tag_id
-
-      changes[linked_tag_id] << release_id
-      touched_tag_ids.push(tag_id, linked_tag_id)
-    end
-    return 0 if changes.empty?
-
-    now = Time.current
-    changes.each do |linked_tag_id, release_ids|
-      Release.where(id: release_ids).update_all(tag_id: linked_tag_id, updated_at: now)
-    end
-    tags.where(id: touched_tag_ids.compact.uniq).update_all(updated_at: now)
-
-    changes.values.sum(&:size)
+    linked_tag_ids.size
   end
 
   def purl

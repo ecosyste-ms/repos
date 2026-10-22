@@ -178,15 +178,15 @@ class RepositoryTest < ActiveSupport::TestCase
       assert_equal tag.id, release.reload.tag_id
     end
 
-    should 'clear the link when the tag is removed' do
+    should 'only link the given tag names' do
       tag = create(:tag, repository: @repository, name: 'v1.0.0')
+      create(:tag, repository: @repository, name: 'v2.0.0')
       release = create(:release, repository: @repository, tag_name: 'v1.0.0')
-      @repository.link_releases_to_tags
+      other_release = create(:release, repository: @repository, tag_name: 'v2.0.0')
 
-      Tag.where(id: tag.id).delete_all
-
-      assert_equal 1, @repository.link_releases_to_tags
-      assert_nil release.reload.tag_id
+      assert_equal 1, @repository.link_releases_to_tags(tag_names: ['v1.0.0'])
+      assert_equal tag.id, release.reload.tag_id
+      assert_nil other_release.reload.tag_id
     end
 
     should 'touch linked tags and releases' do
@@ -197,28 +197,6 @@ class RepositoryTest < ActiveSupport::TestCase
 
       assert_operator tag.reload.updated_at, :>, 1.hour.ago
       assert_operator release.reload.updated_at, :>, 1.hour.ago
-    end
-
-    should 'run after downloading releases' do
-      tag = create(:tag, repository: @repository, name: 'v1.0.0')
-      release = create(:release, repository: @repository, tag_name: 'v1.0.0')
-      @repository.host.expects(:download_releases).with(@repository)
-
-      @repository.download_releases
-
-      assert_equal tag.id, release.reload.tag_id
-    end
-
-    should 'run after downloading tags' do
-      release = create(:release, repository: @repository, tag_name: 'v1.0.0')
-      @repository.host.expects(:download_tags).with(@repository)
-      @repository.host.expects(:download_releases).never
-      tag = create(:tag, repository: @repository, name: 'v1.0.0')
-      @repository.update_column(:tags_count, 0)
-
-      @repository.download_tags
-
-      assert_equal tag.id, release.reload.tag_id
     end
   end
 
