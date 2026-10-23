@@ -31,6 +31,41 @@ class RepositoryTest < ActiveSupport::TestCase
       
       assert_equal 0, Release.where(id: [release1.id, release2.id]).count
     end
+
+    should 'delete tag manifests and their dependencies when repository is destroyed' do
+      repository = create(:repository)
+      tag = create(:tag, repository: repository)
+      tag_manifest = create(:manifest, repository: nil, tag: tag)
+      tag_dependency = create(:dependency, repository: repository, manifest: tag_manifest)
+      legacy_dependency = create(:dependency, repository: create(:repository), manifest: tag_manifest)
+      repository_manifest = create(:manifest, repository: repository)
+      repository_dependency = create(:dependency, repository: repository, manifest: repository_manifest)
+
+      other_tag = create(:tag)
+      other_manifest = create(:manifest, repository: nil, tag: other_tag)
+      other_dependency = create(:dependency, repository: other_tag.repository, manifest: other_manifest)
+
+      repository.destroy
+
+      assert_not Manifest.exists?(tag_manifest.id)
+      assert_not Dependency.exists?(tag_dependency.id)
+      assert_not Dependency.exists?(legacy_dependency.id)
+      assert_not Manifest.exists?(repository_manifest.id)
+      assert_not Dependency.exists?(repository_dependency.id)
+      assert Manifest.exists?(other_manifest.id)
+      assert Dependency.exists?(other_dependency.id)
+    end
+
+    should 'delete tag manifests when destroyed without a statement timeout' do
+      repository = create(:repository)
+      tag_manifest = create(:manifest, repository: nil, tag: create(:tag, repository: repository))
+      tag_dependency = create(:dependency, repository: repository, manifest: tag_manifest)
+
+      repository.destroy_without_statement_timeout!
+
+      assert_not Manifest.exists?(tag_manifest.id)
+      assert_not Dependency.exists?(tag_dependency.id)
+    end
   end
 
   context 'purl method' do
