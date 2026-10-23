@@ -6,6 +6,7 @@ class Repository < ApplicationRecord
   INACTIVE_SYNC_END_ID_KEY = 'repositories:inactive_sync_end_id'
 
   belongs_to :host
+  include CachedHost
 
   has_many :manifests, dependent: :destroy
   has_many :tags, dependent: :delete_all

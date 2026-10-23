@@ -1,6 +1,64 @@
 require "test_helper"
 
 class HostTest < ActiveSupport::TestCase
+  def hosts_queries
+    count = 0
+    counter = ->(*, payload) { count += 1 if payload[:sql].include?('"hosts"') && !payload[:cached] }
+    ActiveRecord::Base.uncached do
+      ActiveSupport::Notifications.subscribed(counter, 'sql.active_record') { yield }
+    end
+    count
+  end
+
+  context 'host cache' do
+    setup do
+      @host = create(:host, name: 'GitHub', url: 'https://github.com')
+    end
+
+    should 'look a host up by name once' do
+      assert_equal 2, hosts_queries { 3.times { Host.find_by_name('github') } }
+    end
+
+    should 'return a fresh copy on each read' do
+      refute_same Host.find_by_name('GitHub'), Host.find_by_name('GitHub')
+    end
+
+    should 'reload after the cache expires' do
+      Host.find_by_name('GitHub')
+      @host.update_column(:repositories_count, 42)
+
+      assert_equal 0, Host.find_by_name('GitHub').repositories_count
+      travel Host::CACHE_TTL + 1.second do
+        assert_equal 42, Host.find_by_name('GitHub').repositories_count
+      end
+    end
+
+    should 'not cache a missing host' do
+      assert_nil Host.find_by_name('Codeberg')
+      codeberg = create(:host, name: 'Codeberg', url: 'https://codeberg.org')
+
+      assert_equal codeberg, Host.find_by_name('Codeberg')
+    end
+
+    should 'load the host for repositories from the cache' do
+      first = create(:repository, host: @host)
+      second = create(:repository, host: @host)
+      first, second = Repository.find(first.id), Repository.find(second.id)
+
+      assert_equal 1, hosts_queries { first.host; second.host }
+      assert_same first.host, first.host
+    end
+
+    should 'keep a preloaded or reassigned host' do
+      other = create(:host, name: 'GitLab', url: 'https://gitlab.com')
+      repository = Repository.includes(:host).find(create(:repository, host: @host).id)
+      assert_equal 0, hosts_queries { repository.host }
+
+      repository.host = other
+      assert_equal other, repository.host
+    end
+  end
+
   context 'find_by_name methods' do
     setup do
       @host = create(:host, name: 'GitHub', url: 'https://github.com')

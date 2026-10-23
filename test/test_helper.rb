@@ -17,6 +17,7 @@ class ActiveSupport::TestCase
   
   setup do
     DatabaseCleaner.clean
+    Host.cache.clear
   end
   
   Shoulda::Matchers.configure do |config|
