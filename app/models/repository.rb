@@ -14,7 +14,6 @@ class Repository < ApplicationRecord
   has_many :repository_usages, dependent: :delete_all
   has_one :scorecard, dependent: :destroy
 
-  # Prepended so it runs before tags are deleted by their dependent callback.
   before_destroy :delete_tag_manifests, prepend: true
 
   scope :owner, ->(owner) { where(owner: owner) }
@@ -632,9 +631,6 @@ class Repository < ApplicationRecord
     end
   end
 
-  # Tags are removed with delete_all and their manifests carry no repository_id,
-  # so neither association reaches them. Dependencies are found by manifest
-  # because older tag dependencies hold the tag id as their repository_id.
   def delete_tag_manifests
     tag_manifest_ids = Manifest.where(tag_id: tags.select(:id)).select(:id)
     Dependency.where(manifest_id: tag_manifest_ids).delete_all
