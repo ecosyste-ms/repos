@@ -1,5 +1,6 @@
 class Topic < ApplicationRecord
   belongs_to :host
+  include CachedHost
 
   validates :name, presence: true, uniqueness: { scope: :host_id }
 

@@ -45,17 +45,31 @@ class Host < ApplicationRecord
     new_count
   end
 
+  # Per-process, so each read is a fresh copy (MemoryStore marshals values) and counts can lag by CACHE_TTL.
+  CACHE_TTL = 1.minute
+
+  def self.cache
+    @cache ||= ActiveSupport::Cache::MemoryStore.new(expires_in: CACHE_TTL)
+  end
+
+  def self.cached_find(id)
+    return nil if id.blank?
+    cache.fetch("id:#{id}", skip_nil: true) { find_by(id: id) }
+  end
+
   def self.find_by_name(name)
     return nil if name.blank?
-    host = Host.find_by('lower(name) = ?', name.downcase)
-    host = Host.find_by_domain(name) if host.nil?
-    host
+    id = cache.fetch("name:#{name.downcase}", skip_nil: true) do
+      host = Host.find_by('lower(name) = ?', name.downcase)
+      host = Host.find_by_domain(name) if host.nil?
+      host&.id
+    end
+    cached_find(id)
   end
 
   def self.find_by_name!(name)
     return nil if name.blank?
-    host = Host.find_by('lower(name) = ?', name.downcase)
-    host = Host.find_by_domain(name) if host.nil?
+    host = find_by_name(name)
     raise ActiveRecord::RecordNotFound if host.nil?
     host
   end

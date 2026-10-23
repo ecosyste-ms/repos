@@ -1,5 +1,6 @@
 class Owner < ApplicationRecord
   belongs_to :host
+  include CachedHost
   counter_culture :host, execute_after_commit: true
 
   validates :login, presence: true
