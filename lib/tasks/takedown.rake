@@ -3,8 +3,6 @@ require_relative '../cron_lock'
 namespace :takedown do
   desc "Remove indexed repositories blocked by new notices in github/dmca"
   task sweep_github_dmca: :environment do
-    ActiveRecord::Base.connection.execute("SET statement_timeout = 0")
-
     CronLock.acquire("takedown:sweep_github_dmca", ttl: 1.hour) do
       result = GithubDmcaSweeper.new.sweep
       puts "[repos] github/dmca notices=#{result[:notice_files]} candidates=#{result[:candidates]} indexed=#{result[:indexed]} removed=#{result[:removed]}"
@@ -16,8 +14,6 @@ namespace :takedown do
     login = ENV['LOGIN']
     host_name = ENV['HOST'] || 'GitHub'
     abort "LOGIN is required" if login.blank?
-
-    ActiveRecord::Base.connection.execute("SET statement_timeout = 0")
 
     host = Host.find_by('lower(name) = ?', host_name.downcase)
     abort "Host #{host_name} not found" if host.nil?
@@ -31,7 +27,7 @@ namespace :takedown do
     count = repos.count
     repos.find_each do |repo|
       puts "[repos] destroying #{repo.full_name}"
-      repo.destroy
+      repo.destroy_without_statement_timeout!
     end
     puts "[repos] destroyed #{count} repositories for #{host.name}/#{login}"
   end
@@ -41,8 +37,6 @@ namespace :takedown do
     login = ENV['LOGIN']
     host_name = ENV['HOST'] || 'GitHub'
     abort "LOGIN is required" if login.blank?
-
-    ActiveRecord::Base.connection.execute("SET statement_timeout = 0")
 
     host = Host.find_by('lower(name) = ?', host_name.downcase)
     abort "Host #{host_name} not found" if host.nil?

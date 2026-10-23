@@ -44,7 +44,7 @@ class GithubDmcaSweeper
       indexed_count += 1
       if legally_blocked?(repository_name)
         @output.puts "[repos] removing #{repository.full_name} listed in github/dmca"
-        repository.destroy!
+        repository.destroy_without_statement_timeout!
         removed_count += 1
       end
     end

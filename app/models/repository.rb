@@ -621,6 +621,14 @@ class Repository < ApplicationRecord
     Hash[links]
   end
 
+  # SET LOCAL ends with the transaction; a session SET would leak to other clients through pgbouncer.
+  def destroy_without_statement_timeout!
+    transaction do
+      self.class.connection.execute("SET LOCAL statement_timeout = 0")
+      destroy!
+    end
+  end
+
   def cleanup_duplicate_releases
     releases.group(:uuid).having("count(*) > 1").count.each do |uuid, count|
       releases.where(uuid: uuid).order("created_at desc").offset(1).each(&:destroy)

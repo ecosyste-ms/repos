@@ -134,6 +134,26 @@ class RepositoryTest < ActiveSupport::TestCase
     end
   end
 
+  context 'destroy_without_statement_timeout! method' do
+    should 'destroy the repository with the statement timeout lifted' do
+      repository = create(:repository)
+      create(:tag, repository: repository)
+      timeouts = []
+      repository.singleton_class.prepend(Module.new do
+        define_method(:destroy!) do
+          timeouts << self.class.connection.select_value('SHOW statement_timeout')
+          super()
+        end
+      end)
+
+      repository.destroy_without_statement_timeout!
+
+      assert_equal ['0'], timeouts
+      assert_nil Repository.find_by(id: repository.id)
+      assert_equal 0, Tag.where(repository_id: repository.id).count
+    end
+  end
+
   context 'link_releases_to_tags method' do
     setup do
       @repository = create(:repository)
