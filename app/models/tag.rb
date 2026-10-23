@@ -180,7 +180,7 @@ class Tag < ApplicationRecord
           ecosystem: ecosystem,
           requirements: dep[:requirement],
           kind: dep[:type],
-          repository_id: self.id,
+          repository_id: repository_id,
           direct: manifest.kind == 'manifest',
           created_at: Time.now,
           updated_at: Time.now

@@ -141,5 +141,23 @@ class TagTest < ActiveSupport::TestCase
       assert_nil @tag.dependency_job_id
       assert_not_nil @tag.dependencies_parsed_at
     end
+
+    should 'store the repository id on dependencies, not the tag id' do
+      tag = FactoryBot.create(:tag, id: @repository.id + 100, repository: @repository, name: 'v2.0.0', sha: 'def456')
+      manifest = { ecosystem: 'npm', kind: 'manifest', path: 'package.json', sha: 'm1',
+                   dependencies: [{ name: 'left-pad', requirement: '^1.0.0', type: 'runtime' }] }
+
+      response = mock('response')
+      response.stubs(:status).returns(200)
+      response.stubs(:success?).returns(true)
+      response.stubs(:body).returns({ id: 'job', status: 'complete', results: { manifests: [manifest] } }.to_json)
+      conn = mock('connection')
+      conn.expects(:post).returns(response)
+      tag.stubs(:ecosystem_connection).returns(conn)
+
+      tag.parse_dependencies
+
+      assert_equal [@repository.id], Dependency.where(manifest_id: tag.manifests.select(:id)).pluck(:repository_id)
+    end
   end
 end
