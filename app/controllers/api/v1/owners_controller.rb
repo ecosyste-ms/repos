@@ -45,7 +45,7 @@ class Api::V1::OwnersController < Api::V1::ApplicationController
   end
 
   def ping
-    PingOwnerWorker.perform_async(params[:host_id], params[:id])
+    PingOwnerWorker.perform_async(params[:host_id], params[:id], params[:force].present?)
     render json: { message: 'pong' }
   end
 

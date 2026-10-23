@@ -138,4 +138,31 @@ class ApiV1OwnersControllerTest < ActionDispatch::IntegrationTest
     assert_includes actual_response, 'user-test'
     assert_not_includes actual_response, 'org-test'
   end
+
+  test 'get ping queues an owner and repository refresh' do
+    PingOwnerWorker.expects(:perform_async).with(@host.name, @owner.login, false)
+
+    get ping_api_v1_host_owner_path(host_id: @host.name, id: @owner.login)
+
+    assert_response :success
+    assert_equal({ 'message' => 'pong' }, response.parsed_body)
+  end
+
+  test 'post ping queues an owner and repository refresh' do
+    PingOwnerWorker.expects(:perform_async).with(@host.name, @owner.login, false)
+
+    post ping_api_v1_host_owner_path(host_id: @host.name, id: @owner.login)
+
+    assert_response :success
+    assert_equal({ 'message' => 'pong' }, response.parsed_body)
+  end
+
+  test 'post ping supports forced refreshes' do
+    PingOwnerWorker.expects(:perform_async).with(@host.name, @owner.login, true)
+
+    post ping_api_v1_host_owner_path(host_id: @host.name, id: @owner.login, force: true)
+
+    assert_response :success
+    assert_equal({ 'message' => 'pong' }, response.parsed_body)
+  end
 end

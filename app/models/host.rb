@@ -221,6 +221,36 @@ class Host < ApplicationRecord
     update(status: 'error', status_checked_at: Time.current, last_error: e.message)
   end
 
+  def reping_owner_repositories_async(owner, force = false)
+    return if owner.hidden?
+    names = host_instance.load_owner_repos_names(owner) || []
+    repo_names = (owner.repositories.pluck(:full_name) + names).compact.uniq
+    repo_names.each do |full_name|
+      PingWorker.perform_async(name, full_name, force)
+    end
+  rescue Faraday::TimeoutError, Faraday::ConnectionFailed, Net::OpenTimeout, Socket::ResolutionError => e
+    update(status: 'timeout', status_checked_at: Time.current, last_error: e.message)
+  rescue Faraday::SSLError => e
+    update(status: 'ssl_error', status_checked_at: Time.current, last_error: e.message)
+  rescue Faraday::Error => e
+    update(status: 'error', status_checked_at: Time.current, last_error: e.message)
+  end
+
+  def reping_owner_repositories(owner, force = false)
+    return if owner.hidden?
+    names = host_instance.load_owner_repos_names(owner) || []
+    repo_names = (owner.repositories.pluck(:full_name) + names).compact.uniq
+    repo_names.each do |full_name|
+      PingWorker.new.perform(name, full_name, force)
+    end
+  rescue Faraday::TimeoutError, Faraday::ConnectionFailed, Net::OpenTimeout, Socket::ResolutionError => e
+    update(status: 'timeout', status_checked_at: Time.current, last_error: e.message)
+  rescue Faraday::SSLError => e
+    update(status: 'ssl_error', status_checked_at: Time.current, last_error: e.message)
+  rescue Faraday::Error => e
+    update(status: 'error', status_checked_at: Time.current, last_error: e.message)
+  end
+
   def crawl_repositories_async
     host_instance.crawl_repositories_async
   rescue Faraday::TimeoutError, Faraday::ConnectionFailed, Net::OpenTimeout, Socket::ResolutionError => e
@@ -343,10 +373,10 @@ class Host < ApplicationRecord
     end
   end
 
-  def sync_owner(login)
+  def sync_owner(login, force: false)
     existing_owner = owners.find_by('lower(login) = ?', login)
 
-    return existing_owner if existing_owner && existing_owner.last_synced_at && existing_owner.last_synced_at > 1.week.ago
+    return existing_owner if !force && existing_owner && existing_owner.last_synced_at && existing_owner.last_synced_at > 1.week.ago
 
     # Sync local information now as we can return early (no token, or no need to sync external data)
     if existing_owner

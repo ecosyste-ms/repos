@@ -35,7 +35,7 @@ Rails.application.routes.draw do
           end
           member do
             get :repositories
-            get :ping
+            match :ping, via: [:get, :post]
           end
         end
         resources :repositories, constraints: { id: /.*/ }, defaults: { format: :json }, only: [:index, :show] do

@@ -689,6 +689,29 @@ class HostTest < ActiveSupport::TestCase
       @host.expects(:sync_repository_async).with('owner/repo2').once
       @host.sync_owner_repositories_async(@visible_owner)
     end
+
+    should 'not reping repositories for hidden owners in reping_owner_repositories_async' do
+      @host.host_instance.expects(:load_owner_repos_names).never
+      @host.reping_owner_repositories_async(@hidden_owner)
+    end
+
+    should 'reping repositories for visible owners in reping_owner_repositories_async' do
+      FactoryBot.create(:repository, host: @host, full_name: 'visible/existing', owner: @visible_owner.login)
+      @host.stubs(:host_instance).returns(mock('host_instance').tap do |m|
+        m.expects(:load_owner_repos_names).with(@visible_owner).returns(['visible/existing', 'visible/discovered'])
+      end)
+      PingWorker.expects(:perform_async).with(@host.name, 'visible/existing', false).once
+      PingWorker.expects(:perform_async).with(@host.name, 'visible/discovered', false).once
+      @host.reping_owner_repositories_async(@visible_owner)
+    end
+
+    should 'support force in reping_owner_repositories_async' do
+      @host.stubs(:host_instance).returns(mock('host_instance').tap do |m|
+        m.expects(:load_owner_repos_names).with(@visible_owner).returns(['visible/repo'])
+      end)
+      PingWorker.expects(:perform_async).with(@host.name, 'visible/repo', true).once
+      @host.reping_owner_repositories_async(@visible_owner, true)
+    end
   end
 
   context 'sync_repository method' do

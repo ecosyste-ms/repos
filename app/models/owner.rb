@@ -75,13 +75,13 @@ class Owner < ApplicationRecord
     host.repositories.where(owner: login)
   end
   
-  def sync
+  def sync(force: false)
     return self if hidden?
-    host.sync_owner(login)
+    host.sync_owner(login, force: force)
   end
 
-  def sync_async
-    SyncOwnerWorker.perform_async(host_id, login)
+  def sync_async(force = false)
+    SyncOwnerWorker.perform_async(host_id, login, force)
   end
 
   def related_dot_github_repo
@@ -173,6 +173,16 @@ class Owner < ApplicationRecord
   def sync_repositories
     return if hidden?
     host.sync_owner_repositories_async(self)
+  end
+
+  def reping_repositories_async(force = false)
+    return if hidden?
+    host.reping_owner_repositories_async(self, force)
+  end
+
+  def reping_repositories(force = false)
+    return if hidden?
+    host.reping_owner_repositories(self, force)
   end
 
   def check_status

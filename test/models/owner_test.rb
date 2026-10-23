@@ -139,5 +139,20 @@ class OwnerTest < ActiveSupport::TestCase
       @host.expects(:sync_owner).with(@visible_owner.login).once
       @visible_owner.sync
     end
+
+    should 'not reping repositories for hidden owners in reping_repositories_async' do
+      @host.expects(:reping_owner_repositories_async).never
+      @hidden_owner.reping_repositories_async
+    end
+
+    should 'reping repositories for visible owners in reping_repositories_async' do
+      @host.expects(:reping_owner_repositories_async).with(@visible_owner, false).once
+      @visible_owner.reping_repositories_async
+    end
+
+    should 'reping repositories with force in reping_repositories_async' do
+      @host.expects(:reping_owner_repositories_async).with(@visible_owner, true).once
+      @visible_owner.reping_repositories_async(true)
+    end
   end
 end

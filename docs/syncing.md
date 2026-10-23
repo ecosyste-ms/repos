@@ -62,9 +62,9 @@ Sibling ecosyste.ms services and external callers can trigger syncs via ping end
 
 Queues a [`PingWorker`](../app/sidekiq/ping_worker.rb#L1) which checks if the repo was synced in the last week. If so, it schedules a deferred re-sync 1 day later. Otherwise it syncs immediately and also queues [`sync_extra_details_async`](../app/models/repository.rb#L272) if the repo is a non-fork with changed files.
 
-**Owner ping** -- [`GET /api/v1/hosts/:host_id/owners/:id/ping`](../app/controllers/api/v1/owners_controller.rb#L61)
+**Owner ping** -- [`GET /api/v1/hosts/:host_id/owners/:id/ping`](../app/controllers/api/v1/owners_controller.rb#L47) (also accepts `POST`, with optional `force=true`)
 
-Queues a `PingOwnerWorker` which syncs the owner record and their repositories.
+Queues a `PingOwnerWorker` which syncs the owner record and repings all member repositories (both existing in the database and newly discovered on the host) via `PingWorker` to ensure the entire group's repository data is refreshed.
 
 **Package usage ping** -- [`GET /api/v1/usage/:ecosystem/:name/ping`](../app/controllers/api/v1/usage_controller.rb#L42)
 
