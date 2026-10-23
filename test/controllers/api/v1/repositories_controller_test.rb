@@ -282,4 +282,62 @@ class ApiV1RepositoriesControllerTest < ActionDispatch::IntegrationTest
     actual_response = JSON.parse(@response.body)
     assert_equal 'TestUser/CamelCase-Repo', actual_response['full_name']
   end
+
+  test 'repository funding_links from repository funding metadata' do
+    repository = @host.repositories.create!(
+      full_name: 'fundeduser/funded-project',
+      owner: 'fundeduser',
+      metadata: { 'funding' => { 'github' => 'fundeduser', 'open_collective' => 'funded-project' } },
+      created_at: Time.now,
+      updated_at: Time.now
+    )
+
+    get api_v1_host_repository_path(host_id: @host.name, id: repository.full_name)
+    assert_response :success
+
+    actual_response = JSON.parse(@response.body)
+    assert_equal ['https://github.com/sponsors/fundeduser', 'https://opencollective.com/funded-project'],
+                 actual_response['funding_links']
+  end
+
+  test 'repository funding_links from owner funding only' do
+    owner = @host.owners.create!(login: 'sponsorowner', metadata: { 'has_sponsors_listing' => true })
+    repository = @host.repositories.create!(
+      full_name: "#{owner.login}/owner-funded-project",
+      owner: owner.login,
+      created_at: Time.now,
+      updated_at: Time.now
+    )
+
+    get api_v1_host_repository_path(host_id: @host.name, id: repository.full_name)
+    assert_response :success
+
+    actual_response = JSON.parse(@response.body)
+    assert_equal ["https://github.com/sponsors/#{owner.login}"], actual_response['funding_links']
+  end
+
+  test 'repository funding_links removes duplicate links' do
+    owner = @host.owners.create!(login: 'dupeuser', metadata: { 'has_sponsors_listing' => true })
+    repository = @host.repositories.create!(
+      full_name: "#{owner.login}/dupe-project",
+      owner: owner.login,
+      metadata: { 'funding' => { 'github' => 'dupeuser' } },
+      created_at: Time.now,
+      updated_at: Time.now
+    )
+
+    get api_v1_host_repository_path(host_id: @host.name, id: repository.full_name)
+    assert_response :success
+
+    actual_response = JSON.parse(@response.body)
+    assert_equal ["https://github.com/sponsors/#{owner.login}"], actual_response['funding_links']
+  end
+
+  test 'repository funding_links is empty with no funding data' do
+    get api_v1_host_repository_path(host_id: @host.name, id: @repository.full_name)
+    assert_response :success
+
+    actual_response = JSON.parse(@response.body)
+    assert_equal [], actual_response['funding_links']
+  end
 end
