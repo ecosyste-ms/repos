@@ -6,127 +6,266 @@ class RepositoryUsageWorkerTest < ActiveSupport::TestCase
   setup do
     @repository = create(:repository, dependencies_parsed_at: Time.current)
     @manifest = create(:manifest, repository: @repository, ecosystem: 'npm')
+    @previous_enabled = ENV['REPOSITORY_USAGE_WRITES_ENABLED']
+    @previous_ids = ENV['REPOSITORY_USAGE_REPOSITORY_IDS']
+    ENV['REPOSITORY_USAGE_WRITES_ENABLED'] = 'true'
+    ENV['REPOSITORY_USAGE_REPOSITORY_IDS'] = @repository.id.to_s
+    RepositoryUsageWorker.clear
   end
 
-  def preview
-    RepositoryUsageWorker.new.perform(@repository.id, true)
+  teardown do
+    ENV['REPOSITORY_USAGE_WRITES_ENABLED'] = @previous_enabled
+    ENV['REPOSITORY_USAGE_REPOSITORY_IDS'] = @previous_ids
+    RepositoryUsageWorker.clear
   end
 
-  test 'preview deduplicates current manifests and lockfiles without changing usage state' do
+  def perform
+    RepositoryUsageWorker.new.perform(@repository.id)
+  end
+
+  def dependency(name, manifest: @manifest)
+    create(:dependency, repository: @repository, manifest: manifest, ecosystem: 'npm', package_name: name)
+  end
+
+  test 'creates unique memberships across current manifests and lockfiles and updates both counts' do
     lockfile = create(:manifest, :lockfile, repository: @repository, ecosystem: 'npm', filepath: 'package-lock.json')
-    create(:dependency, repository: @repository, manifest: @manifest, ecosystem: 'npm', package_name: 'lodash')
-    create(:dependency, repository: @repository, manifest: lockfile, ecosystem: 'npm', package_name: 'lodash')
-    create(:dependency, repository: @repository, manifest: lockfile, ecosystem: 'npm', package_name: 'express')
-    usage = create(:package_usage, ecosystem: 'npm', name: 'existing', key: 'npm:existing', dependents_count: 42)
-    existing = RepositoryUsage.create!(repository: @repository, package_usage: usage)
+    dependency('lodash')
+    dependency('lodash', manifest: lockfile)
+    dependency('express', manifest: lockfile)
 
-    assert_no_difference ['RepositoryUsage.count', 'PackageUsage.count', 'Dependency.count', 'Manifest.count'] do
-      assert_equal [['npm', 'express'], ['npm', 'lodash']], preview.sort
+    assert_difference ['RepositoryUsage.count', 'PackageUsage.count'], 2 do
+      perform
     end
-    assert_equal existing.id, RepositoryUsage.where(repository: @repository).pick(:id)
-    assert_equal 42, usage.reload.dependents_count
-    assert_nil @repository.reload.usage_last_calculated
+    assert_equal ['express', 'lodash'], PackageUsage.order(:name).pluck(:name)
+    assert_equal [[1, 1], [1, 1]], PackageUsage.pluck(:dependents_count, :repository_usages_count)
+    assert_not_nil @repository.reload.usage_last_calculated
   end
 
-  test 'preview excludes tag observations even when they have the same repository id' do
+  test 'leaves unchanged relationship ids and counters untouched on retries and requirement changes' do
+    observation = dependency('lodash')
+    perform
+    usage = PackageUsage.find_by!(key: 'npm:lodash')
+    relationship_id = RepositoryUsage.where(repository_id: @repository.id).pick(:id)
+    updated_at = usage.updated_at
+    observation.update!(requirements: '^2')
+    queries = []
+
+    ActiveSupport::Notifications.subscribed(->(*args) { queries << args.last[:sql] }, 'sql.active_record') do
+      2.times { perform }
+    end
+
+    assert_equal relationship_id, RepositoryUsage.where(repository_id: @repository.id).pick(:id)
+    assert_equal [1, 1, updated_at], usage.reload.attributes.values_at('dependents_count', 'repository_usages_count', 'updated_at')
+    assert_empty queries.grep(/(?:UPDATE|INSERT INTO|DELETE FROM) "(?:repository_usages|package_usages)"/)
+  end
+
+  test 'replaces one membership with two relationship writes and allows counts to decrease to zero' do
+    dependency('retained')
+    removed = dependency('removed')
+    perform
+    retained_id = RepositoryUsage.find_by!(package_usage: PackageUsage.find_by!(name: 'retained')).id
+    removed.destroy!
+    dependency('added')
+    perform
+
+    assert_equal retained_id, RepositoryUsage.find_by!(package_usage: PackageUsage.find_by!(name: 'retained')).id
+    assert_equal ['added', 'retained'], @repository.repository_usages.joins(:package_usage).order('package_usages.name').pluck('package_usages.name')
+    assert_equal [0, 0], PackageUsage.find_by!(name: 'removed').attributes.values_at('dependents_count', 'repository_usages_count')
+    assert_equal [1, 1], PackageUsage.find_by!(name: 'added').attributes.values_at('dependents_count', 'repository_usages_count')
+  end
+
+  test 'excludes tag observations even when the manifest also has a repository id' do
     tag = create(:tag, repository: @repository)
     tag_manifest = create(:manifest, repository: nil, tag: tag, ecosystem: 'npm')
     tag_manifest.update_column(:repository_id, @repository.id)
-    create(:dependency, repository: @repository, manifest: tag_manifest, ecosystem: 'npm', package_name: 'historical')
-    create(:dependency, repository: @repository, manifest: @manifest, ecosystem: 'npm', package_name: 'current')
+    dependency('historical', manifest: tag_manifest)
+    dependency('current')
+    perform
 
-    assert_equal [['npm', 'current']], preview
+    assert_equal ['current'], PackageUsage.pluck(:name)
   end
 
-  test 'preview does not query dependencies for a repository without manifests' do
-    @manifest.destroy!
-    queries = []
-    callback = ->(*args) { queries << args.last[:sql] }
+  test 'removes all duplicate relationship rows but decrements only one repository membership' do
+    dependency('lodash')
+    perform
+    usage = PackageUsage.find_by!(name: 'lodash')
+    RepositoryUsage.create!(repository: @repository, package_usage: usage)
+    Dependency.where(manifest_id: @manifest.id).delete_all
+    perform
+    perform
 
-    ActiveSupport::Notifications.subscribed(callback, 'sql.active_record') do
-      assert_equal [], preview
-    end
-    assert_empty queries.grep(/FROM "dependencies"/)
+    assert_empty RepositoryUsage.where(repository_id: @repository.id)
+    assert_equal [0, 0], usage.reload.attributes.values_at('dependents_count', 'repository_usages_count')
   end
 
-  test 'preview reads fresh manifest ids after bulk deletion' do
-    create(:dependency, repository: @repository, manifest: @manifest, ecosystem: 'npm', package_name: 'deleted')
-    @repository.manifests.load
-    Manifest.where(id: @manifest.id).delete_all
-    Repository.expects(:find).with(@repository.id).returns(@repository)
+  test 'preserves raw case in package identity and ignores invalid observations' do
+    dependency('package')
+    dependency('Package')
+    dependency('...')
+    invalid = dependency('missing-ecosystem')
+    invalid.update_column(:ecosystem, nil)
+    perform
 
-    assert_equal [], preview
+    assert_equal ['npm:Package', 'npm:package'], PackageUsage.order(:key).pluck(:key)
   end
 
-  test 'preview falls back to SQL distinct for larger inputs without losing memberships' do
-    now = Time.current
-    Dependency.insert_all!(Array.new(RepositoryUsage::MAX_RAW_DEPENDENCIES + 1) do |i|
-      { repository_id: @repository.id, manifest_id: @manifest.id, ecosystem: 'npm', package_name: "package-#{i}", requirements: '^1', created_at: now, updated_at: now }
-    end)
-
-    packages = preview
-    assert_equal RepositoryUsage::MAX_RAW_DEPENDENCIES + 1, packages.length
-    assert_includes packages, ['npm', 'package-0']
-    assert_includes packages, ['npm', "package-#{RepositoryUsage::MAX_RAW_DEPENDENCIES}"]
-  end
-
-  test 'Ruby and SQL paths preserve raw identity including null and case' do
-    expected = [['npm', 'package'], ['npm', 'Package'], [nil, 'package'], ['', 'package']]
-    now = Time.current
-    rows = expected.map do |ecosystem, name|
-      { repository_id: @repository.id, manifest_id: @manifest.id, ecosystem: ecosystem, package_name: name, created_at: now, updated_at: now }
-    end
-    Dependency.insert_all!(rows)
-    assert_equal expected.to_set, preview.to_set
-
-    Dependency.insert_all!(Array.new(RepositoryUsage::MAX_RAW_DEPENDENCIES + 1) { rows.first })
-    assert_equal expected.to_set, preview.to_set
-  end
-
-  test 'preview refuses an incomplete package set' do
+  test 'refuses incomplete reads without changing relationships counters or calculation time' do
+    dependency('retained')
+    perform
+    before = @repository.reload.usage_last_calculated
+    usage = PackageUsage.find_by!(name: 'retained')
     now = Time.current
     Dependency.insert_all!(Array.new(RepositoryUsage::MAX_PACKAGES_PER_READ + 1) do |i|
       { repository_id: @repository.id, manifest_id: @manifest.id, ecosystem: 'npm', package_name: "package-#{i}", created_at: now, updated_at: now }
     end)
 
-    assert_raises(RepositoryUsage::ReadLimitExceeded) { preview }
-    assert_nil @repository.reload.usage_last_calculated
+    assert_no_difference ['RepositoryUsage.count', 'PackageUsage.count'] do
+      assert_raises(RepositoryUsage::ReadLimitExceeded) { perform }
+    end
+    assert_equal before, @repository.reload.usage_last_calculated
+    assert_equal 1, usage.reload.dependents_count
   end
 
-  test 'preview refuses an incomplete manifest set before reading dependencies' do
+  test 'refuses an incomplete manifest set before reading dependencies' do
     now = Time.current
     Manifest.insert_all!(Array.new(RepositoryUsage::MAX_MANIFESTS_PER_READ) do |i|
       { repository_id: @repository.id, ecosystem: 'npm', kind: 'manifest', filepath: "workspace-#{i}/package.json", created_at: now, updated_at: now }
     end)
     queries = []
-    callback = ->(*args) { queries << args.last[:sql] }
-
-    ActiveSupport::Notifications.subscribed(callback, 'sql.active_record') do
-      assert_raises(RepositoryUsage::ReadLimitExceeded) { preview }
+    ActiveSupport::Notifications.subscribed(->(*args) { queries << args.last[:sql] }, 'sql.active_record') do
+      assert_raises(RepositoryUsage::ReadLimitExceeded) { perform }
     end
     assert_empty queries.grep(/FROM "dependencies"/)
+    assert_nil @repository.reload.usage_last_calculated
   end
 
-  test 'preview uses a read-only snapshot with transaction-local query safeguards' do
+  test 'rejects an inconsistent counter baseline and rolls back new package creation' do
+    old_usage = create(:package_usage, ecosystem: 'npm', name: 'old', key: 'npm:old', dependents_count: 12, repository_usages_count: 1)
+    old_relationship = RepositoryUsage.create!(repository: @repository, package_usage: old_usage)
+    dependency('new')
+
+    assert_no_difference ['RepositoryUsage.count', 'PackageUsage.count'] do
+      assert_raises(RepositoryUsage::CounterBaselineRequired) { perform }
+    end
+    assert_equal old_relationship.id, RepositoryUsage.where(repository_id: @repository.id).pick(:id)
+    assert_nil @repository.reload.usage_last_calculated
+    assert_equal [12, 1], old_usage.reload.attributes.values_at('dependents_count', 'repository_usages_count')
+  end
+
+  test 'rolls back count changes when a relationship write fails' do
+    dependency('lodash')
+    perform
+    usage = PackageUsage.find_by!(name: 'lodash')
+    dependency('express')
+    RepositoryUsage.expects(:insert_all!).raises(ActiveRecord::StatementInvalid, 'write failed')
+
+    assert_raises(ActiveRecord::StatementInvalid) { perform }
+    assert_equal [1, 1], usage.reload.attributes.values_at('dependents_count', 'repository_usages_count')
+    assert_nil PackageUsage.find_by(name: 'express')
+    assert_equal [usage.id], RepositoryUsage.pluck(:package_usage_id)
+  end
+
+  test 'destroying a repository decrements unique memberships in its destroy transaction' do
+    dependency('lodash')
+    perform
+    usage = PackageUsage.find_by!(name: 'lodash')
+    RepositoryUsage.create!(repository: @repository, package_usage: usage)
+    @repository.destroy!
+
+    assert_empty RepositoryUsage.all
+    assert_equal [0, 0], usage.reload.attributes.values_at('dependents_count', 'repository_usages_count')
+    assert_nil RepositoryUsageWorker.new.perform(@repository.id)
+  end
+
+  test 'disabled worker and direct entrypoint do no usage reads or writes' do
+    dependency('lodash')
+    ENV.delete('REPOSITORY_USAGE_WRITES_ENABLED')
+    RepositoryUsage.expects(:packages_for_repository).never
+    assert_no_difference ['RepositoryUsage.count', 'PackageUsage.count'] do
+      assert_nil perform
+      assert_nil RepositoryUsage.from_repository(@repository)
+    end
+  end
+
+  test 'allowlist excludes other repositories' do
+    ENV['REPOSITORY_USAGE_REPOSITORY_IDS'] = (@repository.id + 1).to_s
+    RepositoryUsage.expects(:packages_for_repository).never
+    assert_nil perform
+  end
+
+  test 'skips repositories that have not completed parsing' do
+    @repository.update_column(:dependencies_parsed_at, nil)
+    dependency('lodash')
+    assert_no_difference 'RepositoryUsage.count' do
+      perform
+    end
+  end
+
+  test 'concurrent maintenance retries instead of inserting duplicate memberships' do
+    dependency('lodash')
+    error = nil
+    RepositoryUsage.transaction do
+      RepositoryUsage.lock_repository(@repository.id)
+      thread = Thread.new do
+        ActiveRecord::Base.connection_pool.with_connection do
+          RepositoryUsageWorker.new.perform(@repository.id)
+        rescue => exception
+          error = exception
+        end
+      end
+      assert thread.join(5), 'Worker did not finish within the lock test budget'
+    ensure
+      thread&.kill if thread&.alive?
+    end
+
+    assert_instance_of ActiveRecord::LockWaitTimeout, error
+    assert_empty RepositoryUsage.all
+    perform
+    perform
+    assert_equal 1, RepositoryUsage.count
+    assert_equal [1, 1], PackageUsage.first.attributes.values_at('dependents_count', 'repository_usages_count')
+  end
+
+  test 'a parse committing during maintenance cannot commit a stale membership set' do
+    dependency('old')
+    changed = false
+    callback = lambda do |*args|
+      next unless args.last[:sql].include?('FROM "dependencies"') && !changed
+      changed = true
+      Thread.new do
+        ActiveRecord::Base.connection_pool.with_connection do
+          Repository.transaction do
+            Dependency.where(manifest_id: @manifest.id).delete_all
+            dependency('new')
+            Repository.where(id: @repository.id).update_all(dependencies_parsed_at: Time.current)
+          end
+        end
+      end.value
+    end
+
+    ActiveSupport::Notifications.subscribed(callback, 'sql.active_record') do
+      assert_raises(ActiveRecord::SerializationFailure) { perform }
+    end
+    assert_empty RepositoryUsage.all
+    assert_empty PackageUsage.all
+    assert_nil @repository.reload.usage_last_calculated
+
+    perform
+    assert_equal ['new'], PackageUsage.pluck(:name)
+    assert_equal [1], PackageUsage.pluck(:dependents_count)
+  end
+
+  test 'sets query safeguards only for the maintenance transaction' do
+    sql = "SELECT current_setting('statement_timeout') AS statement_timeout, current_setting('lock_timeout') AS lock_timeout, current_setting('jit') AS jit, current_setting('max_parallel_workers_per_gather') AS parallel_workers"
+    before = RepositoryUsage.connection.select_one(sql)
     settings = nil
-    reset_query = "SELECT current_setting('statement_timeout') AS statement_timeout, current_setting('lock_timeout') AS lock_timeout, current_setting('jit') AS jit, current_setting('max_parallel_workers_per_gather') AS parallel_workers"
-    before = RepositoryUsage.connection.select_one(reset_query)
     RepositoryUsage.expects(:packages_for_repository).with do |repository|
-      settings = RepositoryUsage.connection.select_one("SELECT current_setting('transaction_read_only') AS read_only, current_setting('transaction_isolation') AS isolation, current_setting('statement_timeout') AS statement_timeout, current_setting('lock_timeout') AS lock_timeout, current_setting('jit') AS jit, current_setting('max_parallel_workers_per_gather') AS parallel_workers")
+      settings = RepositoryUsage.connection.select_one(sql)
       repository.id == @repository.id
     end.returns([])
+    perform
 
-    preview
-    assert_equal ['on', 'repeatable read', '2s', '250ms', 'off', '0'], settings.values_at('read_only', 'isolation', 'statement_timeout', 'lock_timeout', 'jit', 'parallel_workers')
-    assert_equal 'off', RepositoryUsage.connection.select_value("SHOW transaction_read_only")
-    assert_equal before, RepositoryUsage.connection.select_one(reset_query)
-  end
-
-  test 'ordinary worker calls retain the disabled rebuild behaviour' do
-    RepositoryUsage.expects(:packages_for_repository).never
-
-    assert_no_difference 'RepositoryUsage.count' do
-      assert_nil RepositoryUsageWorker.new.perform(@repository.id)
-    end
+    assert_equal ['2s', '250ms', 'off', '0'], settings.values_at('statement_timeout', 'lock_timeout', 'jit', 'parallel_workers')
+    assert_equal before, RepositoryUsage.connection.select_one(sql)
   end
 end

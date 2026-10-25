@@ -83,6 +83,15 @@ TODO
 
 A container-based deployment is highly recommended, we use [dokku.com](https://dokku.com/).
 
+Usage maintenance is disabled unless `REPOSITORY_USAGE_WRITES_ENABLED=true`.
+Set `REPOSITORY_USAGE_REPOSITORY_IDS` to a comma-separated allowlist of repository IDs for a pilot. An unset or empty allowlist enables all repositories when the write flag is on. The flag is checked both when enqueuing and when processing jobs. Disable it to stop subsequent usage writes, then let any running transaction finish.
+
+Before enabling a pilot, establish both package counters from distinct repository memberships in `repository_usages` for every package it can add or remove. Existing counters may be stale even when they agree. Do this separately with bounded runner scripts or offline exports; do not run a global recount on production. Reconciliation rejects missing, unequal or underflowing counters, but cannot detect equal stale values. Repairing the baseline does not reconcile historical relationships; those still need a separate catch-up.
+
+Start with a small allowlist and one consumer of the existing `usage` queue. Account for every worker process that consumes that queue when setting concurrency. Worker transactions cap manifest and package sets, use a 2-second statement timeout and a 250-millisecond lock timeout, and roll back on failure. These are per-statement limits, not a total job deadline. Inspect queue age, retries, database I/O and WAL through runner scripts and existing monitoring before widening the pilot. Oversized repositories remain unreconciled until handled separately; do not treat a read limit as an empty snapshot.
+
+Successful repository parses enqueue after their observations commit. Jobs coalesce while waiting, and a parse during a running job can enqueue another refresh. Current manifests and lockfiles contribute one membership per package; tag-only observations do not. Requirement changes leave memberships untouched. During the pilot, manifests without a SHA compare dependency observations before replacing them. Repository destruction decrements memberships in the destroy transaction. Bulk SQL deletes bypass these callbacks and require separate counter repair.
+
 ## Alternative service domains
 
 This service uses a number of other ecosyste.ms services, you can use alternative domains for these services by setting the following environment variables:

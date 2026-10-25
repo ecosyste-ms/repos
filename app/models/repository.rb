@@ -7,6 +7,9 @@ class Repository < ApplicationRecord
 
   belongs_to :host
 
+  before_destroy -> { RepositoryUsage.remove_repository(self) }, prepend: true
+  after_update_commit :enqueue_usage_update, if: :saved_change_to_usage_updated_at?
+
   has_many :manifests, dependent: :destroy
   has_many :tags, dependent: :delete_all
   has_many :releases, dependent: :delete_all
@@ -254,53 +257,63 @@ class Repository < ApplicationRecord
   def record_dependency_parsing(json)
     if ["complete", "error"].include?(json["status"])
       if json["status"] == "complete"
-        new_manifests = json["results"].to_h.with_indifferent_access["manifests"]
+        transaction do
+          lock! if RepositoryUsage.writes_enabled?(id)
+          new_manifests = json["results"].to_h.with_indifferent_access["manifests"]
 
-        if new_manifests.blank?
-          manifest_ids = manifests.pluck(:id)
-          Dependency.where(manifest_id: manifest_ids).delete_all if manifest_ids.any?
-          manifests.delete_all
-        else
-          new_manifests.each { |m| sync_manifest(m) }
-          delete_old_manifests(new_manifests)
+          if new_manifests.blank?
+            manifest_ids = manifests.pluck(:id)
+            Dependency.where(manifest_id: manifest_ids).delete_all if manifest_ids.any?
+            manifests.delete_all
+          else
+            new_manifests.each { |m| sync_manifest(m) }
+            delete_old_manifests(new_manifests)
+          end
+          now = Time.current
+          update!(dependencies_parsed_at: now, dependency_job_id: nil, usage_updated_at: now)
         end
+      else
+        update_columns(dependencies_parsed_at: Time.current, dependency_job_id: nil)
       end
-
-      update_columns(dependencies_parsed_at: Time.now, dependency_job_id: nil)
-      RepositoryUsage.from_repository(self)
     else
       update_column(:dependency_job_id, json["id"]) if dependency_job_id != json["id"]
       ParseDependenciesWorker.perform_in(10.minutes, id)
     end
   end
 
+  def enqueue_usage_update
+    RepositoryUsageWorker.perform_async(id) if RepositoryUsage.writes_enabled?(id)
+  end
+
   def sync_manifest(m)
     args = {ecosystem: m[:platform] || m[:ecosystem], kind: m[:kind], filepath: m[:path], sha: m[:sha]}
+    manifest = manifests.find_by(args)
+    return if manifest && (args[:sha].present? || !RepositoryUsage.writes_enabled?(id))
 
-    unless manifests.find_by(args)
-      manifest = manifests.create(args)
-      return if m[:dependencies].nil?
-      dependencies = m[:dependencies].compact.map(&:with_indifferent_access).uniq { |dep| [dep[:name].try(:strip), dep[:requirement], dep[:type]] }
+    manifest ||= manifests.create!(args)
+    dependencies = Array(m[:dependencies]).compact.map(&:with_indifferent_access).uniq { |dep| [dep[:name].try(:strip), dep[:requirement], dep[:type]] }
 
-      deps = dependencies.map do |dep|
-        ecosystem = manifest.ecosystem
-        next unless dep.is_a?(Hash)
-        next unless dep[:name].present?
-        {
-          manifest_id: manifest.id,
-          package_name: dep[:name].to_s.strip[0..255],
-          ecosystem: ecosystem,
-          requirements: dep[:requirement],
-          kind: dep[:type],
-          repository_id: id,
-          direct: manifest.kind == "manifest",
-          created_at: Time.now,
-          updated_at: Time.now
-        }
-      end.compact
-
-      Dependency.insert_all(deps) if deps.any?
+    deps = dependencies.filter_map do |dep|
+      next unless dep[:name].present?
+      {
+        manifest_id: manifest.id,
+        package_name: dep[:name].to_s.strip[0..255],
+        ecosystem: manifest.ecosystem,
+        requirements: dep[:requirement],
+        kind: dep[:type],
+        repository_id: id,
+        direct: manifest.kind == "manifest",
+        created_at: Time.current,
+        updated_at: Time.current
+      }
     end
+
+    columns = [:package_name, :requirements, :kind, :direct]
+    existing = Dependency.where(manifest_id: manifest.id).pluck(*columns)
+    return if existing.to_set == deps.map { |dep| dep.values_at(*columns) }.to_set
+
+    Dependency.where(manifest_id: manifest.id).delete_all
+    Dependency.insert_all(deps) if deps.any?
   end
 
   def delete_old_manifests(new_manifests)
