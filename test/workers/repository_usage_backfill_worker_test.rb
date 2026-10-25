@@ -1,12 +1,15 @@
 require 'test_helper'
+require 'sidekiq/job_retry'
+require 'sidekiq/api'
 
 class RepositoryUsageBackfillWorkerTest < ActiveSupport::TestCase
   self.use_transactional_tests = false
 
   setup do
-    @previous = ENV.to_h.slice('REPOSITORY_USAGE_GENERATION', 'REPOSITORY_USAGE_WRITES_ENABLED', 'REPOSITORY_USAGE_REPOSITORY_IDS')
+    @previous = ENV.to_h.slice('REPOSITORY_USAGE_GENERATION', 'REPOSITORY_USAGE_WRITES_ENABLED', 'REPOSITORY_USAGE_REPOSITORY_IDS', 'REPOSITORY_USAGE_BACKFILL_INTERVAL')
     ENV['REPOSITORY_USAGE_GENERATION'] = '171'
     ENV['REPOSITORY_USAGE_WRITES_ENABLED'] = 'true'
+    ENV['REPOSITORY_USAGE_BACKFILL_INTERVAL'] = '0'
     ENV.delete('REPOSITORY_USAGE_REPOSITORY_IDS')
     clear_progress
     RepositoryUsageBackfillWorker.clear
@@ -22,7 +25,7 @@ class RepositoryUsageBackfillWorkerTest < ActiveSupport::TestCase
     RepositoryUsageBackfillWorker.clear
     Sidekiq::Testing.server_middleware { |chain| chain.remove SidekiqUniqueJobs::Middleware::Server }
     @previous.each { |key, value| ENV[key] = value }
-    %w[REPOSITORY_USAGE_GENERATION REPOSITORY_USAGE_WRITES_ENABLED REPOSITORY_USAGE_REPOSITORY_IDS].each { |key| ENV.delete(key) unless @previous.key?(key) }
+    %w[REPOSITORY_USAGE_GENERATION REPOSITORY_USAGE_WRITES_ENABLED REPOSITORY_USAGE_REPOSITORY_IDS REPOSITORY_USAGE_BACKFILL_INTERVAL].each { |key| ENV.delete(key) unless @previous.key?(key) }
   end
 
   def clear_progress
@@ -91,6 +94,44 @@ class RepositoryUsageBackfillWorkerTest < ActiveSupport::TestCase
     assert_includes settings, "SET LOCAL statement_timeout = '5s'"
     assert_equal 0, RepositoryUsageBackfillWorker.status['pending']
     assert_equal 1, @package.reload.repository_usages_count
+  end
+
+  [ActiveRecord::LockWaitTimeout, ActiveRecord::SerializationFailure, ActiveRecord::QueryCanceled].each do |error|
+    test "#{error.name} retries the batch without advancing or creating manual work" do
+      later = create(:repository, dependencies_parsed_at: Time.current)
+      manifest = create(:manifest, repository: later)
+      create(:dependency, repository: later, manifest: manifest, ecosystem: 'npm', package_name: 'later')
+      PackageUsage.expects(:insert_all).raises(error)
+      worker = RepositoryUsageBackfillWorker.new
+      jid = SecureRandom.hex(12)
+      payload = Sidekiq.dump_json('class' => worker.class.name, 'args' => [171], 'queue' => 'usage', 'jid' => jid, 'retry' => true)
+      assert_raises(Sidekiq::JobRetry::Handled) do
+        Sidekiq::JobRetry.new(Sidekiq.default_configuration).local(worker, payload, 'usage') { worker.perform(171) }
+      end
+      retry_job = Sidekiq::RetrySet.new.find_job(jid)
+      assert_not_nil retry_job
+      assert_equal 1, @package.reload.repository_usages_count
+      assert_nil REDIS.hget(RepositoryUsageBackfillWorker.key, 'cursor')
+      assert_equal 0, RepositoryUsageBackfillWorker.status['pending']
+      assert_not RepositoryUsageBackfillWorker.status['ready']
+      PackageUsage.unstub(:insert_all)
+      worker.perform(*retry_job.args)
+      assert_equal 1, @package.reload.repository_usages_count
+      assert_equal 1, PackageUsage.find_by!(name: 'later').repository_usages_count
+      perform
+      assert RepositoryUsageBackfillWorker.status['ready']
+    ensure
+      retry_job&.delete
+    end
+  end
+
+  test 'an unset or negative interval fails before reading repositories or advancing progress' do
+    Repository.expects(:transaction).never
+    ENV.delete('REPOSITORY_USAGE_BACKFILL_INTERVAL')
+    assert_raises(KeyError) { perform }
+    ENV['REPOSITORY_USAGE_BACKFILL_INTERVAL'] = '-1'
+    assert_raises(ArgumentError) { perform }
+    assert_empty REDIS.hgetall(RepositoryUsageBackfillWorker.key)
   end
 
   test 'disabled allowlisted and obsolete generation jobs do not advance coverage' do

@@ -22,7 +22,7 @@ class RepositoryUsageBackfillWorker
     RepositoryUsage.from_repository(repository, **limits) if repository
     REDIS.zrem("#{key}:pending", id)
     true
-  rescue RepositoryUsage::ReadLimitExceeded, RepositoryUsage::InvalidContribution, ActiveRecord::StatementInvalid => error
+  rescue RepositoryUsage::ReadLimitExceeded, RepositoryUsage::InvalidContribution => error
     record_failure(id, error)
     false
   end
@@ -38,6 +38,9 @@ class RepositoryUsageBackfillWorker
     key = self.class.key(generation)
     state = REDIS.hgetall(key)
     return if state['finished'] == 'true'
+
+    interval = Integer(ENV.fetch('REPOSITORY_USAGE_BACKFILL_INTERVAL'))
+    raise ArgumentError, 'Backfill interval must be non-negative' if interval.negative?
 
     rows = Repository.transaction do
       Repository.connection.execute("SET LOCAL statement_timeout = '2s'")
@@ -56,6 +59,6 @@ class RepositoryUsageBackfillWorker
       self.class.retry_repository(id) if parsed_at
     end
     REDIS.hset(key, 'cursor', rows.last.first)
-    self.class.perform_in(Integer(ENV.fetch('REPOSITORY_USAGE_BACKFILL_INTERVAL', '10')), generation)
+    self.class.perform_in(interval, generation)
   end
 end

@@ -1,4 +1,6 @@
 require 'test_helper'
+require 'sidekiq/job_retry'
+require 'sidekiq/api'
 
 class RepositoryUsageWorkerTest < ActiveSupport::TestCase
   self.use_transactional_tests = false
@@ -322,15 +324,23 @@ class RepositoryUsageWorkerTest < ActiveSupport::TestCase
     assert_equal 1, usage.reload.repository_usages_count
   end
 
-  test 'exhausted parse-triggered jobs are retained for explicit retry' do
+  test 'exhausted transient failures remain visible without suppressing later parse jobs' do
     dependency('shared')
-    RepositoryUsageWorker.sidekiq_retries_exhausted_block.call({'args' => [@repository.id]}, ActiveRecord::StatementInvalid.new('failed'))
-    assert_equal [@repository.id.to_s], RepositoryUsageBackfillWorker.status['pending_ids']
-    perform
-    assert_empty RepositoryUsage.all
-    assert RepositoryUsageBackfillWorker.retry_repository(@repository.id)
-    assert_equal 1, PackageUsage.first.repository_usages_count
+    worker = RepositoryUsageWorker.new
+    jid = SecureRandom.hex(12)
+    payload = Sidekiq.dump_json('class' => worker.class.name, 'args' => [@repository.id], 'queue' => 'usage', 'jid' => jid, 'retry' => 0)
+    RepositoryUsage.expects(:from_repository).raises(ActiveRecord::QueryCanceled)
+    assert_raises(Sidekiq::JobRetry::Handled) do
+      Sidekiq::JobRetry.new(Sidekiq.default_configuration).local(worker, payload, 'usage') { worker.perform(@repository.id) }
+    end
+    dead_job = Sidekiq::DeadSet.new.find_job(jid)
+    assert_not_nil dead_job
     assert_equal 0, RepositoryUsageBackfillWorker.status['pending']
+    RepositoryUsage.unstub(:from_repository)
+    perform
+    assert_equal 1, PackageUsage.first.repository_usages_count
+  ensure
+    dead_job&.delete
   end
 
   test 'deletion waits for maintenance and reverses contributions even when writes are disabled' do

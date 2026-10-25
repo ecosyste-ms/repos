@@ -3,10 +3,6 @@ class RepositoryUsageWorker
   include GithubRateLimitRetry
   sidekiq_options queue: 'usage', lock: :until_executing, lock_ttl: 1.day.to_i
 
-  sidekiq_retries_exhausted do |job, error|
-    RepositoryUsageBackfillWorker.record_failure(job['args'].first, error)
-  end
-
   def perform(repository_id)
     return unless RepositoryUsage.writes_enabled?(repository_id)
     return if REDIS.zscore("#{RepositoryUsageBackfillWorker.key}:pending", repository_id)
