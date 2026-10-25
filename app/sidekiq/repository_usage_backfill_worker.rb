@@ -22,7 +22,7 @@ class RepositoryUsageBackfillWorker
     RepositoryUsage.from_repository(repository, **limits) if repository
     REDIS.zrem("#{key}:pending", id)
     true
-  rescue RepositoryUsage::ReadLimitExceeded, RepositoryUsage::InvalidContribution => error
+  rescue RepositoryUsage::ReadLimitExceeded, RepositoryUsage::InvalidContribution, ActiveRecord::QueryCanceled => error
     record_failure(id, error)
     false
   end

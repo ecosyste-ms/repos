@@ -96,7 +96,32 @@ class RepositoryUsageBackfillWorkerTest < ActiveSupport::TestCase
     assert_equal 1, @package.reload.repository_usages_count
   end
 
-  [ActiveRecord::LockWaitTimeout, ActiveRecord::SerializationFailure, ActiveRecord::QueryCanceled].each do |error|
+  test 'a timed out repository stays pending while the pass continues and can be retried with a longer timeout' do
+    later = create(:repository, dependencies_parsed_at: Time.current)
+    manifest = create(:manifest, repository: later)
+    create(:dependency, repository: later, manifest: manifest, ecosystem: 'npm', package_name: 'later')
+    RepositoryUsage.expects(:packages_for_repository).with { |repository, **| repository.id == @repository.id }.raises(ActiveRecord::QueryCanceled)
+    RepositoryUsage.expects(:packages_for_repository).with { |repository, **| repository.id == later.id }.returns([['npm', 'later']])
+    perform
+    perform
+    status = RepositoryUsageBackfillWorker.status
+    assert_equal 'true', status['finished']
+    assert_not status['ready']
+    assert_equal [@repository.id.to_s], status['pending_ids']
+    assert_equal 1, PackageUsage.find_by!(name: 'later').repository_usages_count
+    assert_nil @repository.reload.usage_count_generation
+    RepositoryUsage.unstub(:packages_for_repository)
+    settings = []
+    callback = ->(*args) { settings << args.last[:sql] if args.last[:sql].include?('SET LOCAL statement_timeout') }
+    ActiveSupport::Notifications.subscribed(callback, 'sql.active_record') do
+      2.times { assert RepositoryUsageBackfillWorker.retry_repository(@repository.id, statement_timeout: '5s') }
+    end
+    assert_includes settings, "SET LOCAL statement_timeout = '5s'"
+    assert RepositoryUsageBackfillWorker.status['ready']
+    assert_equal 1, @package.reload.repository_usages_count
+  end
+
+  [ActiveRecord::LockWaitTimeout, ActiveRecord::SerializationFailure].each do |error|
     test "#{error.name} retries the batch without advancing or creating manual work" do
       later = create(:repository, dependencies_parsed_at: Time.current)
       manifest = create(:manifest, repository: later)
