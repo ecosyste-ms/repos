@@ -1,6 +1,8 @@
 require "test_helper"
 
 class RepositoryUsageTest < ActiveSupport::TestCase
+  self.use_transactional_tests = false
+
   context 'associations' do
     should belong_to(:repository)
     should belong_to(:package_usage)
@@ -13,9 +15,17 @@ class RepositoryUsageTest < ActiveSupport::TestCase
 
   context '.from_repository' do
     setup do
-      skip "TODO(DB_PERF): RepositoryUsage disabled 2026-01-10"
+      @previous_enabled = ENV['REPOSITORY_USAGE_WRITES_ENABLED']
+      @previous_ids = ENV['REPOSITORY_USAGE_REPOSITORY_IDS']
+      ENV['REPOSITORY_USAGE_WRITES_ENABLED'] = 'true'
+      ENV.delete('REPOSITORY_USAGE_REPOSITORY_IDS')
       @repository = create(:repository, dependencies_parsed_at: Time.now)
       @manifest = create(:manifest, repository: @repository)
+    end
+
+    teardown do
+      ENV['REPOSITORY_USAGE_WRITES_ENABLED'] = @previous_enabled
+      ENV['REPOSITORY_USAGE_REPOSITORY_IDS'] = @previous_ids
     end
 
     should 'create repository usages for dependencies' do
@@ -48,7 +58,7 @@ class RepositoryUsageTest < ActiveSupport::TestCase
       end
     end
 
-    should 'clear existing usages before recalculating' do
+    should 'reconcile existing usages when dependencies change' do
       dep = create(:dependency, manifest: @manifest, repository: @repository, ecosystem: 'npm', package_name: 'lodash')
       RepositoryUsage.from_repository(@repository)
 
@@ -63,7 +73,7 @@ class RepositoryUsageTest < ActiveSupport::TestCase
     end
 
     should 'reuse existing package_usages' do
-      existing_pu = create(:package_usage, ecosystem: 'npm', name: 'lodash', key: 'npm:lodash')
+      existing_pu = create(:package_usage, ecosystem: 'npm', name: 'lodash', key: 'npm:lodash', dependents_count: 0, repository_usages_count: 0)
       create(:dependency, manifest: @manifest, repository: @repository, ecosystem: 'npm', package_name: 'lodash')
 
       assert_no_difference 'PackageUsage.count' do

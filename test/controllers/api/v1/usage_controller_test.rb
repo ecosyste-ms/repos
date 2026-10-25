@@ -1,6 +1,39 @@
 require "test_helper"
 
 class ApiV1UsageControllerTest < ActionDispatch::IntegrationTest
+  self.use_transactional_tests = false
+
+  test 'membership removals decrease API counts and invalidate conditional responses' do
+    previous_enabled = ENV['REPOSITORY_USAGE_WRITES_ENABLED']
+    previous_ids = ENV['REPOSITORY_USAGE_REPOSITORY_IDS']
+    repository = create(:repository, dependencies_parsed_at: Time.current)
+    ENV['REPOSITORY_USAGE_WRITES_ENABLED'] = 'true'
+    ENV['REPOSITORY_USAGE_REPOSITORY_IDS'] = repository.id.to_s
+    manifest = create(:manifest, repository: repository)
+    dependency = create(:dependency, repository: repository, manifest: manifest, ecosystem: 'npm', package_name: 'lodash')
+    RepositoryUsageWorker.new.perform(repository.id)
+
+    get api_v1_usage_url('npm', 'lodash')
+    assert_response :success
+    assert_equal 1, response.parsed_body['dependents_count']
+    etag = response.headers['ETag']
+
+    travel 2.seconds do
+      dependency.destroy!
+      RepositoryUsageWorker.new.perform(repository.id)
+    end
+    get api_v1_usage_url('npm', 'lodash'), headers: { 'If-None-Match' => etag }
+    assert_response :success
+    assert_equal 0, response.parsed_body['dependents_count']
+    assert_not_equal etag, response.headers['ETag']
+
+    get api_v1_usage_url('npm', 'lodash'), headers: { 'If-None-Match' => response.headers['ETag'] }
+    assert_response :not_modified
+  ensure
+    ENV['REPOSITORY_USAGE_WRITES_ENABLED'] = previous_enabled
+    ENV['REPOSITORY_USAGE_REPOSITORY_IDS'] = previous_ids
+  end
+
   test "should get index" do
     get api_v1_usage_index_url
     assert_response :success
