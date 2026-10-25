@@ -117,8 +117,8 @@ namespace :health do
     # Check for disabled features
     puts "\n## Disabled Features (TODO(DB_PERF))"
     disabled = []
-    disabled << "RepositoryUsage.from_repository" if RepositoryUsage.from_repository(nil).nil? rescue true
-    disabled << "RepositoryUsage.crawl" if RepositoryUsage.crawl.nil? rescue true
+    disabled << "RepositoryUsage.from_repository" unless RepositoryUsage.writes_enabled?
+    disabled << "RepositoryUsage.crawl" unless RepositoryUsage.writes_enabled?
     disabled << "topics#show (503)" # Still disabled until filtering is optimized
     disabled << "hosts#topic (503)" # Still disabled until filtering is optimized
 

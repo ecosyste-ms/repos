@@ -6,14 +6,14 @@ class Api::V1::UsageController < Api::V1::ApplicationController
 
   def ecosystem
     @ecosystem = params[:ecosystem]
-    @scope = PackageUsage.where(ecosystem: @ecosystem).order('dependents_count DESC')
+    @scope = PackageUsage.where(ecosystem: @ecosystem).order(PackageUsage.usage_order)
     @pagy, @package_usages = pagy_countless(@scope)
-    fresh_when etag: @package_usages, last_modified: @package_usages.filter_map(&:updated_at).max, public: true
+    fresh_when etag: [@package_usages, PackageUsage.read_generation], last_modified: (@package_usages.filter_map(&:updated_at).max unless PackageUsage.read_generation), public: true
   end
 
   def show
     @usage = find_or_create_usage!
-    fresh_when @usage, public: true
+    fresh_when etag: [@usage, PackageUsage.read_generation], last_modified: (@usage.updated_at unless PackageUsage.read_generation), public: true
   end
 
   def dependent_repositories

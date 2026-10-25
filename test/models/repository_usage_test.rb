@@ -15,6 +15,8 @@ class RepositoryUsageTest < ActiveSupport::TestCase
 
   context '.from_repository' do
     setup do
+      @previous_generation = ENV['REPOSITORY_USAGE_GENERATION']
+      ENV['REPOSITORY_USAGE_GENERATION'] = '1'
       @previous_enabled = ENV['REPOSITORY_USAGE_WRITES_ENABLED']
       @previous_ids = ENV['REPOSITORY_USAGE_REPOSITORY_IDS']
       ENV['REPOSITORY_USAGE_WRITES_ENABLED'] = 'true'
@@ -24,6 +26,7 @@ class RepositoryUsageTest < ActiveSupport::TestCase
     end
 
     teardown do
+      ENV['REPOSITORY_USAGE_GENERATION'] = @previous_generation
       ENV['REPOSITORY_USAGE_WRITES_ENABLED'] = @previous_enabled
       ENV['REPOSITORY_USAGE_REPOSITORY_IDS'] = @previous_ids
     end
@@ -67,6 +70,7 @@ class RepositoryUsageTest < ActiveSupport::TestCase
       dep.destroy
       create(:dependency, manifest: @manifest, repository: @repository, ecosystem: 'npm', package_name: 'express')
       create(:dependency, manifest: @manifest, repository: @repository, ecosystem: 'npm', package_name: 'react')
+      @repository.update_column(:usage_updated_at, Time.current)
       RepositoryUsage.from_repository(@repository)
 
       assert_equal 2, RepositoryUsage.where(repository: @repository).count

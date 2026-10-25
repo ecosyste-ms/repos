@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_03_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_25_130000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -121,6 +121,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_120000) do
     t.datetime "package_last_synced_at"
     t.integer "repository_usages_count"
     t.datetime "updated_at"
+    t.bigint "usage_count_generation"
     t.index ["ecosystem", "name"], name: "index_package_usages_on_ecosystem_and_name"
     t.index ["key"], name: "index_package_usages_on_key", unique: true
   end
@@ -207,6 +208,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_120000) do
     t.datetime "usage_last_calculated"
     t.datetime "usage_updated_at"
     t.string "uuid"
+    t.bigint "usage_count_generation"
     t.index "host_id, lower((full_name)::text)", name: "index_repositories_on_host_id_lower_full_name", unique: true
     t.index ["host_id", "uuid"], name: "index_repositories_on_host_id_uuid", unique: true
     t.index ["owner"], name: "index_repositories_on_owner"

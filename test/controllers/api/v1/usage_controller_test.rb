@@ -4,6 +4,9 @@ class ApiV1UsageControllerTest < ActionDispatch::IntegrationTest
   self.use_transactional_tests = false
 
   test 'membership removals decrease API counts and invalidate conditional responses' do
+    previous_generation = ENV['REPOSITORY_USAGE_GENERATION']
+    previous_read_generation = ENV['REPOSITORY_USAGE_READ_GENERATION']
+    ENV['REPOSITORY_USAGE_GENERATION'] = ENV['REPOSITORY_USAGE_READ_GENERATION'] = '1'
     previous_enabled = ENV['REPOSITORY_USAGE_WRITES_ENABLED']
     previous_ids = ENV['REPOSITORY_USAGE_REPOSITORY_IDS']
     repository = create(:repository, dependencies_parsed_at: Time.current)
@@ -20,6 +23,7 @@ class ApiV1UsageControllerTest < ActionDispatch::IntegrationTest
 
     travel 2.seconds do
       dependency.destroy!
+      repository.update_column(:usage_updated_at, Time.current)
       RepositoryUsageWorker.new.perform(repository.id)
     end
     get api_v1_usage_url('npm', 'lodash'), headers: { 'If-None-Match' => etag }
@@ -30,6 +34,8 @@ class ApiV1UsageControllerTest < ActionDispatch::IntegrationTest
     get api_v1_usage_url('npm', 'lodash'), headers: { 'If-None-Match' => response.headers['ETag'] }
     assert_response :not_modified
   ensure
+    ENV['REPOSITORY_USAGE_GENERATION'] = previous_generation
+    ENV['REPOSITORY_USAGE_READ_GENERATION'] = previous_read_generation
     ENV['REPOSITORY_USAGE_WRITES_ENABLED'] = previous_enabled
     ENV['REPOSITORY_USAGE_REPOSITORY_IDS'] = previous_ids
   end
@@ -37,6 +43,32 @@ class ApiV1UsageControllerTest < ActionDispatch::IntegrationTest
   test "should get index" do
     get api_v1_usage_index_url
     assert_response :success
+  end
+
+  test 'switching count generation changes values ordering and cache validators without publication writes' do
+    previous = ENV['REPOSITORY_USAGE_READ_GENERATION']
+    ENV.delete('REPOSITORY_USAGE_READ_GENERATION')
+    used = create(:package_usage, ecosystem: 'npm', name: 'used', key: 'npm:used', dependents_count: 1, repository_usages_count: 3, usage_count_generation: 7)
+    unused = create(:package_usage, ecosystem: 'npm', name: 'unused', key: 'npm:unused', dependents_count: 99, repository_usages_count: 888)
+    get api_v1_usage_url('npm', 'unused')
+    assert_equal 99, response.parsed_body['dependents_count']
+    etag, modified = response.headers.values_at('ETag', 'Last-Modified')
+    get api_v1_ecosystem_usage_url('npm')
+    ecosystem_etag = response.headers['ETag']
+    assert_equal ['unused', 'used'], response.parsed_body.pluck('name')
+    ENV['REPOSITORY_USAGE_READ_GENERATION'] = '7'
+    get api_v1_usage_url('npm', 'unused'), headers: {'If-None-Match' => etag}
+    assert_response :success
+    assert_equal 0, response.parsed_body['dependents_count']
+    assert_not_equal etag, response.headers['ETag']
+    get api_v1_usage_url('npm', 'unused'), headers: {'If-Modified-Since' => modified}
+    assert_response :success
+    get api_v1_ecosystem_usage_url('npm'), headers: {'If-None-Match' => ecosystem_etag}
+    assert_response :success
+    assert_equal [['used', 3], ['unused', 0]], response.parsed_body.map { |row| row.values_at('name', 'dependents_count') }
+    assert_equal [1, 99], [used, unused].map { |usage| usage.reload[:dependents_count] }
+  ensure
+    ENV['REPOSITORY_USAGE_READ_GENERATION'] = previous
   end
 
   test "should get ecosystem" do
