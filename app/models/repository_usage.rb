@@ -4,7 +4,7 @@ class RepositoryUsage < ApplicationRecord
   MAX_PACKAGES_PER_READ = 10_000
 
   class ReadLimitExceeded < StandardError; end
-  class CounterBaselineRequired < StandardError; end
+  class InvalidContribution < StandardError; end
 
   validates :repository_id, presence: true
   validates :package_usage_id, presence: true
@@ -12,26 +12,31 @@ class RepositoryUsage < ApplicationRecord
   belongs_to :repository
   belongs_to :package_usage
 
-  def self.writes_enabled?(repository_id)
-    return false unless ENV['REPOSITORY_USAGE_WRITES_ENABLED'] == 'true'
+  def self.generation
+    value = ENV['REPOSITORY_USAGE_GENERATION']
+    Integer(value, 10) if value&.match?(/\A[1-9]\d*\z/)
+  end
+
+  def self.writes_enabled?(repository_id = nil)
+    return false unless ENV['REPOSITORY_USAGE_WRITES_ENABLED'] == 'true' && generation
 
     ids = ENV['REPOSITORY_USAGE_REPOSITORY_IDS'].to_s.split(',').map(&:strip)
     ids.empty? || ids.include?(repository_id.to_s)
   end
 
-  def self.packages_for_repository(repository)
-    manifest_ids = Manifest.where(repository_id: repository.id, tag_id: nil).limit(MAX_MANIFESTS_PER_READ + 1).pluck(:id)
-    if manifest_ids.length > MAX_MANIFESTS_PER_READ
-      raise ReadLimitExceeded, "Repository #{repository.id} exceeds the #{MAX_MANIFESTS_PER_READ} manifest read limit"
+  def self.packages_for_repository(repository, max_manifests: MAX_MANIFESTS_PER_READ, max_packages: MAX_PACKAGES_PER_READ)
+    manifest_ids = Manifest.where(repository_id: repository.id, tag_id: nil).limit(max_manifests + 1).pluck(:id)
+    if manifest_ids.length > max_manifests
+      raise ReadLimitExceeded, "Repository #{repository.id} exceeds the #{max_manifests} manifest read limit"
     end
     return [] if manifest_ids.empty?
 
     dependencies = Dependency.where(manifest_id: manifest_ids)
     packages = dependencies.limit(MAX_RAW_DEPENDENCIES + 1).pluck(:ecosystem, :package_name)
     if packages.length > MAX_RAW_DEPENDENCIES
-      packages = dependencies.distinct.limit(MAX_PACKAGES_PER_READ + 1).pluck(:ecosystem, :package_name)
-      if packages.length > MAX_PACKAGES_PER_READ
-        raise ReadLimitExceeded, "Repository #{repository.id} exceeds the #{MAX_PACKAGES_PER_READ} package read limit"
+      packages = dependencies.distinct.limit(max_packages + 1).pluck(:ecosystem, :package_name)
+      if packages.length > max_packages
+        raise ReadLimitExceeded, "Repository #{repository.id} exceeds the #{max_packages} package read limit"
       end
     end
 
@@ -39,43 +44,45 @@ class RepositoryUsage < ApplicationRecord
   end
 
   def self.crawl
-    # TODO(DB_PERF): crawl disabled 2026-01-10
-    # Iterates all 297M repositories with find_each, calls from_repository on each
-    # Needs batching with limits, or move to scheduled background job with throttling
-    return
-    latest_id = REDIS.get('repository_usage_crawl_id').to_i
-
-    Repository.where('id > ?', latest_id).find_each do |repository|
-      next if repository.dependencies_parsed_at.nil?
-      next if repository.usage_last_calculated.present?
-      from_repository(repository) rescue nil
-      REDIS.set('repository_usage_crawl_id', repository.id)
-    end
+    RepositoryUsageBackfillWorker.perform_async(generation) if writes_enabled?
   end
 
-  def self.from_repository(repository)
+  def self.from_repository(repository, max_manifests: MAX_MANIFESTS_PER_READ, max_packages: MAX_PACKAGES_PER_READ, statement_timeout: '2s')
     return unless repository && writes_enabled?(repository.id)
 
     transaction(isolation: :repeatable_read) do
-      connection.execute("SET LOCAL statement_timeout = '2s'")
+      connection.execute("SET LOCAL statement_timeout = #{connection.quote(statement_timeout)}")
       connection.execute("SET LOCAL lock_timeout = '250ms'")
       connection.execute('SET LOCAL jit = off')
       connection.execute('SET LOCAL max_parallel_workers_per_gather = 0')
       lock_repository(repository.id)
-      repository = Repository.select(:id, :dependencies_parsed_at).find_by(id: repository.id)
+      repository = Repository.select(:id, :dependencies_parsed_at, :usage_count_generation, :usage_updated_at, :usage_last_calculated).find_by(id: repository.id)
       next unless repository&.dependencies_parsed_at
+      raise InvalidContribution, 'Repository belongs to a newer generation' if repository.usage_count_generation.to_i > generation
 
-      reconcile(repository, packages_for_repository(repository))
-      repository.update_columns(usage_last_calculated: Time.current)
+      if repository.usage_count_generation == generation && repository.usage_last_calculated && (!repository.usage_updated_at || repository.usage_updated_at == repository.usage_last_calculated)
+        next true
+      end
+      packages = packages_for_repository(repository, max_manifests: max_manifests, max_packages: max_packages)
+      contributed = reconcile(repository, packages, max_packages: max_packages)
+      repository.update_columns(usage_count_generation: generation, usage_last_calculated: repository.usage_updated_at || Time.current) if contributed
+      true
     end
   end
 
   def self.remove_repository(repository)
-    return unless writes_enabled?(repository.id)
-
     transaction do
-      lock_repository(repository.id)
-      reconcile(repository, [])
+      connection.execute("SELECT pg_advisory_xact_lock(138132, #{Integer(repository.id)})")
+      target = Repository.where(id: repository.id).pick(:usage_count_generation)
+      next unless target
+
+      ids = where(repository_id: repository.id).distinct.pluck(:package_usage_id)
+      rows = PackageUsage.where(id: ids, usage_count_generation: target).order(:id).lock.pluck(:id, :repository_usages_count)
+      raise InvalidContribution, 'Missing recorded contribution' if rows.any? { |_, count| count.nil? || count < 1 }
+
+      rows.map(&:first).each_slice(1_000) do |slice|
+        PackageUsage.where(id: slice).update_all(['repository_usages_count = repository_usages_count - 1, updated_at = ?', Time.current])
+      end
     end
   end
 
@@ -85,10 +92,10 @@ class RepositoryUsage < ApplicationRecord
     raise ActiveRecord::LockWaitTimeout, "Usage maintenance already running for repository #{repository_id}" unless locked
   end
 
-  def self.reconcile(repository, packages)
+  def self.reconcile(repository, packages, max_packages: MAX_PACKAGES_PER_READ)
     usages = where(repository_id: repository.id)
-    old_ids = usages.limit(MAX_PACKAGES_PER_READ + 1).pluck(:package_usage_id)
-    raise ReadLimitExceeded, "Repository #{repository.id} exceeds the relationship read limit" if old_ids.length > MAX_PACKAGES_PER_READ
+    old_ids = usages.limit(max_packages + 1).pluck(:package_usage_id)
+    raise ReadLimitExceeded, "Repository #{repository.id} exceeds the relationship read limit" if old_ids.length > max_packages
 
     package_rows = packages.filter_map do |ecosystem, name|
       next if ecosystem.blank? || name.blank? || !name.match?(/\w/)
@@ -105,28 +112,35 @@ class RepositoryUsage < ApplicationRecord
 
     additions = new_ids.uniq - old_ids
     removals = old_ids.uniq - new_ids
-    changes = additions.to_h { |id| [id, 1] }.merge(removals.to_h { |id| [id, -1] })
-    return if changes.empty?
+    counted = repository.usage_count_generation == generation
+    changes = if counted
+      additions.to_h { |id| [id, 1] }.merge(removals.to_h { |id| [id, -1] })
+    else
+      new_ids.uniq.to_h { |id| [id, 1] }
+    end
 
-    change_counts(changes)
+    change_counts(changes) if changes.any?
     usages.where(package_usage_id: removals).delete_all if removals.any?
     insert_all!(additions.map { |id| { repository_id: repository.id, package_usage_id: id } }) if additions.any?
+    counted || new_ids.any?
   end
 
   def self.change_counts(changes)
-    counts = PackageUsage.where(id: changes.keys).order(:id).lock.pluck(:id, :dependents_count, :repository_usages_count)
-    invalid = counts.find do |id, dependents, usages|
-      dependents.nil? || usages.nil? || dependents != usages || dependents + changes.fetch(id) < 0
-    end
-    if invalid || counts.length != changes.length
-      raise CounterBaselineRequired, 'Usage counters need a consistent baseline before applying membership changes'
-    end
+    counts = PackageUsage.where(id: changes.keys).order(:id).lock.pluck(:id, :usage_count_generation, :repository_usages_count)
+    raise InvalidContribution, 'Missing package' unless counts.length == changes.length
 
-    changes.group_by { |id, delta| delta }.each do |delta, entries|
-      PackageUsage.where(id: entries.map(&:first)).update_all([
-        'dependents_count = dependents_count + ?, repository_usages_count = repository_usages_count + ?, updated_at = ?',
-        delta, delta, Time.current
-      ])
+    counts.group_by do |id, recorded_generation, count|
+      fresh = recorded_generation != generation
+      total = fresh ? 0 : count
+      raise InvalidContribution, 'Invalid recorded contribution' if recorded_generation.to_i > generation || total.nil? || total + changes.fetch(id) < 0
+      [fresh, changes.fetch(id)]
+    end.each do |(fresh, delta), rows|
+      scope = PackageUsage.where(id: rows.map(&:first))
+      if fresh
+        scope.update_all(usage_count_generation: generation, repository_usages_count: delta, updated_at: Time.current)
+      else
+        scope.update_all(['repository_usages_count = repository_usages_count + ?, updated_at = ?', delta, Time.current])
+      end
     end
   end
 
@@ -159,7 +173,7 @@ class RepositoryUsage < ApplicationRecord
       end
       if dependency.repository.dependencies_parsed_at.nil?
       end
-      
+
       unless dependency.repository.fork?
         RepositoryUsage.from_repository(dependency.repository)
       end

@@ -9,7 +9,7 @@ class Repository < ApplicationRecord
   include CachedHost
 
   before_destroy -> { RepositoryUsage.remove_repository(self) }, prepend: true
-  after_update_commit :enqueue_usage_update, if: :saved_change_to_usage_updated_at?
+  after_update_commit :enqueue_usage_update, if: -> { saved_change_to_usage_updated_at? || saved_change_to_dependencies_parsed_at? }
 
   has_many :manifests, dependent: :destroy
   has_many :tags, dependent: :delete_all
@@ -263,17 +263,21 @@ class Repository < ApplicationRecord
         transaction do
           lock! if RepositoryUsage.writes_enabled?(id)
           new_manifests = json["results"].to_h.with_indifferent_access["manifests"]
+          changed = usage_updated_at.nil?
 
           if new_manifests.blank?
             manifest_ids = manifests.pluck(:id)
+            changed ||= manifest_ids.any?
             Dependency.where(manifest_id: manifest_ids).delete_all if manifest_ids.any?
             manifests.delete_all
           else
-            new_manifests.each { |m| sync_manifest(m) }
-            delete_old_manifests(new_manifests)
+            new_manifests.each { |m| changed = sync_manifest(m) || changed }
+            changed = delete_old_manifests(new_manifests).to_i.positive? || changed
           end
           now = Time.current
-          update!(dependencies_parsed_at: now, dependency_job_id: nil, usage_updated_at: now)
+          attributes = {dependencies_parsed_at: now, dependency_job_id: nil}
+          attributes[:usage_updated_at] = now if changed
+          update!(attributes)
         end
       else
         update_columns(dependencies_parsed_at: Time.current, dependency_job_id: nil)
@@ -285,14 +289,18 @@ class Repository < ApplicationRecord
   end
 
   def enqueue_usage_update
-    RepositoryUsageWorker.perform_async(id) if RepositoryUsage.writes_enabled?(id)
+    return unless RepositoryUsage.writes_enabled?(id)
+    return if usage_count_generation == RepositoryUsage.generation && usage_last_calculated && (!usage_updated_at || usage_updated_at == usage_last_calculated)
+
+    RepositoryUsageWorker.perform_async(id)
   end
 
   def sync_manifest(m)
     args = {ecosystem: m[:platform] || m[:ecosystem], kind: m[:kind], filepath: m[:path], sha: m[:sha]}
     manifest = manifests.find_by(args)
-    return if manifest && (args[:sha].present? || !RepositoryUsage.writes_enabled?(id))
+    return false if manifest && (args[:sha].present? || !RepositoryUsage.writes_enabled?(id))
 
+    created = manifest.nil?
     manifest ||= manifests.create!(args)
     dependencies = Array(m[:dependencies]).compact.map(&:with_indifferent_access).uniq { |dep| [dep[:name].try(:strip), dep[:requirement], dep[:type]] }
 
@@ -313,10 +321,11 @@ class Repository < ApplicationRecord
 
     columns = [:package_name, :requirements, :kind, :direct]
     existing = Dependency.where(manifest_id: manifest.id).pluck(*columns)
-    return if existing.to_set == deps.map { |dep| dep.values_at(*columns) }.to_set
+    return created if existing.to_set == deps.map { |dep| dep.values_at(*columns) }.to_set
 
     Dependency.where(manifest_id: manifest.id).delete_all
     Dependency.insert_all(deps) if deps.any?
+    true
   end
 
   def delete_old_manifests(new_manifests)

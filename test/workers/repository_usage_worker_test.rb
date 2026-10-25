@@ -4,6 +4,9 @@ class RepositoryUsageWorkerTest < ActiveSupport::TestCase
   self.use_transactional_tests = false
 
   setup do
+    @previous_generation = ENV['REPOSITORY_USAGE_GENERATION']
+    @previous_read_generation = ENV['REPOSITORY_USAGE_READ_GENERATION']
+    ENV['REPOSITORY_USAGE_GENERATION'] = ENV['REPOSITORY_USAGE_READ_GENERATION'] = '1'
     @repository = create(:repository, dependencies_parsed_at: Time.current)
     @manifest = create(:manifest, repository: @repository, ecosystem: 'npm')
     @previous_enabled = ENV['REPOSITORY_USAGE_WRITES_ENABLED']
@@ -11,12 +14,16 @@ class RepositoryUsageWorkerTest < ActiveSupport::TestCase
     ENV['REPOSITORY_USAGE_WRITES_ENABLED'] = 'true'
     ENV['REPOSITORY_USAGE_REPOSITORY_IDS'] = @repository.id.to_s
     RepositoryUsageWorker.clear
+    REDIS.del('repository_usage_backfill:1:pending', 'repository_usage_backfill:2:pending')
   end
 
   teardown do
+    ENV['REPOSITORY_USAGE_GENERATION'] = @previous_generation
+    ENV['REPOSITORY_USAGE_READ_GENERATION'] = @previous_read_generation
     ENV['REPOSITORY_USAGE_WRITES_ENABLED'] = @previous_enabled
     ENV['REPOSITORY_USAGE_REPOSITORY_IDS'] = @previous_ids
     RepositoryUsageWorker.clear
+    REDIS.del('repository_usage_backfill:1:pending', 'repository_usage_backfill:2:pending')
   end
 
   def perform
@@ -24,10 +31,11 @@ class RepositoryUsageWorkerTest < ActiveSupport::TestCase
   end
 
   def dependency(name, manifest: @manifest)
+    @repository.update_column(:usage_updated_at, Time.current)
     create(:dependency, repository: @repository, manifest: manifest, ecosystem: 'npm', package_name: name)
   end
 
-  test 'creates unique memberships across current manifests and lockfiles and updates both counts' do
+  test 'creates unique memberships across current manifests and lockfiles and builds fresh counts' do
     lockfile = create(:manifest, :lockfile, repository: @repository, ecosystem: 'npm', filepath: 'package-lock.json')
     dependency('lodash')
     dependency('lodash', manifest: lockfile)
@@ -37,7 +45,7 @@ class RepositoryUsageWorkerTest < ActiveSupport::TestCase
       perform
     end
     assert_equal ['express', 'lodash'], PackageUsage.order(:name).pluck(:name)
-    assert_equal [[1, 1], [1, 1]], PackageUsage.pluck(:dependents_count, :repository_usages_count)
+    assert_equal [[0, 1], [0, 1]], PackageUsage.pluck(:dependents_count, :repository_usages_count)
     assert_not_nil @repository.reload.usage_last_calculated
   end
 
@@ -55,7 +63,7 @@ class RepositoryUsageWorkerTest < ActiveSupport::TestCase
     end
 
     assert_equal relationship_id, RepositoryUsage.where(repository_id: @repository.id).pick(:id)
-    assert_equal [1, 1, updated_at], usage.reload.attributes.values_at('dependents_count', 'repository_usages_count', 'updated_at')
+    assert_equal [0, 1, updated_at], usage.reload.attributes.values_at('dependents_count', 'repository_usages_count', 'updated_at')
     assert_empty queries.grep(/(?:UPDATE|INSERT INTO|DELETE FROM) "(?:repository_usages|package_usages)"/)
   end
 
@@ -71,7 +79,7 @@ class RepositoryUsageWorkerTest < ActiveSupport::TestCase
     assert_equal retained_id, RepositoryUsage.find_by!(package_usage: PackageUsage.find_by!(name: 'retained')).id
     assert_equal ['added', 'retained'], @repository.repository_usages.joins(:package_usage).order('package_usages.name').pluck('package_usages.name')
     assert_equal [0, 0], PackageUsage.find_by!(name: 'removed').attributes.values_at('dependents_count', 'repository_usages_count')
-    assert_equal [1, 1], PackageUsage.find_by!(name: 'added').attributes.values_at('dependents_count', 'repository_usages_count')
+    assert_equal [0, 1], PackageUsage.find_by!(name: 'added').attributes.values_at('dependents_count', 'repository_usages_count')
   end
 
   test 'excludes tag observations even when the manifest also has a repository id' do
@@ -91,6 +99,7 @@ class RepositoryUsageWorkerTest < ActiveSupport::TestCase
     usage = PackageUsage.find_by!(name: 'lodash')
     RepositoryUsage.create!(repository: @repository, package_usage: usage)
     Dependency.where(manifest_id: @manifest.id).delete_all
+    @repository.update_column(:usage_updated_at, Time.current)
     perform
     perform
 
@@ -118,10 +127,12 @@ class RepositoryUsageWorkerTest < ActiveSupport::TestCase
     Dependency.insert_all!(Array.new(RepositoryUsage::MAX_PACKAGES_PER_READ + 1) do |i|
       { repository_id: @repository.id, manifest_id: @manifest.id, ecosystem: 'npm', package_name: "package-#{i}", created_at: now, updated_at: now }
     end)
+    @repository.update_column(:usage_updated_at, Time.current)
 
     assert_no_difference ['RepositoryUsage.count', 'PackageUsage.count'] do
-      assert_raises(RepositoryUsage::ReadLimitExceeded) { perform }
+      perform
     end
+    assert_equal [@repository.id.to_s], RepositoryUsageBackfillWorker.status['pending_ids']
     assert_equal before, @repository.reload.usage_last_calculated
     assert_equal 1, usage.reload.dependents_count
   end
@@ -133,22 +144,23 @@ class RepositoryUsageWorkerTest < ActiveSupport::TestCase
     end)
     queries = []
     ActiveSupport::Notifications.subscribed(->(*args) { queries << args.last[:sql] }, 'sql.active_record') do
-      assert_raises(RepositoryUsage::ReadLimitExceeded) { perform }
+      perform
     end
     assert_empty queries.grep(/FROM "dependencies"/)
     assert_nil @repository.reload.usage_last_calculated
+    RepositoryUsage.expects(:from_repository).never
+    perform
   end
 
-  test 'rejects an inconsistent counter baseline and rolls back new package creation' do
+  test 'repairs relationships despite an inconsistent counter baseline' do
     old_usage = create(:package_usage, ecosystem: 'npm', name: 'old', key: 'npm:old', dependents_count: 12, repository_usages_count: 1)
-    old_relationship = RepositoryUsage.create!(repository: @repository, package_usage: old_usage)
+    RepositoryUsage.create!(repository: @repository, package_usage: old_usage)
     dependency('new')
 
-    assert_no_difference ['RepositoryUsage.count', 'PackageUsage.count'] do
-      assert_raises(RepositoryUsage::CounterBaselineRequired) { perform }
-    end
-    assert_equal old_relationship.id, RepositoryUsage.where(repository_id: @repository.id).pick(:id)
-    assert_nil @repository.reload.usage_last_calculated
+    perform
+    assert_equal ['new'], @repository.repository_usages.joins(:package_usage).pluck('package_usages.name')
+    assert_equal 1, @repository.reload.usage_count_generation
+    assert_equal 0, old_usage.reload.dependents_count
     assert_equal [12, 1], old_usage.reload.attributes.values_at('dependents_count', 'repository_usages_count')
   end
 
@@ -160,7 +172,7 @@ class RepositoryUsageWorkerTest < ActiveSupport::TestCase
     RepositoryUsage.expects(:insert_all!).raises(ActiveRecord::StatementInvalid, 'write failed')
 
     assert_raises(ActiveRecord::StatementInvalid) { perform }
-    assert_equal [1, 1], usage.reload.attributes.values_at('dependents_count', 'repository_usages_count')
+    assert_equal [0, 1], usage.reload.attributes.values_at('dependents_count', 'repository_usages_count')
     assert_nil PackageUsage.find_by(name: 'express')
     assert_equal [usage.id], RepositoryUsage.pluck(:package_usage_id)
   end
@@ -207,7 +219,7 @@ class RepositoryUsageWorkerTest < ActiveSupport::TestCase
     RepositoryUsage.transaction do
       RepositoryUsage.lock_repository(@repository.id)
       thread = Thread.new do
-        ActiveRecord::Base.connection_pool.with_connection do
+        ActiveRecord::Base.connection_pool.with_connection(prevent_permanent_checkout: true) do
           RepositoryUsageWorker.new.perform(@repository.id)
         rescue => exception
           error = exception
@@ -223,7 +235,7 @@ class RepositoryUsageWorkerTest < ActiveSupport::TestCase
     perform
     perform
     assert_equal 1, RepositoryUsage.count
-    assert_equal [1, 1], PackageUsage.first.attributes.values_at('dependents_count', 'repository_usages_count')
+    assert_equal [0, 1], PackageUsage.first.attributes.values_at('dependents_count', 'repository_usages_count')
   end
 
   test 'a parse committing during maintenance cannot commit a stale membership set' do
@@ -233,7 +245,7 @@ class RepositoryUsageWorkerTest < ActiveSupport::TestCase
       next unless args.last[:sql].include?('FROM "dependencies"') && !changed
       changed = true
       Thread.new do
-        ActiveRecord::Base.connection_pool.with_connection do
+        ActiveRecord::Base.connection_pool.with_connection(prevent_permanent_checkout: true) do
           Repository.transaction do
             Dependency.where(manifest_id: @manifest.id).delete_all
             dependency('new')
@@ -252,20 +264,104 @@ class RepositoryUsageWorkerTest < ActiveSupport::TestCase
 
     perform
     assert_equal ['new'], PackageUsage.pluck(:name)
-    assert_equal [1], PackageUsage.pluck(:dependents_count)
+    assert_equal [1], PackageUsage.pluck(:repository_usages_count)
   end
 
   test 'sets query safeguards only for the maintenance transaction' do
     sql = "SELECT current_setting('statement_timeout') AS statement_timeout, current_setting('lock_timeout') AS lock_timeout, current_setting('jit') AS jit, current_setting('max_parallel_workers_per_gather') AS parallel_workers"
-    before = RepositoryUsage.connection.select_one(sql)
+    before = RepositoryUsage.uncached { RepositoryUsage.connection.select_one(sql) }
     settings = nil
-    RepositoryUsage.expects(:packages_for_repository).with do |repository|
-      settings = RepositoryUsage.connection.select_one(sql)
+    RepositoryUsage.expects(:packages_for_repository).with do |repository, **options|
+      settings = RepositoryUsage.uncached { RepositoryUsage.connection.select_one(sql) }
       repository.id == @repository.id
     end.returns([])
     perform
 
     assert_equal ['2s', '250ms', 'off', '0'], settings.values_at('statement_timeout', 'lock_timeout', 'jit', 'parallel_workers')
-    assert_equal before, RepositoryUsage.connection.select_one(sql)
+    assert_equal before, RepositoryUsage.uncached { RepositoryUsage.connection.select_one(sql) }
+  end
+
+  test 'unchanged legacy memberships contribute once regardless of old counters' do
+    [nil, -3, 99].each_with_index do |old_count, index|
+      usage = create(:package_usage, ecosystem: 'npm', name: "package-#{index}", key: "npm:package-#{index}", dependents_count: 99, repository_usages_count: old_count)
+      2.times { RepositoryUsage.create!(repository: @repository, package_usage: usage) }
+      dependency(usage.name)
+    end
+    before = RepositoryUsage.order(:id).pluck(:id)
+    2.times { perform }
+    assert_equal before, RepositoryUsage.order(:id).pluck(:id)
+    assert_equal [1, 1, 1], PackageUsage.order(:id).pluck(:repository_usages_count)
+    assert_equal [99, 99, 99], PackageUsage.order(:id).pluck(:dependents_count)
+  end
+
+  test 'empty uncounted repositories are not rewritten' do
+    queries = []
+    ActiveSupport::Notifications.subscribed(->(*args) { queries << args.last[:sql] }, 'sql.active_record') { perform }
+    assert_nil @repository.reload.usage_count_generation
+    assert_empty queries.grep(/UPDATE|INSERT INTO|DELETE FROM/)
+  end
+
+  test 'a new generation counts each repository once and ignores old generation deletions' do
+    ENV.delete('REPOSITORY_USAGE_REPOSITORY_IDS')
+    other = create(:repository, dependencies_parsed_at: Time.current)
+    other_manifest = create(:manifest, repository: other)
+    dependency('shared')
+    create(:dependency, repository: other, manifest: other_manifest, ecosystem: 'npm', package_name: 'shared')
+    perform
+    RepositoryUsageWorker.new.perform(other.id)
+    usage = PackageUsage.find_by!(name: 'shared')
+    assert_equal 2, usage.repository_usages_count
+    ENV['REPOSITORY_USAGE_GENERATION'] = '2'
+    2.times { perform }
+    assert_equal 1, usage.reload.repository_usages_count
+    other.destroy!
+    assert_equal 1, usage.reload.repository_usages_count
+    ENV['REPOSITORY_USAGE_GENERATION'] = '1'
+    perform
+    assert_equal [@repository.id.to_s], RepositoryUsageBackfillWorker.status['pending_ids']
+    assert_equal 1, usage.reload.repository_usages_count
+  end
+
+  test 'exhausted parse-triggered jobs are retained for explicit retry' do
+    dependency('shared')
+    RepositoryUsageWorker.sidekiq_retries_exhausted_block.call({'args' => [@repository.id]}, ActiveRecord::StatementInvalid.new('failed'))
+    assert_equal [@repository.id.to_s], RepositoryUsageBackfillWorker.status['pending_ids']
+    perform
+    assert_empty RepositoryUsage.all
+    assert RepositoryUsageBackfillWorker.retry_repository(@repository.id)
+    assert_equal 1, PackageUsage.first.repository_usages_count
+    assert_equal 0, RepositoryUsageBackfillWorker.status['pending']
+  end
+
+  test 'deletion waits for maintenance and reverses contributions even when writes are disabled' do
+    dependency('shared')
+    perform
+    held = Queue.new
+    release = Queue.new
+    lock_holder = Thread.new do
+      ActiveRecord::Base.connection_pool.with_connection(prevent_permanent_checkout: true) do
+        RepositoryUsage.transaction do
+          RepositoryUsage.lock_repository(@repository.id)
+          held << true
+          release.pop
+        end
+      end
+    end
+    held.pop
+    ENV.delete('REPOSITORY_USAGE_WRITES_ENABLED')
+    deleter = Thread.new do
+      ActiveRecord::Base.connection_pool.with_connection(prevent_permanent_checkout: true) do
+        Repository.find(@repository.id).destroy_without_statement_timeout!
+      end
+    end
+    assert_nil deleter.join(0.1)
+    release << true
+    lock_holder.value
+    assert deleter.join(5)
+    deleter.value
+    assert_equal 0, PackageUsage.find_by!(name: 'shared').repository_usages_count
+  ensure
+    release << true if release
+    [lock_holder, deleter].compact.each { |thread| thread.kill if thread.alive? }
   end
 end

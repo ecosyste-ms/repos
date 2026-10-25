@@ -12,6 +12,25 @@ class PackageUsage < ApplicationRecord
   has_many :repository_usages, dependent: :destroy
   has_many :repositories, through: :repository_usages
 
+  def self.read_generation
+    value = ENV['REPOSITORY_USAGE_READ_GENERATION']
+    Integer(value, 10) if value&.match?(/\A[1-9]\d*\z/)
+  end
+
+  def self.usage_order
+    generation = read_generation
+    return 'dependents_count DESC' unless generation
+
+    Arel.sql("CASE WHEN usage_count_generation = #{generation} THEN COALESCE(repository_usages_count, 0) ELSE 0 END DESC")
+  end
+
+  def dependents_count
+    generation = self.class.read_generation
+    return self[:dependents_count] unless generation
+
+    usage_count_generation == generation ? repository_usages_count.to_i : 0
+  end
+
   def fetch_dependents_count
     @dependents_count ||= Dependency.where(ecosystem: ecosystem, package_name: name).distinct.count(:repository_id)
   end
