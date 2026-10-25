@@ -17,6 +17,8 @@ class Repository < ApplicationRecord
   has_many :repository_usages, dependent: :delete_all
   has_one :scorecard, dependent: :destroy
 
+  before_destroy :delete_tag_manifests, prepend: true
+
   scope :owner, ->(owner) { where(owner: owner) }
   scope :subgroup, ->(owner, subgroup) { where(owner: owner).where("lower(full_name) ilike ?", "#{owner}/#{subgroup}/%") }
   scope :language, ->(language) { where(language: language) }
@@ -640,6 +642,12 @@ class Repository < ApplicationRecord
       self.class.connection.execute("SET LOCAL statement_timeout = 0")
       destroy!
     end
+  end
+
+  def delete_tag_manifests
+    tag_manifest_ids = Manifest.where(tag_id: tags.select(:id)).select(:id)
+    Dependency.where(manifest_id: tag_manifest_ids).delete_all
+    Manifest.where(id: tag_manifest_ids).delete_all
   end
 
   def cleanup_duplicate_releases
