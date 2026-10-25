@@ -1,9 +1,34 @@
 class RepositoryUsage < ApplicationRecord
+  MAX_MANIFESTS_PER_READ = 1_000
+  MAX_RAW_DEPENDENCIES = 1_000
+  MAX_PACKAGES_PER_READ = 10_000
+
+  class ReadLimitExceeded < StandardError; end
+
   validates :repository_id, presence: true
   validates :package_usage_id, presence: true
 
   belongs_to :repository
   belongs_to :package_usage
+
+  def self.packages_for_repository(repository)
+    manifest_ids = Manifest.where(repository_id: repository.id, tag_id: nil).limit(MAX_MANIFESTS_PER_READ + 1).pluck(:id)
+    if manifest_ids.length > MAX_MANIFESTS_PER_READ
+      raise ReadLimitExceeded, "Repository #{repository.id} exceeds the #{MAX_MANIFESTS_PER_READ} manifest read limit"
+    end
+    return [] if manifest_ids.empty?
+
+    dependencies = Dependency.where(manifest_id: manifest_ids)
+    packages = dependencies.limit(MAX_RAW_DEPENDENCIES + 1).pluck(:ecosystem, :package_name)
+    if packages.length > MAX_RAW_DEPENDENCIES
+      packages = dependencies.distinct.limit(MAX_PACKAGES_PER_READ + 1).pluck(:ecosystem, :package_name)
+      if packages.length > MAX_PACKAGES_PER_READ
+        raise ReadLimitExceeded, "Repository #{repository.id} exceeds the #{MAX_PACKAGES_PER_READ} package read limit"
+      end
+    end
+
+    packages.uniq
+  end
 
   def self.crawl
     # TODO(DB_PERF): crawl disabled 2026-01-10
@@ -26,14 +51,10 @@ class RepositoryUsage < ApplicationRecord
     # Needs query optimization or complete rethink of approach at this scale
     return
     return if repository.dependencies_parsed_at.nil?
+    unique_dependencies = packages_for_repository(repository)
+
     # TODO deleting everything for the repo may be wasteful
     RepositoryUsage.where(repository: repository).delete_all
-
-    unique_dependencies = Dependency
-      .joins(:manifest)
-      .where(manifests: { repository_id: repository.id })
-      .distinct
-      .pluck(:ecosystem, :package_name)
 
     keys = unique_dependencies.map { |ecosystem, package_name| "#{ecosystem}:#{package_name}" }
 
