@@ -106,7 +106,7 @@ class RepositoryUsageWorkerTest < ActiveSupport::TestCase
     invalid.update_column(:ecosystem, nil)
     perform
 
-    assert_equal ['npm:Package', 'npm:package'], PackageUsage.order(:key).pluck(:key)
+    assert_equal ['npm:Package', 'npm:package'], PackageUsage.pluck(:key).sort
   end
 
   test 'refuses incomplete reads without changing relationships counters or calculation time' do
