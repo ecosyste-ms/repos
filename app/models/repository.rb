@@ -6,6 +6,7 @@ class Repository < ApplicationRecord
   INACTIVE_SYNC_END_ID_KEY = 'repositories:inactive_sync_end_id'
 
   belongs_to :host
+  include CachedHost
 
   before_destroy -> { RepositoryUsage.remove_repository(self) }, prepend: true
   after_update_commit :enqueue_usage_update, if: :saved_change_to_usage_updated_at?

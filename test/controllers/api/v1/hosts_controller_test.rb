@@ -10,6 +10,20 @@ class ApiV1HostsControllerTest < ActionDispatch::IntegrationTest
     @hidden_owner = @host.owners.create!(login: 'hidden-owner', kind: :organization, hidden: true)
   end
 
+  test 'looks the host up from the cache on later requests' do
+    get api_v1_host_path(id: 'GitHub')
+    assert_response :success
+
+    lookups = 0
+    counter = ->(*, payload) { lookups += 1 if payload[:sql].match?(/FROM "hosts" WHERE \(lower\(name\)/) }
+    ActiveSupport::Notifications.subscribed(counter, 'sql.active_record') do
+      get api_v1_host_path(id: 'github')
+    end
+
+    assert_response :success
+    assert_equal 0, lookups
+  end
+
   test 'lists hosts' do
     get api_v1_hosts_path
     assert_response :success
