@@ -1200,6 +1200,11 @@ components:
           type: string
         metadata:
           type: object
+        funding_links:
+          type: array
+          description: Only included in single repository responses (getHostRepository, repositoriesLookup).
+          items:
+            type: string
         created_at:
           type: string
           format: date-time
