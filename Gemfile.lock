@@ -41,7 +41,7 @@ GEM
     after_commit_action (1.1.0)
       activerecord (>= 3.0.0)
       activesupport (>= 3.0.0)
-    appsignal (5.0.5)
+    appsignal (5.0.7)
       logger
       rack (>= 2.0.0)
     ast (2.4.3)
@@ -56,7 +56,7 @@ GEM
       nokogiri (~> 1)
     builder (3.3.0)
     cgi (0.5.2)
-    chartkick (5.2.1)
+    chartkick (5.3.0)
     commonmarker (2.10.1)
       rb_sys (~> 0.9)
     commonmarker (2.10.1-aarch64-linux-musl)
@@ -74,7 +74,7 @@ GEM
     crack (1.0.1)
       bigdecimal
       rexml
-    crass (1.0.7)
+    crass (1.0.8)
     csv (3.3.6)
     database_cleaner-active_record (2.2.2)
       activerecord (>= 5.a)
@@ -209,7 +209,7 @@ GEM
     ostruct (0.6.3)
     packageurl-ruby (0.2.0)
     pagy (9.4.0)
-    parser (3.3.12.0)
+    parser (3.3.13.0)
       ast (~> 2.4.1)
       racc
     pg (1.7.0)
@@ -218,7 +218,7 @@ GEM
     pg (1.7.0-x86_64-darwin)
     pg (1.7.0-x86_64-linux)
     pg (1.7.0-x86_64-linux-musl)
-    pghero (4.0.1)
+    pghero (4.1.0)
       activerecord (>= 7.2)
     popper_js (2.11.8)
     postgresql_cursor (0.6.11)
@@ -238,7 +238,7 @@ GEM
     rack-session (2.1.2)
       base64 (>= 0.1.0)
       rack (>= 3.0.0)
-    rack-test (2.2.0)
+    rack-test (2.3.0)
       rack (>= 1.3)
     rack-timeout (0.7.0)
     rackup (2.3.1)
@@ -446,7 +446,7 @@ CHECKSUMS
   activesupport (8.1.4) sha256=891dd3fe43c4fc8391934b237b1189bb1f661c932a84a840043db9d46a4e80df
   addressable (2.9.0) sha256=7fdf6ac3660f7f4e867a0838be3f6cf722ace541dd97767fa42bc6cfa980c7af
   after_commit_action (1.1.0) sha256=28a4730735a042127ddee9246334a087fbbe1c20f28791509ddbdc8723017238
-  appsignal (5.0.5) sha256=9a2925f70ef4e984271965ad632104bfbedbc23960adeb025177e5dfc2a6a571
+  appsignal (5.0.7) sha256=7316aa63071f2cba80be44e3571f7a8fe1e3e18781d4a6029016456df8b1a8e0
   ast (2.4.3) sha256=954615157c1d6a382bc27d690d973195e79db7f55e9765ac7c481c60bdb4d383
   base64 (0.3.0) sha256=27337aeabad6ffae05c265c450490628ef3ebd4b67be58257393227588f5a97b
   bigdecimal (4.1.3) sha256=61ebe1e5e559bdc3cc6f2c0ee7f427321fc838f59611c294356eb04d6e21cf66
@@ -457,7 +457,7 @@ CHECKSUMS
   builder (3.3.0) sha256=497918d2f9dca528fdca4b88d84e4ef4387256d984b8154e9d5d3fe5a9c8835f
   bundler (4.1.0.beta2) sha256=ffd80c244e3c080cbc403b194e7b386668c69275561f81b7a801f08772a6e2d6
   cgi (0.5.2) sha256=61ca30298171190fd4fa0d8018e57ada456eae9b7a2b78526debf7f0a0e6f8bb
-  chartkick (5.2.1) sha256=2848d7de87189f30f28d077eb0bbdebc8a1f0f6f81de1ded95008fe564369949
+  chartkick (5.3.0) sha256=19a2bba39decf54c4939d3f31460535f8814c85045672ba2ed616c6897325b00
   commonmarker (2.10.1) sha256=924a972223dab8701cd01ed66bb5fda208ad17a4a566c0b7cdc4a78772e9f845
   commonmarker (2.10.1-aarch64-linux-musl) sha256=98e6d1a03ba708438d804702e3c25f3423bff21a1e9975280eb265d889677dfc
   commonmarker (2.10.1-arm-linux-gnu) sha256=dc1ce6cfe5547d2814351ef306d5d1dd05f9c08ad405c76baa94748326c83b7f
@@ -470,7 +470,7 @@ CHECKSUMS
   connection_pool (3.0.2) sha256=33fff5ba71a12d2aa26cb72b1db8bba2a1a01823559fb01d29eb74c286e62e0a
   counter_culture (3.14.0) sha256=386f10ba78837123443597212284f166a498abf36af4b6e85e2f280b908760f3
   crack (1.0.1) sha256=ff4a10390cd31d66440b7524eb1841874db86201d5b70032028553130b6d4c7e
-  crass (1.0.7) sha256=94868719948664c89ddcaf0a37c65048413dfcb1c869470a5f7a7ceb5390b295
+  crass (1.0.8) sha256=7a0145c7a2c59f8e7923b3a69ce819c444823a00a5127d805298fea13be24efe
   csv (3.3.6) sha256=aba61e7e507a66f03d45cb1f3c4b6359861c3504038b422962875dce099e4456
   database_cleaner-active_record (2.2.2) sha256=88296b9f3088c31f7c0d4fcec10f68e4b71c96698043916de59b04debec10388
   database_cleaner-core (2.1.0) sha256=b2875266d9b26b716e8b669c883e01c5250839f6f2ec56422b5e79aa97fb6927
@@ -534,14 +534,14 @@ CHECKSUMS
   ostruct (0.6.3) sha256=95a2ed4a4bd1d190784e666b47b2d3f078e4a9efda2fccf18f84ddc6538ed912
   packageurl-ruby (0.2.0) sha256=9bef22c96622b7d3a0087a7fbca8903f9187b66fbfd6a78299ef115768f5012b
   pagy (9.4.0) sha256=db3f2e043f684155f18f78be62a81e8d033e39b9f97b1e1a8d12ad38d7bce738
-  parser (3.3.12.0) sha256=21a6d7f755d5a24dfbdc6e6b772e4e879a52e7631a88bc5a3a134606052c9828
+  parser (3.3.13.0) sha256=e02f9b63c2fe05b0c68f692ba4df89b3cb113b663964f75d988fbebfd6c3deca
   pg (1.7.0) sha256=f7b536501284e883d4c9ef86dbde0313063e4aaafc23575b0017b0d572a26afb
   pg (1.7.0-aarch64-linux-musl) sha256=5ca4d4619a1a39fb22de47350130956ece69cf0512858ee68dca926e46f65e4a
   pg (1.7.0-arm64-darwin) sha256=9fa895bbe28bdd579b83ccc80464c01d1015ea7549a7919134c9f8f10c060e4b
   pg (1.7.0-x86_64-darwin) sha256=7b726ba6eab8b143fb803d3b4173b0a3e4b0b032025032212f90d436785022db
   pg (1.7.0-x86_64-linux) sha256=d0a24f448b3c874c8b2658d4efbbbefce7315c228ede84f6f6f42089d1d704b6
   pg (1.7.0-x86_64-linux-musl) sha256=0c9bc93b6e0aca2a5b07daef00b7ec4f9882bfe21ef3872b4371f8ecffe1f1e1
-  pghero (4.0.1) sha256=5fa794616065f030a9efc64b30ce34ee99f9cd7077e4d312322b7df3a9b7fa17
+  pghero (4.1.0) sha256=e8000515afa825171c27648a1deae267864e054348efe2720d9186c2d2dac3de
   popper_js (2.11.8) sha256=f4b0be717fc0d50bdb3dbbc55788525a9e0e8f640b76c9971fc34ee609eadbd2
   postgresql_cursor (0.6.11) sha256=c1dc2c546f5e3f71b007b6f046f59e4860429f9a750bd16af47513a3808341f3
   pp (0.6.4) sha256=dfcb0fce700c41456265922884f9fe195d7fbb0674a3578e6c0f69588e82b570
@@ -553,7 +553,7 @@ CHECKSUMS
   rack (3.2.7) sha256=93e13e1c24f93556671d85d2d79fa228c3485815c50d7e2f265b5330c6528fb7
   rack-cors (3.0.0) sha256=7b95be61db39606906b61b83bd7203fa802b0ceaaad8fcb2fef39e097bf53f68
   rack-session (2.1.2) sha256=595434f8c0c3473ae7d7ac56ecda6cc6dfd9d37c0b2b5255330aa1576967ffe8
-  rack-test (2.2.0) sha256=005a36692c306ac0b4a9350355ee080fd09ddef1148a5f8b2ac636c720f5c463
+  rack-test (2.3.0) sha256=b118d177cc002c572fc1b6fd8d19c9ed5881a36e8d6f689f9e618f9f861241e8
   rack-timeout (0.7.0) sha256=757337e9793cca999bb73a61fe2a7d4280aa9eefbaf787ce3b98d860749c87d9
   rackup (2.3.1) sha256=6c79c26753778e90983761d677a48937ee3192b3ffef6bc963c0950f94688868
   rails-controller-testing (1.0.5) sha256=741448db59366073e86fc965ba403f881c636b79a2c39a48d0486f2607182e94
