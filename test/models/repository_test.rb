@@ -366,6 +366,23 @@ class RepositoryTest < ActiveSupport::TestCase
       assert_equal 'README.md', result[:readme]
     end
 
+    should 'prefer a root canonical README regardless of file ordering' do
+      paths = ['README-ja.md', 'README-ko.md', 'docs/README.md', '.github/README.md', 'README.md', 'README.txt']
+      [paths, paths.reverse, paths.rotate(2)].each do |files|
+        @repository.stubs(:get_file_list).returns(files)
+        assert_equal 'README.md', @repository.fetch_metadata_files_list[:readme]
+      end
+    end
+
+    should 'recognize mixed case canonical names and fall back to translated files' do
+      @repository.stubs(:get_file_list).returns(['README-ja.md', 'ReadMe.rst'])
+      assert_equal 'ReadMe.rst', @repository.fetch_metadata_files_list[:readme]
+      @repository.stubs(:get_file_list).returns(['README-ko.md', 'README-ja.md'])
+      assert_equal 'README-ja.md', @repository.fetch_metadata_files_list[:readme]
+      @repository.stubs(:get_file_list).returns(['README-images/banner.png', 'docs/README.md'])
+      assert_equal 'docs/README.md', @repository.fetch_metadata_files_list[:readme]
+    end
+
     should 'find changelog files' do
       file_list = [
         'CHANGELOG.md',
@@ -861,7 +878,7 @@ class RepositoryTest < ActiveSupport::TestCase
       assert_nil result[:disclosure]
     end
 
-    should 'handle mixed case and find first matching file' do
+    should 'choose mixed case README filenames deterministically' do
       file_list = [
         'readme.md',
         'README.MD',
@@ -873,7 +890,7 @@ class RepositoryTest < ActiveSupport::TestCase
       @repository.stubs(:get_file_list).returns(file_list)
       
       result = @repository.fetch_metadata_files_list
-      assert_equal 'readme.md', result[:readme]
+      assert_equal 'README.MD', result[:readme]
       assert_equal 'LICENSE.txt', result[:license]
     end
   end

@@ -427,7 +427,7 @@ class Repository < ApplicationRecord
     file_list = get_file_list
     return if file_list.blank?
     {
-      readme: file_list.find { |file| file.match(/^(docs\/)?(\.github\/)?(\.gitlab\/)?README/i) },
+      readme: find_readme_file(file_list),
       changelog: file_list.find { |file| file.match(/^CHANGE|^HISTORY|^NEWS/i) },
       contributing: file_list.find { |file| file.match(/^(docs\/)?(\.github\/)?(\.gitlab\/)?CONTRIBUTING/i) },
       funding: file_list.find { |file| file.match(/^(docs\/)?(\.github\/)?(\.gitlab\/)?FUNDING\.(ya?ml|json)/i)},
@@ -463,6 +463,16 @@ class Repository < ApplicationRecord
 
   def update_metadata_files_async
     UpdateMetadataFilesWorker.perform_async(id)
+  end
+
+  def find_readme_file(file_list)
+    extensions = %w[.md .markdown .mdown .mkdn .rst .txt .rdoc .org .adoc .asciidoc]
+    file_list.select { |file| file.match?(/\A(?:docs\/|\.github\/|\.gitlab\/)?README[^\/]*\z/i) }
+      .min_by do |file|
+        name = File.basename(file).downcase
+        canonical = name == 'readme' || extensions.any? { |extension| name == "readme#{extension}" }
+        [canonical ? 0 : 1, file.count('/'), extensions.index(File.extname(name)) || extensions.length, file.downcase, file]
+      end
   end
 
   def update_metadata_files
