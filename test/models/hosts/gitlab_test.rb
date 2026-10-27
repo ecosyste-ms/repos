@@ -1,6 +1,23 @@
 require "test_helper"
 
 class Hosts::GitlabTest < ActiveSupport::TestCase
+  context 'rate limiting' do
+    setup do
+      @host = create(:host, name: 'gitlab.com', url: 'https://gitlab.com', kind: 'gitlab')
+      Hosts::Gitlab.any_instance.stubs(:api_token).returns('test-token')
+      @users_url = %r{\Ahttps://gitlab\.com/(api/v4/)?users\?username=someone\z}
+      stub_request(:get, @users_url).to_return(status: 429, headers: { 'Retry-After' => '3600' }, body: '{"message":"Retry later"}')
+    end
+
+    should 'raise a 429 from an owner sync without sleeping in the worker thread' do
+      Gitlab::Request.any_instance.expects(:sleep).never
+
+      assert_raises(Gitlab::Error::TooManyRequests) { SyncOwnerWorker.new.perform(@host.id, 'someone') }
+
+      assert_requested :get, @users_url, times: 1
+    end
+  end
+
   context 'recently_changed_repo_names' do
     setup do
       @host = create(:host, url: 'https://gitlab.com', kind: 'gitlab')
