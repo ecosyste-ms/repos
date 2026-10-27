@@ -10,7 +10,7 @@ class GithubRateLimitRetryTest < ActiveSupport::TestCase
   end
 
   should 'delay a GitLab 429 by about a minute' do
-    stub_request(:get, %r{\Ahttps://gitlab\.com/(api/v4/)?users/1\z}).to_return(status: 429, body: '{"message":"Retry later"}')
+    stub_request(:get, 'https://gitlab.com/api/v4/users/1').to_return(status: 429, body: '{"message":"Retry later"}')
     exception = assert_raises(Gitlab::Error::TooManyRequests) { Gitlab.client(endpoint: 'https://gitlab.com/api/v4', private_token: 'test-token').user(1) }
 
     delay = SyncOwnerWorker.sidekiq_retry_in_block.call(0, exception)

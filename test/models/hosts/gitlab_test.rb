@@ -1,11 +1,31 @@
 require "test_helper"
 
 class Hosts::GitlabTest < ActiveSupport::TestCase
+  context 'token authenticated requests' do
+    setup do
+      @host = create(:host, name: 'gitlab.com', url: 'https://gitlab.com', kind: 'gitlab')
+      Hosts::Gitlab.any_instance.stubs(:api_token).returns('test-token')
+    end
+
+    should 'sync an owner through the /api/v4 endpoints' do
+      stub_request(:get, 'https://gitlab.com/api/v4/users?username=some-group')
+        .to_return(status: 200, headers: { 'Content-Type' => 'application/json' }, body: [].to_json)
+      stub_request(:get, 'https://gitlab.com/api/v4/groups/some-group?with_projects=false')
+        .to_return(status: 200, headers: { 'Content-Type' => 'application/json' }, body: { id: 7, path: 'some-group', name: 'Some Group' }.to_json)
+      stub_request(:get, 'https://gitlab.com/api/v4/groups/some-group/projects?archived=false&include_subgroups=true&per_page=100&simple=true')
+        .to_return(status: 200, headers: { 'Content-Type' => 'application/json' }, body: [].to_json)
+
+      SyncOwnerWorker.new.perform(@host.id, 'some-group')
+
+      assert_equal 'Some Group', @host.owners.find_by(login: 'some-group').name
+    end
+  end
+
   context 'rate limiting' do
     setup do
       @host = create(:host, name: 'gitlab.com', url: 'https://gitlab.com', kind: 'gitlab')
       Hosts::Gitlab.any_instance.stubs(:api_token).returns('test-token')
-      @users_url = %r{\Ahttps://gitlab\.com/(api/v4/)?users\?username=someone\z}
+      @users_url = 'https://gitlab.com/api/v4/users?username=someone'
       stub_request(:get, @users_url).to_return(status: 429, headers: { 'Retry-After' => '3600' }, body: '{"message":"Retry later"}')
     end
 
