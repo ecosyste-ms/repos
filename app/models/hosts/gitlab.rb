@@ -183,25 +183,6 @@ module Hosts
       nil
     end
 
-    def download_readme(repository)
-      files = api_client.tree(repository.full_name)
-      paths = files.map(&:path)
-      readme_path = paths.select { |path| path.match(/^readme/i) }.sort { |path| Readme.supported_format?(path) ? 0 : 1 }.first
-      return if readme_path.nil?
-      file = get_file_contents(readme_path)
-      return unless file.present?
-      content = Readme.format_markup(readme_path, file[:content])
-      return unless content.present?
-
-      if repository.readme.nil?
-        repository.create_readme(html_body: content)
-      else
-        repository.readme.update(html_body: content)
-      end
-    rescue *IGNORABLE_EXCEPTIONS
-      nil
-    end
-
     def download_tags(repository)
       existing_tag_names = repository.tags.pluck(:name)
       remote_tags = api_client.tags(repository.full_name, per_page: 100)
