@@ -39,6 +39,40 @@ class Hosts::GitlabTest < ActiveSupport::TestCase
     end
   end
 
+  context 'hosts without a token' do
+    setup do
+      @host = create(:host, name: 'gitlab.example.org', url: 'https://gitlab.example.org', kind: 'gitlab')
+      Hosts::Gitlab.any_instance.stubs(:api_token).returns(nil)
+      @json = { 'Content-Type' => 'application/json' }
+    end
+
+    should 'not treat a missing project as data' do
+      stub_request(:get, 'https://gitlab.example.org/api/v4/projects/group%2Fgone?license=true')
+        .to_return(status: 404, headers: @json, body: { message: '404 Project Not Found' }.to_json)
+
+      assert_nil @host.host_instance.fetch_repository('group/gone')
+    end
+
+    should 'not treat a refused user profile as data' do
+      stub_request(:get, 'https://gitlab.example.org/api/v4/users?username=someone')
+        .to_return(status: 200, headers: @json, body: [{ id: 5, username: 'someone' }].to_json)
+      stub_request(:get, 'https://gitlab.example.org/api/v4/users/5')
+        .to_return(status: 403, headers: @json, body: { message: '403 Forbidden - Not authorized!' }.to_json)
+
+      assert_nil @host.host_instance.fetch_owner('someone')
+    end
+
+    should 'skip tags for a missing project' do
+      repository = create(:repository, host: @host, full_name: 'group/gone')
+      stub_request(:get, 'https://gitlab.example.org/api/v4/projects/group%2Fgone/repository/tags?search=&per_page=100&page=1')
+        .to_return(status: 404, headers: @json, body: { message: '404 Project Not Found' }.to_json)
+
+      repository.download_tags
+
+      assert_empty repository.tags
+    end
+  end
+
   context 'token authenticated requests' do
     setup do
       @host = create(:host, name: 'gitlab.com', url: 'https://gitlab.com', kind: 'gitlab')

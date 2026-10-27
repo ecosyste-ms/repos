@@ -15,6 +15,12 @@ module Hosts
         end
       end
 
+      def get_json(url, **options)
+        response = faraday_client.get(url)
+        return nil unless response.success?
+        JSON.parse(response.body, **options)
+      end
+
       def tags(id_or_full_name, _options = {}, &block)
         # return an iterator if no block is given
         return enum_for(__callee__, id_or_full_name) unless block
@@ -24,8 +30,8 @@ module Hosts
         loop do
           url = "#{@endpoint}/projects/#{CGI.escape(id_or_full_name.to_s)}/repository/tags?search=&per_page=#{per_page}&page=#{page}"
           Rails.logger.debug("Gitlab: Fetching tags from URL: #{url}")
-          response = faraday_client.get(url)
-          tags = JSON.parse(response.body, object_class: OpenStruct)
+          tags = get_json(url, object_class: OpenStruct)
+          return if tags.nil?
           Rails.logger.debug("Gitlab: Fetched #{tags.count} tags")
           tags.each do |tag|
             yield tag
@@ -39,8 +45,7 @@ module Hosts
         url = "#{@endpoint}/projects/#{CGI.escape(id_or_full_name.to_s)}?license=#{license}"
         Rails.logger.debug("Gitlab[project]: Fetching project from URL: #{url}")
 
-        response = faraday_client.get(url)
-        project = JSON.parse(response.body, object_class: OpenStruct)
+        project = get_json(url, object_class: OpenStruct)
         return nil if project.nil? || project.empty?
         project.visibility = "public" # We get it from a nonauthenticated public endpoint
         project
@@ -62,8 +67,7 @@ module Hosts
         url = "#{@endpoint}/projects?per_page=#{per_page}&archived=#{archived}&id_before=#{id_before}&id_after=#{id_after}&simple=#{simple}&page=#{page}&order_by=#{order_by}&sort=#{sort}"
         Rails.logger.debug("Gitlab[projects]: Fetching projects from URL: #{url}")
 
-        response = faraday_client.get(url)
-        JSON.parse(response.body, object_class: OpenStruct)
+        get_json(url, object_class: OpenStruct)
       rescue JSON::ParserError
         nil
       end
@@ -73,8 +77,7 @@ module Hosts
         url = "#{@endpoint}/users/#{CGI.escape(username.to_s)}"
         Rails.logger.debug("Gitlab[user]: Fetching user from URL: #{url}")
 
-        response = faraday_client.get(url)
-        JSON.parse(response.body)
+        get_json(url)
       rescue JSON::ParserError
         nil
       end
@@ -83,8 +86,7 @@ module Hosts
         url = "#{@endpoint}/groups/#{CGI.escape(username)}?with_projects=#{with_projects}"
         Rails.logger.debug("Gitlab[group]: Fetching group from URL: #{url}")
 
-        response = faraday_client.get(url)
-        JSON.parse(response.body)
+        get_json(url)
       rescue JSON::ParserError
         nil
       end
@@ -93,8 +95,7 @@ module Hosts
         url = "#{@endpoint}/groups/#{CGI.escape(username)}/projects?per_page=#{per_page}&archived=#{archived}&simple=#{simple}&include_subgroups=#{include_subgroups}"
         Rails.logger.debug("Gitlab[group_projects]: Fetching group projects from URL: #{url}")
 
-        response = faraday_client.get(url)
-        JSON.parse(response.body, object_class: OpenStruct)
+        get_json(url, object_class: OpenStruct)
       rescue JSON::ParserError
         nil
       end
@@ -103,8 +104,7 @@ module Hosts
         url = "#{@endpoint}#{path}"
         Rails.logger.debug("Gitlab[get]: Fetching from URL: #{url}")
 
-        response = faraday_client.get(url)
-        JSON.parse(response.body)
+        get_json(url)
       rescue JSON::ParserError
         nil
       end
