@@ -338,7 +338,7 @@ module Hosts
     end
 
 
-    def load_owner_repos_names(owner)
+    def load_owner_repos_names(owner, max_pages: 10)
       repos = if owner.user?
         api_client.user_projects(owner.login, per_page: 100, archived: false, simple: true)
       else
@@ -346,7 +346,8 @@ module Hosts
       end
       
       return [] unless repos.present?
-      
+
+      repos = repos.to_enum(:each_page).take(max_pages).flat_map(&:to_ary) if repos.respond_to?(:each_page)
       repos.map { |repo| repo["path_with_namespace"] }
     rescue *IGNORABLE_EXCEPTIONS
       []

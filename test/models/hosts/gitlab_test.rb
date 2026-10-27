@@ -48,6 +48,34 @@ class Hosts::GitlabTest < ActiveSupport::TestCase
 
       assert_equal %w[v0 v1 v2], repository.tags.pluck(:name).sort
     end
+
+    should 'queue every page of an owner repos' do
+      projects_url = 'https://gitlab.com/api/v4/groups/some-group/projects'
+      stub_request(:get, 'https://gitlab.com/api/v4/users?username=some-group')
+        .to_return(status: 200, headers: { 'Content-Type' => 'application/json' }, body: [].to_json)
+      stub_request(:get, 'https://gitlab.com/api/v4/groups/some-group?with_projects=false')
+        .to_return(status: 200, headers: { 'Content-Type' => 'application/json' }, body: { id: 7, path: 'some-group', name: 'Some Group' }.to_json)
+      stub_request(:get, "#{projects_url}?archived=false&include_subgroups=true&per_page=100&simple=true")
+        .to_return(status: 200, body: [{ path_with_namespace: 'some-group/a' }].to_json,
+                   headers: { 'Content-Type' => 'application/json', 'Link' => "<#{projects_url}?page=2&per_page=100>; rel=\"next\"" })
+      stub_request(:get, "#{projects_url}?page=2&per_page=100")
+        .to_return(status: 200, headers: { 'Content-Type' => 'application/json' }, body: [{ path_with_namespace: 'some-group/b' }].to_json)
+      Sidekiq::Worker.clear_all
+
+      SyncOwnerWorker.new.perform(@host.id, 'some-group')
+
+      assert_equal %w[some-group/a some-group/b], SyncRepositoryWorker.jobs.map { |job| job['args'].last }.sort
+    end
+
+    should 'stop listing owner repos after max_pages' do
+      owner = create(:owner, host: @host, login: 'some-group', kind: 'organization')
+      projects_url = 'https://gitlab.com/api/v4/groups/some-group/projects'
+      stub_request(:get, "#{projects_url}?archived=false&include_subgroups=true&per_page=100&simple=true")
+        .to_return(status: 200, body: [{ path_with_namespace: 'some-group/a' }].to_json,
+                   headers: { 'Content-Type' => 'application/json', 'Link' => "<#{projects_url}?page=2&per_page=100>; rel=\"next\"" })
+
+      assert_equal ['some-group/a'], @host.host_instance.load_owner_repos_names(owner, max_pages: 1)
+    end
   end
 
   context 'rate limiting' do
