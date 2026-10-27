@@ -46,7 +46,24 @@ class RepositoryCommitStatsRefreshTest < ActionDispatch::IntegrationTest
     PingWorker.drain
 
     assert_equal [@repository.id, false], UpdateRepositoryWorker.jobs.sole['args']
+    assert_equal 'default', UpdateRepositoryWorker.jobs.sole['queue']
     assert_empty SyncCommitStatsWorker.jobs
+  end
+
+  test 'forced pings queue their refreshes on the critical queue' do
+    post @ping_path, params: { force: true }
+    assert_response :success
+    PingWorker.drain
+
+    assert_equal [[@repository.id, true], 'critical'], UpdateRepositoryWorker.jobs.sole.values_at('args', 'queue')
+    assert_equal 'critical', SyncCommitStatsWorker.jobs.sole['queue']
+  end
+
+  test 'forced lookups queue their refresh on the critical queue' do
+    get api_v1_repositories_lookup_path(url: "https://github.com/#{@repository.full_name}", force: true)
+    assert_response :success
+
+    assert_equal [[@repository.id, true], 'critical'], UpdateRepositoryWorker.jobs.sole.values_at('args', 'queue')
   end
 
   test 'unavailable commit statistics preserve the previous summary' do

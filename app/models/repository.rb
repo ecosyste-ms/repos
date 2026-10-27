@@ -213,7 +213,8 @@ class Repository < ApplicationRecord
   end
 
   def sync_async(force = false)
-    UpdateRepositoryWorker.perform_async(id, force)
+    # forced refreshes are user requests, keep them out of the default backlog
+    UpdateRepositoryWorker.set(queue: force ? :critical : :default).perform_async(id, force)
   end
 
   def html_url
@@ -600,7 +601,7 @@ class Repository < ApplicationRecord
   end
 
   def sync_commit_stats_async
-    SyncCommitStatsWorker.perform_async(id)
+    SyncCommitStatsWorker.set(queue: :critical).perform_async(id)
   end
 
   def self.parse_dependencies_for_github_actions_tags
