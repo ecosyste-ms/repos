@@ -1,6 +1,44 @@
 require "test_helper"
 
 class Hosts::GitlabTest < ActiveSupport::TestCase
+  context 'anonymous first requests' do
+    setup do
+      @host = create(:host, name: 'gitlab.com', url: 'https://gitlab.com', kind: 'gitlab')
+      Hosts::Gitlab.any_instance.stubs(:api_token).returns('test-token')
+      @json = { 'Content-Type' => 'application/json' }
+      @anonymous = ->(request) { !request.headers.key?('Private-Token') }
+      @with_token = ->(request) { request.headers['Private-Token'] == 'test-token' }
+    end
+
+    should 'only use the token for a user profile gitlab refuses anonymously' do
+      search = stub_request(:get, 'https://gitlab.com/api/v4/users?username=someone').with(&@anonymous)
+        .to_return(status: 200, headers: @json, body: [{ id: 5, username: 'someone' }].to_json)
+      refused = stub_request(:get, 'https://gitlab.com/api/v4/users/5').with(&@anonymous)
+        .to_return(status: 403, headers: @json, body: { message: '403 Forbidden - Not authorized!' }.to_json)
+      profile = stub_request(:get, 'https://gitlab.com/api/v4/users/5').with(&@with_token)
+        .to_return(status: 200, headers: @json, body: { id: 5, username: 'someone', name: 'Some One', bio: 'Hello' }.to_json)
+      projects = stub_request(:get, 'https://gitlab.com/api/v4/users/someone/projects?archived=false&per_page=100&simple=true').with(&@anonymous)
+        .to_return(status: 200, headers: @json, body: [].to_json)
+
+      SyncOwnerWorker.new.perform(@host.id, 'someone')
+
+      assert_equal ['Some One', 'Hello'], @host.owners.find_by(login: 'someone').values_at(:name, :description)
+      [search, refused, profile, projects].each { |stub| assert_requested stub, times: 1 }
+    end
+
+    should 'fall back to the token on a server that refuses anonymous requests' do
+      project = { id: 9, path_with_namespace: 'group/project', name: 'project', description: 'A project', visibility: 'public',
+                  created_at: '2020-01-01T00:00:00.000Z', last_activity_at: '2026-10-01T00:00:00.000Z', default_branch: 'main',
+                  star_count: 1, avatar_url: nil, license: { key: 'mit' } }
+      project_url = 'https://gitlab.com/api/v4/projects/group%2Fproject?license=true'
+      refused = stub_request(:get, project_url).with(&@anonymous).to_return(status: 401, headers: @json, body: { message: '401 Unauthorized' }.to_json)
+      stub_request(:get, project_url).with(&@with_token).to_return(status: 200, headers: @json, body: project.to_json)
+
+      assert_equal 'group/project', @host.host_instance.fetch_repository('group/project')[:full_name]
+      assert_requested refused, times: 1
+    end
+  end
+
   context 'token authenticated requests' do
     setup do
       @host = create(:host, name: 'gitlab.com', url: 'https://gitlab.com', kind: 'gitlab')
