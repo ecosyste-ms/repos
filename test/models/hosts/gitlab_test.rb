@@ -19,6 +19,35 @@ class Hosts::GitlabTest < ActiveSupport::TestCase
 
       assert_equal 'Some Group', @host.owners.find_by(login: 'some-group').name
     end
+
+    should 'sync a user owner' do
+      stub_request(:get, 'https://gitlab.com/api/v4/users?username=someone')
+        .to_return(status: 200, headers: { 'Content-Type' => 'application/json' }, body: [{ id: 5, username: 'someone' }].to_json)
+      stub_request(:get, 'https://gitlab.com/api/v4/users/5')
+        .to_return(status: 200, headers: { 'Content-Type' => 'application/json' }, body: { id: 5, username: 'someone', name: 'Some One' }.to_json)
+      stub_request(:get, 'https://gitlab.com/api/v4/users/someone/projects?archived=false&per_page=100&simple=true')
+        .to_return(status: 200, headers: { 'Content-Type' => 'application/json' }, body: [].to_json)
+
+      SyncOwnerWorker.new.perform(@host.id, 'someone')
+
+      owner = @host.owners.find_by(login: 'someone')
+      assert_equal ['Some One', 'user'], [owner.name, owner.kind]
+    end
+
+    should 'download every page of tags' do
+      repository = create(:repository, host: @host, full_name: 'group/project')
+      tags_url = 'https://gitlab.com/api/v4/projects/group%2Fproject/repository/tags'
+      tag = ->(name) { { name: name, commit: { id: "sha-#{name}", committed_date: '2026-10-01T00:00:00.000Z' } } }
+      stub_request(:get, "#{tags_url}?per_page=100")
+        .to_return(status: 200, body: [tag.('v2'), tag.('v1')].to_json,
+                   headers: { 'Content-Type' => 'application/json', 'Link' => "<#{tags_url}?page=2&per_page=100>; rel=\"next\"" })
+      stub_request(:get, "#{tags_url}?page=2&per_page=100")
+        .to_return(status: 200, headers: { 'Content-Type' => 'application/json' }, body: [tag.('v0')].to_json)
+
+      repository.download_tags
+
+      assert_equal %w[v0 v1 v2], repository.tags.pluck(:name).sort
+    end
   end
 
   context 'rate limiting' do

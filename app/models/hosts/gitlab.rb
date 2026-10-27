@@ -15,7 +15,7 @@ module Hosts
         end
       end
 
-      def tags(id_or_full_name, &block)
+      def tags(id_or_full_name, _options = {}, &block)
         # return an iterator if no block is given
         return enum_for(__callee__, id_or_full_name) unless block
 
@@ -204,7 +204,9 @@ module Hosts
 
     def download_tags(repository)
       existing_tag_names = repository.tags.pluck(:name)
-      remote_tags = api_client.tags(repository.full_name).each do |tag|
+      remote_tags = api_client.tags(repository.full_name, per_page: 100)
+      remote_tags = remote_tags.lazy_paginate if remote_tags.respond_to?(:lazy_paginate)
+      remote_tags.each do |tag|
         next if existing_tag_names.include?(tag.name)
         next if tag.commit.nil?
         repository.tags.create({
@@ -269,7 +271,7 @@ module Hosts
 
     def fetch_repository(full_name)
       project = api_client.project(full_name, license: true)
-      return nil if project.nil? || project.empty?
+      return nil if project.nil? || project.to_h.empty?
       return nil if project.visibility != "public"
 
       full_hash = project.to_h.with_indifferent_access
@@ -371,6 +373,7 @@ module Hosts
 
     def fetch_owner(login)
       search = api_client.get "/users?username=#{login}"
+      search = search.to_ary if search.respond_to?(:to_ary)
       if search.present? && search.is_a?(Array) && search.first.present?
         user = search.first.to_hash
         id = user["id"]
