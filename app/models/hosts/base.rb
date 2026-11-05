@@ -207,6 +207,7 @@ module Hosts
         else
           repository.update_column(:last_synced_at, Time.now)
         end
+        repository.sync_extra_details_async if repository.files_changed? && !repository.fork? && repository.persisted?
         
       rescue *Array(self.class.api_missing_error_class) => e
         p e

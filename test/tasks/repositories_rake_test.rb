@@ -21,4 +21,19 @@ class RepositoriesRakeTest < ActiveSupport::TestCase
 
     Rake::Task['repositories:sync_inactive'].execute
   end
+  test 'sync_extra_details queues a batch when the extra queue has capacity' do
+    CronLock.expects(:acquire).with('repositories:sync_extra_details', ttl: 10.minutes).yields
+    Sidekiq::Queue.any_instance.stubs(:size).returns(0)
+    Repository.expects(:sync_extra_details_async).once
+
+    Rake::Task['repositories:sync_extra_details'].execute
+  end
+
+  test 'sync_extra_details skips the batch when the extra queue is full' do
+    CronLock.expects(:acquire).with('repositories:sync_extra_details', ttl: 10.minutes).yields
+    Sidekiq::Queue.any_instance.stubs(:size).returns(10_000)
+    Repository.expects(:sync_extra_details_async).never
+
+    Rake::Task['repositories:sync_extra_details'].execute
+  end
 end

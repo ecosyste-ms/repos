@@ -110,6 +110,63 @@ class Hosts::GithubTest < ActiveSupport::TestCase
     end
   end
 
+  def remote_repository(pushed_at:, fork: false)
+    { uuid: '123', full_name: @repository.full_name, owner: 'testuser', description: 'Docs', created_at: 1.year.ago, fork: fork, pushed_at: pushed_at }
+  end
+
+  context 'update_from_host' do
+    setup do
+      @unique_jobs_enabled = SidekiqUniqueJobs.config.enabled
+      SidekiqUniqueJobs.config.enabled = false
+      SyncExtraDetailsWorker.clear
+      @repository.update_columns(uuid: '123', pushed_at: 1.month.ago, last_synced_at: 1.day.ago, files_changed: false)
+    end
+
+    teardown do
+      SyncExtraDetailsWorker.clear
+      SidekiqUniqueJobs.config.enabled = @unique_jobs_enabled
+    end
+
+    should 'process a funding file added to an existing repository' do
+      @github.stubs(:fetch_repository).returns(remote_repository(pushed_at: Time.current))
+      Repository.any_instance.stubs(:fetch_metadata_files_list).returns({ 'funding' => '.github/FUNDING.yml' })
+      Repository.any_instance.stubs(:get_file_contents).with('.github/FUNDING.yml').returns({ content: "github: [testuser]\n" })
+      Repository.any_instance.stubs(:parse_dependencies)
+      Repository.any_instance.stubs(:download_tags)
+
+      @github.update_from_host(@repository)
+      assert_equal [[@repository.id]], SyncExtraDetailsWorker.jobs.map { |job| job['args'] }
+
+      SyncExtraDetailsWorker.drain
+
+      @repository.reload
+      assert_equal '.github/FUNDING.yml', @repository.metadata['files']['funding']
+      assert_equal({ 'github' => ['testuser'] }, @repository.metadata['funding'])
+      assert_not @repository.files_changed?
+    end
+
+    should 'enqueue a repository that is still pending when nothing changed' do
+      @repository.update_columns(files_changed: true)
+      @github.stubs(:fetch_repository).returns(remote_repository(pushed_at: @repository.pushed_at))
+      @github.update_from_host(@repository)
+      SyncExtraDetailsWorker.clear
+      @repository.reload
+
+      @github.update_from_host(@repository)
+
+      assert_equal [[@repository.id]], SyncExtraDetailsWorker.jobs.map { |job| job['args'] }
+    end
+
+    should 'not enqueue forks' do
+      @github.stubs(:fetch_repository).returns(remote_repository(pushed_at: Time.current, fork: true))
+
+      @github.update_from_host(@repository)
+
+      assert @repository.reload.files_changed?
+      assert_empty SyncExtraDetailsWorker.jobs
+    end
+  end
+
   context 'download_releases' do
     should 'store immutability for new releases and refresh existing releases' do
       existing_release = create(

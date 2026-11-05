@@ -4,6 +4,9 @@ class Repository < ApplicationRecord
   INACTIVE_SYNC_BATCH_SIZE = 3_000
   INACTIVE_SYNC_CURSOR_KEY = 'repositories:inactive_sync_cursor'
   INACTIVE_SYNC_END_ID_KEY = 'repositories:inactive_sync_end_id'
+  EXTRA_DETAILS_BATCH_SIZE = 100_000
+  EXTRA_DETAILS_CURSOR_KEY = 'repositories:extra_details_cursor'
+  EXTRA_DETAILS_END_ID_KEY = 'repositories:extra_details_end_id'
 
   belongs_to :host
   include CachedHost
@@ -351,8 +354,26 @@ class Repository < ApplicationRecord
     self.latest_tag_name = latest_tag.try(:name)
   end
 
-  def self.sync_extra_details_async
-    Repository.where(files_changed: true, fork: false).limit(600).order("pushed_at asc").select("id").each(&:sync_extra_details_async)
+  def self.sync_extra_details_async(batch_size: EXTRA_DETAILS_BATCH_SIZE)
+    sweep_end_id = REDIS.get(EXTRA_DETAILS_END_ID_KEY).presence&.to_i
+    unless sweep_end_id
+      sweep_end_id = maximum(:id)
+      return 0 unless sweep_end_id
+
+      REDIS.set(EXTRA_DETAILS_END_ID_KEY, sweep_end_id)
+    end
+
+    cursor = REDIS.get(EXTRA_DETAILS_CURSOR_KEY).to_i
+    if cursor >= sweep_end_id
+      REDIS.del(EXTRA_DETAILS_CURSOR_KEY, EXTRA_DETAILS_END_ID_KEY)
+      return 0
+    end
+
+    batch_end_id = [cursor + batch_size, sweep_end_id].min
+    ids = where(id: (cursor + 1)..batch_end_id, files_changed: true, fork: false).pluck(:id)
+    ids.each { |id| SyncExtraDetailsWorker.perform_async(id) }
+    REDIS.set(EXTRA_DETAILS_CURSOR_KEY, batch_end_id)
+    ids.size
   end
 
   def sync_extra_details_async

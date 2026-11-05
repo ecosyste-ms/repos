@@ -22,7 +22,7 @@ namespace :repositories do
   desc 'sync extra details on repos that files have changed'
   task sync_extra_details: :environment do
     CronLock.acquire("repositories:sync_extra_details", ttl: 10.minutes) do
-      # Repository.sync_extra_details_async
+      Repository.sync_extra_details_async if Sidekiq::Queue.new('extra').size < 10_000
     end
   end
 
