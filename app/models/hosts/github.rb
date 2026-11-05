@@ -206,7 +206,7 @@ module Hosts
 
     def download_releases(repository)
       releases, complete = fetch_releases(repository)
-      return unless releases.present?
+      return if releases.empty? && !complete
 
       # Get existing release UUIDs in one query
       release_uuids = releases.map { |release| release[:uuid].to_s }
