@@ -145,16 +145,15 @@ class Hosts::GithubTest < ActiveSupport::TestCase
       assert_not @repository.files_changed?
     end
 
-    should 'enqueue a repository that is still pending when nothing changed' do
+    should 'not enqueue an already pending repository when pushed_at did not change' do
       @repository.update_columns(files_changed: true)
       @github.stubs(:fetch_repository).returns(remote_repository(pushed_at: @repository.pushed_at))
-      @github.update_from_host(@repository)
-      SyncExtraDetailsWorker.clear
-      @repository.reload
 
       @github.update_from_host(@repository)
 
-      assert_equal [[@repository.id]], SyncExtraDetailsWorker.jobs.map { |job| job['args'] }
+      assert @repository.reload.files_changed?
+      assert_equal 'Docs', @repository.description
+      assert_empty SyncExtraDetailsWorker.jobs
     end
 
     should 'not enqueue forks' do

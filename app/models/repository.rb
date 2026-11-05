@@ -5,6 +5,7 @@ class Repository < ApplicationRecord
   INACTIVE_SYNC_CURSOR_KEY = 'repositories:inactive_sync_cursor'
   INACTIVE_SYNC_END_ID_KEY = 'repositories:inactive_sync_end_id'
   EXTRA_DETAILS_BATCH_SIZE = 100_000
+  EXTRA_DETAILS_QUEUE_LIMIT = 10_000
   EXTRA_DETAILS_CURSOR_KEY = 'repositories:extra_details_cursor'
   EXTRA_DETAILS_END_ID_KEY = 'repositories:extra_details_end_id'
 

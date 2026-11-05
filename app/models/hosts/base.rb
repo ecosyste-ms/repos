@@ -203,11 +203,11 @@ module Hosts
           rescue ActiveRecord::RecordNotUnique
             # duplicate repository
           end
+          repository.sync_extra_details_async if repository.saved_change_to_pushed_at? && !repository.fork?
           # repository.download_tags_async
         else
           repository.update_column(:last_synced_at, Time.now)
         end
-        repository.sync_extra_details_async if repository.files_changed? && !repository.fork? && repository.persisted?
         
       rescue *Array(self.class.api_missing_error_class) => e
         p e

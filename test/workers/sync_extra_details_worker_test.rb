@@ -2,10 +2,10 @@ require 'test_helper'
 
 class SyncExtraDetailsWorkerTest < ActiveSupport::TestCase
   setup do
-    SidekiqUniqueJobs::Digests.new.delete_by_pattern('*')
     SyncExtraDetailsWorker.clear
     Sidekiq::Testing.server_middleware { |chain| chain.add SidekiqUniqueJobs::Middleware::Server }
     @repository = create(:repository, files_changed: true, pushed_at: 1.day.ago)
+    delete_lock
     Repository.any_instance.stubs(:parse_dependencies)
     Repository.any_instance.stubs(:download_tags)
   end
@@ -13,7 +13,15 @@ class SyncExtraDetailsWorkerTest < ActiveSupport::TestCase
   teardown do
     SyncExtraDetailsWorker.clear
     Sidekiq::Testing.server_middleware { |chain| chain.remove SidekiqUniqueJobs::Middleware::Server }
-    SidekiqUniqueJobs::Digests.new.delete_by_pattern('*')
+    delete_lock
+  end
+
+  def lock_digest
+    SidekiqUniqueJobs::Job.prepare('class' => SyncExtraDetailsWorker.name, 'queue' => 'extra', 'args' => [@repository.id])['lock_digest']
+  end
+
+  def delete_lock
+    SidekiqUniqueJobs::Digests.new.delete_by_digest(lock_digest)
   end
 
   test 'queues a follow-up when a newer push arrives while running' do
@@ -43,5 +51,6 @@ class SyncExtraDetailsWorkerTest < ActiveSupport::TestCase
     2.times { SyncExtraDetailsWorker.perform_async(@repository.id) }
 
     assert_equal 1, SyncExtraDetailsWorker.jobs.length
+    assert_equal lock_digest, SyncExtraDetailsWorker.jobs.first['lock_digest']
   end
 end
