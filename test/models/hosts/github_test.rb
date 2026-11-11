@@ -414,6 +414,50 @@ class Hosts::GithubTest < ActiveSupport::TestCase
 
       assert_equal @repository.tags.find_by(name: 'v1').id, @repository.releases.find_by(uuid: '1').tag_id
     end
+
+    should 'sync releases and record the attempt when the tag fetch returns nothing' do
+      @repository.update_columns(tags_count: nil, tags_last_synced_at: nil)
+      Hosts::Github.any_instance.stubs(:fetch_tags).returns([nil, false])
+      Hosts::Github.any_instance.stubs(:fetch_releases).returns([[
+        { uuid: 1, tag_name: 'v1', immutable: false, last_synced_at: Time.current }
+      ], true])
+
+      DownloadTagsWorker.new.perform(@repository.id)
+
+      @repository.reload
+      assert @repository.releases.exists?(uuid: '1')
+      assert_operator @repository.tags_last_synced_at, :>, 1.minute.ago
+    end
+
+    should 'record the attempt when the tag fetch raises an ignored error' do
+      @repository.update_columns(tags_last_synced_at: nil)
+      Hosts::Github.any_instance.stubs(:fetch_tags).raises(Octokit::NotFound)
+      Hosts::Github.any_instance.stubs(:fetch_releases).returns([[], false])
+
+      DownloadTagsWorker.new.perform(@repository.id)
+
+      assert_operator @repository.reload.tags_last_synced_at, :>, 1.minute.ago
+    end
+
+    should 'remove stored releases when GitHub returns a complete empty list' do
+      release = create(:release, repository: @repository, uuid: '1', tag_name: 'v1')
+      Hosts::Github.any_instance.stubs(:fetch_tags).returns([nil, false])
+      Hosts::Github.any_instance.stubs(:fetch_releases).returns([[], true])
+
+      DownloadTagsWorker.new.perform(@repository.id)
+
+      assert_not Release.exists?(release.id)
+    end
+
+    should 'keep stored releases when the release fetch fails' do
+      release = create(:release, repository: @repository, uuid: '1', tag_name: 'v1')
+      Hosts::Github.any_instance.stubs(:fetch_tags).returns([nil, false])
+      Hosts::Github.any_instance.stubs(:fetch_releases).returns([[], false])
+
+      DownloadTagsWorker.new.perform(@repository.id)
+
+      assert Release.exists?(release.id)
+    end
   end
 
   context 'recently_changed_repo_names' do

@@ -383,8 +383,10 @@ class Repository < ApplicationRecord
   end
 
   def download_tags
+    # Stamped before fetching so empty or failed fetches still leave the head of the cron queue
+    update_columns(tags_last_synced_at: Time.current)
     host.download_tags(self)
-    host.download_releases(self) if tags_count && tags_count > 0
+    host.download_releases(self)
     cleanup_duplicate_releases
   end
 
