@@ -8,6 +8,7 @@ class PingWorker
     return unless host
     repository = host.find_repository(full_name.downcase)
     if repository
+      repository.sync_extra_details_async if !repository.fork? && repository.files_changed?
       if !force && repository.last_synced_at && repository.last_synced_at > 1.week.ago
         # if recently synced, schedule for syncing 1 day later
         delay = (repository.last_synced_at + 1.day) - Time.now
@@ -17,7 +18,6 @@ class PingWorker
 
       repository.sync_async(force)
       repository.sync_commit_stats_async if force
-      repository.sync_extra_details_async if !repository.fork? && repository.files_changed?
     else
       host.sync_repository_async(full_name)
     end
