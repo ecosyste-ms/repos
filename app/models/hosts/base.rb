@@ -203,6 +203,7 @@ module Hosts
           rescue ActiveRecord::RecordNotUnique
             # duplicate repository
           end
+          repository.sync_extra_details_async if repository.saved_change_to_pushed_at? && !repository.fork?
           # repository.download_tags_async
         else
           repository.update_column(:last_synced_at, Time.now)
