@@ -14,4 +14,9 @@ namespace :packages do
       PackageUsage.sync_packages
     end
   end
+
+  desc 'warm the ecosystem counts cache used by /usage'
+  task warm_usage_cache: :environment do
+    PackageUsage.ecosystem_counts(force: true)
+  end
 end
