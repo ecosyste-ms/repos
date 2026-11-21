@@ -37,6 +37,10 @@
       "schedule": "0 9 * * *"
     },
     {
+      "command": "bundle exec rake packages:warm_usage_cache",
+      "schedule": "30 7 * * *"
+    },
+    {
       "command": "bundle exec rake hosts:check_github_tokens",
       "schedule": "0 0 * * *"
     },

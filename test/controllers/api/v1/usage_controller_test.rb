@@ -126,6 +126,18 @@ class ApiV1UsageControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "ecosystem rejects pagination past MAX_PAGE with a pointer to open-data" do
+    get api_v1_ecosystem_usage_url('npm', page: Api::V1::UsageController::MAX_PAGE + 1)
+    assert_response :bad_request
+    assert_match 'open-data', response.parsed_body['error']
+  end
+
+  test "dependent_repositories rejects pagination past MAX_PAGE" do
+    create(:package_usage, ecosystem: 'npm', name: 'lodash')
+    get api_v1_usage_dependent_repositories_url('npm', 'lodash', page: Api::V1::UsageController::MAX_PAGE + 1)
+    assert_response :bad_request
+  end
+
   test "invalid dependent repository sort falls back to id ascending" do
     usage = create(:package_usage, ecosystem: 'npm', name: 'lodash')
     repositories = create_list(:repository, 2)

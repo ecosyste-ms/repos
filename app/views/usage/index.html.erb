@@ -3,11 +3,8 @@
 
 <div class="container-sm">
   <h1 class='mb-3'>Package Usage</h1>
-  
-  <p>Temporarily disabled due to scaling issues, this page will be back soon.</p>
 
-  <% if false %>
-    <% @ecosystems.each do |ecosystem, count| %>
+  <% @ecosystems.each do |ecosystem, count| %>
       <% registry = Registry.find_by_ecosystem(ecosystem) %>
       <div class="card mb-3 host d-flex">
         <div class="card-body pb-1">
@@ -30,6 +27,5 @@
           </div>
         </div>
       </div>
-    <% end %>
   <% end %>
 </div>

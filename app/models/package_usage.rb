@@ -12,6 +12,14 @@ class PackageUsage < ApplicationRecord
   has_many :repository_usages, dependent: :destroy
   has_many :repositories, through: :repository_usages
 
+  ECOSYSTEM_COUNTS_CACHE_KEY = 'package_usage/ecosystem_counts'
+
+  def self.ecosystem_counts(force: false)
+    Rails.cache.fetch(ECOSYSTEM_COUNTS_CACHE_KEY, expires_in: 25.hours, force: force) do
+      group(:ecosystem).count.sort_by { |_, c| -c }
+    end
+  end
+
   def self.read_generation
     value = ENV['REPOSITORY_USAGE_READ_GENERATION']
     Integer(value, 10) if value&.match?(/\A[1-9]\d*\z/)
