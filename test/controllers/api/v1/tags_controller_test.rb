@@ -52,10 +52,9 @@ class ApiV1TagsControllerTest < ActionDispatch::IntegrationTest
     assert_equal [newer.name, @tag.name, undated.name], JSON.parse(@response.body).pluck('name')
   end
 
-  test 'non-nullable tag sort columns omit null ordering' do
-    sql = capture_ordered_tags_query(sort: 'created_at', order: 'asc')
-    assert_match(/ORDER BY tags\.created_at ASC/i, sql)
-    refute_match(/NULLS LAST/i, sql)
+  test 'unindexed sort columns fall back to published_at' do
+    sql = capture_ordered_tags_query(sort: 'id', order: 'asc')
+    assert_match(/ORDER BY tags\.published_at DESC NULLS LAST/i, sql)
   end
 
   def capture_ordered_tags_query(params = {})
