@@ -1,4 +1,6 @@
 class Api::V1::DependenciesController < Api::V1::ApplicationController
+  before_action :reject_deep_pagination
+
   def index
     @usage = PackageUsage.find_by(ecosystem: params[:ecosystem], name: params[:name])
     raise ActiveRecord::RecordNotFound unless @usage

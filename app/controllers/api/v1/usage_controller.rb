@@ -1,6 +1,4 @@
 class Api::V1::UsageController < Api::V1::ApplicationController
-  MAX_PAGE = 100
-
   before_action :reject_deep_pagination
 
   def index
@@ -70,10 +68,5 @@ class Api::V1::UsageController < Api::V1::ApplicationController
       key: "#{params[:ecosystem]}:#{params[:name]}",
       dependents_count: 1
     )
-  end
-
-  def reject_deep_pagination
-    return unless params[:page].to_i > MAX_PAGE
-    render json: { error: "Pagination is capped at page #{MAX_PAGE}. Use the data exports at https://repos.ecosyste.ms/open-data for bulk access." }, status: :bad_request
   end
 end

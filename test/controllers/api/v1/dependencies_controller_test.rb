@@ -24,6 +24,12 @@ class Api::V1::DependenciesControllerTest < ActionDispatch::IntegrationTest
     assert data.length > 0
   end
 
+  test "rejects pagination past MAX_PAGE with a pointer to open-data" do
+    get api_v1_usage_dependencies_path(ecosystem: 'npm', name: 'react', page: Api::V1::DependenciesController::MAX_PAGE + 1)
+    assert_response :bad_request
+    assert_match 'open-data', JSON.parse(@response.body)['error']
+  end
+
   test "should return 404 for non-existent package" do
     get api_v1_usage_dependencies_path(ecosystem: 'npm', name: 'nonexistent-package')
     assert_response :not_found

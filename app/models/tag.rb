@@ -13,15 +13,10 @@ class Tag < ApplicationRecord
   has_one :release, dependent: :nullify
 
   def self.sortable_columns
-    {
-      'id' => 'tags.id',
-      'name' => 'tags.name',
-      'sha' => 'tags.sha',
-      'kind' => 'tags.kind',
-      'published_at' => 'tags.published_at',
-      'created_at' => 'tags.created_at',
-      'updated_at' => 'tags.updated_at',
-    }
+    # Only published_at is backed by the (repository_id, published_at) index.
+    # Other columns let the planner walk tags_pkey filtering by repository_id,
+    # which times out on repos with tens of thousands of tags.
+    { 'published_at' => 'tags.published_at' }
   end
 
   def to_s

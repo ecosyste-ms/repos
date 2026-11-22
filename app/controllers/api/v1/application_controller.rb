@@ -1,5 +1,12 @@
 class Api::V1::ApplicationController < ApplicationController
+  MAX_PAGE = 100
+
   after_action { pagy_headers_merge(@pagy) if @pagy }
+
+  def reject_deep_pagination
+    return unless params[:page].to_i > MAX_PAGE
+    render json: { error: "Pagination is capped at page #{MAX_PAGE}. Use the data exports at https://repos.ecosyste.ms/open-data for bulk access." }, status: :bad_request
+  end
 
   def default_url_options(options = {})
     Rails.env.production? ? { :protocol => "https" }.merge(options) : options
