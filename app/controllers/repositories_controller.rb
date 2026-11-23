@@ -56,10 +56,10 @@ class RepositoriesController < ApplicationController
   private
 
   def find_and_validate_repository
-    @repository = @host.find_repository(params[:id].downcase)
+    @repository = @host.find_repository(params[:id].downcase, previous_names: false)
 
     if @repository.nil? && action_name != 'show'
-      fallback = @host.find_repository("#{params[:id]}/#{action_name}".downcase)
+      fallback = @host.find_repository("#{params[:id]}/#{action_name}".downcase, previous_names: false)
       if fallback && !fallback.owner_hidden? && !fallback.has_blocked_topic?
         @repository = fallback
         setup_repository_data
@@ -67,6 +67,8 @@ class RepositoriesController < ApplicationController
         return
       end
     end
+
+    @repository ||= @host.find_repository(params[:id].downcase)
 
     raise ActiveRecord::RecordNotFound if @repository.nil?
     raise ActiveRecord::RecordNotFound if @repository.owner_hidden?

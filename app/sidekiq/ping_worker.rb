@@ -6,7 +6,7 @@ class PingWorker
   def perform(host_name, full_name, force = false)
     host = Host.find_by_name(host_name)
     return unless host
-    repository = host.find_repository(full_name.downcase)
+    repository = host.find_repository(full_name.downcase, previous_names: false)
     if repository
       if !force && repository.last_synced_at && repository.last_synced_at > 1.week.ago
         # if recently synced, schedule for syncing 1 day later

@@ -167,6 +167,22 @@ class ApiV1RepositoriesControllerTest < ActionDispatch::IntegrationTest
     assert_equal actual_response["full_name"], @repository.full_name
   end
 
+  test 'lookup a renamed repository by its previous name' do
+    @repository.update!(full_name: 'newowner/awesome-project')
+
+    get api_v1_repositories_lookup_path(url: 'https://github.com/TestUser/awesome-project')
+    assert_response :success
+
+    assert_equal 'newowner/awesome-project', JSON.parse(@response.body)['full_name']
+  end
+
+  test 'show redirects a previous name to the current name' do
+    @repository.update!(full_name: 'newowner/awesome-project')
+
+    get api_v1_host_repository_path(host_id: @host.name, id: 'testuser/awesome-project')
+    assert_redirected_to api_v1_host_repository_path(@host, 'newowner/awesome-project')
+  end
+
   test 'lookup a repository with hidden owner returns 404' do
     get api_v1_repositories_lookup_path(url: 'https://github.com/hiddenuser/secret-project/')
     assert_response :not_found

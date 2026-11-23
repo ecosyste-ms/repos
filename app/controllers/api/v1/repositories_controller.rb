@@ -59,7 +59,7 @@ class Api::V1::RepositoriesController < Api::V1::ApplicationController
   end
 
   def sbom
-    @repository = @host.find_repository(params[:id].downcase)
+    @repository = find_repository_unless_shadowed(params[:id], 'sbom')
     if @repository
       render json: { error: 'Repository not found' }, status: :not_found and return if @repository.owner_hidden?
       if stale?(@repository, public: true)

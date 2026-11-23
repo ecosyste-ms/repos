@@ -78,6 +78,24 @@ class Api::V1::ReleasesControllerTest < ActionDispatch::IntegrationTest
     assert_equal 'group/subgroup/releases', body['full_name']
   end
 
+  test "a previous name does not hide a repository whose full_name ends in releases" do
+    renamed = create(:repository, host: @host, full_name: 'group/subgroup')
+    renamed.update!(full_name: 'group/moved')
+    repo = create(:repository, host: @host, full_name: 'group/subgroup/releases')
+
+    get "/api/v1/hosts/#{@host.name}/repositories/#{repo.full_name}"
+    assert_response :success
+
+    assert_equal 'group/subgroup/releases', JSON.parse(@response.body)['full_name']
+  end
+
+  test "redirects releases for a previous name to the current name" do
+    @repository.update!(full_name: 'user/renamed')
+
+    get api_v1_host_repository_releases_path(@host.name, 'user/repo')
+    assert_redirected_to api_v1_host_repository_releases_path(@host, 'user/renamed')
+  end
+
   test "should order releases by published_at desc by default" do
     get api_v1_host_repository_releases_path(@host.name, @repository.full_name)
     assert_response :success

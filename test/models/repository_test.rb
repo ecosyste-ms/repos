@@ -1274,4 +1274,59 @@ class RepositoryTest < ActiveSupport::TestCase
       assert_nil Repository.github_actions_package_names
     end
   end
+
+  context 'previous names' do
+    setup do
+      @host = create(:github_host)
+      @repository = create(:repository, host: @host, full_name: 'Old/Name', owner: 'Old')
+    end
+
+    should 'record the old name when full_name changes' do
+      @repository.update!(full_name: 'New/Name')
+
+      assert_equal ['old/name'], @repository.previous_names
+      assert_equal @repository, @host.find_repository('OLD/name')
+      assert_equal @repository, @host.find_repository('new/name')
+    end
+
+    should 'not record a case-only change' do
+      @repository.update!(full_name: 'old/name')
+
+      assert_equal [], @repository.previous_names
+      assert_equal 0, RepositoryPreviousName.count
+    end
+
+    should 'point a reused previous name at the most recently renamed repository' do
+      @repository.update!(full_name: 'New/Name')
+      reuser = create(:repository, host: @host, full_name: 'old/name', owner: 'old')
+      reuser.update!(full_name: 'Other/Name')
+
+      assert_equal reuser, @host.find_repository('old/name')
+    end
+
+    should 'not reclaim a reused previous name on a later rename' do
+      @repository.update!(full_name: 'New/Name')
+      reuser = create(:repository, host: @host, full_name: 'old/name', owner: 'old')
+      reuser.update!(full_name: 'Other/Name')
+      @repository.update!(full_name: 'Newer/Name')
+
+      assert_equal reuser, @host.find_repository('old/name')
+      assert_equal @repository, @host.find_repository('new/name')
+    end
+
+    should 'prefer a repository currently using the name' do
+      @repository.update!(full_name: 'New/Name')
+      current = create(:repository, host: @host, full_name: 'old/name', owner: 'old')
+
+      assert_equal current, @host.find_repository('old/name')
+    end
+
+    should 'remove previous names when destroyed' do
+      @repository.update!(full_name: 'New/Name')
+      @repository.destroy
+
+      assert_nil @host.find_repository('old/name')
+      assert_equal 0, RepositoryPreviousName.count
+    end
+  end
 end
