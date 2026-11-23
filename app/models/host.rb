@@ -74,13 +74,11 @@ class Host < ApplicationRecord
     host
   end
 
-  def find_repository(full_name)
+  def find_repository(full_name, previous_names: true)
     return nil if full_name.blank?
-    # TODO(DB_PERF): previous_names fallback disabled 2026-01-10
-    # Was causing multi-hour queries - GIN index on previous_names + host_id filter is slow on 297M rows
-    # Needs composite index or different approach before re-enabling
-    # repo = repositories.where('previous_names && ARRAY[?]::varchar[]', full_name.downcase).first if repo.nil?
-    repositories.find_by('lower(full_name) = ?', full_name.downcase)
+    repo = repositories.find_by('lower(full_name) = ?', full_name.downcase)
+    repo ||= RepositoryPreviousName.find_by(host_id: id, full_name: full_name.downcase)&.repository if previous_names
+    repo
   end
 
   def self.find_by_domain(domain)
@@ -163,7 +161,7 @@ class Host < ApplicationRecord
         end
         repo.full_name = repo_hash[:full_name] if repo.full_name&.downcase != repo_hash[:full_name]&.downcase
 
-        repo.previous_names = (repo.previous_names + [full_name.downcase]).uniq if repo.full_name_changed? || repo.full_name&.downcase != full_name&.downcase
+        repo.add_previous_name(full_name)
 
         repo.assign_attributes(repo_hash)
         repo_changed = repo.changed?

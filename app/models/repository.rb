@@ -17,6 +17,10 @@ class Repository < ApplicationRecord
 
   has_many :repository_usages, dependent: :delete_all
   has_one :scorecard, dependent: :destroy
+  has_many :repository_previous_names, dependent: :delete_all
+
+  before_save -> { add_previous_name(full_name_was) }, if: -> { persisted? && full_name_changed? }
+  after_save :save_previous_names, if: :saved_change_to_previous_names?
 
   before_destroy :delete_tag_manifests, prepend: true
 
@@ -210,6 +214,19 @@ class Repository < ApplicationRecord
       return
     end
     host.host_instance.update_from_host(self)
+  end
+
+  def add_previous_name(name)
+    name = name.to_s.downcase
+    return if name.blank? || name == full_name.to_s.downcase
+    self.previous_names = (previous_names + [name]).uniq
+  end
+
+  def save_previous_names
+    rows = (previous_names - [full_name.to_s.downcase]).map do |name|
+      { host_id: host_id, repository_id: id, full_name: name }
+    end
+    RepositoryPreviousName.upsert_all(rows, unique_by: [:host_id, :full_name]) if rows.any?
   end
 
   def sync_async(force = false)

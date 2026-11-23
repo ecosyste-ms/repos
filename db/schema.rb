@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_21_200646) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_23_170000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -213,6 +213,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_21_200646) do
     t.index "host_id, lower((full_name)::text)", name: "index_repositories_on_host_id_lower_full_name", unique: true
     t.index ["host_id", "uuid"], name: "index_repositories_on_host_id_uuid", unique: true
     t.index ["owner"], name: "index_repositories_on_owner"
+  end
+
+  create_table "repository_previous_names", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "full_name", null: false
+    t.bigint "host_id", null: false
+    t.bigint "repository_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["host_id", "full_name"], name: "index_repository_previous_names_on_host_id_and_full_name", unique: true
+    t.index ["repository_id"], name: "index_repository_previous_names_on_repository_id"
   end
 
   create_table "repository_usages", force: :cascade do |t|

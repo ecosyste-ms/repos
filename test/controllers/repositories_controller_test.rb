@@ -15,6 +15,14 @@ class RepositoriesControllerTest < ActionDispatch::IntegrationTest
     assert_template 'repositories/show', file: 'repositories/show.html.erb'
   end
 
+  test 'redirects a previous name to the current name' do
+    @repository.update!(full_name: 'ecosyste-ms/repositories')
+
+    get host_repository_path(host_id: @host.name, id: 'ecosyste-ms/repos')
+    assert_redirected_to host_repository_path(@host, 'ecosyste-ms/repositories')
+    assert_response :moved_permanently
+  end
+
   test 'shadowed member route falls back to show when full_name ends in the action name' do
     %w[dependencies readme releases scorecard].each do |suffix|
       repo = create(:repository, host: @host, full_name: "group/subgroup/#{suffix}", owner: 'group')

@@ -38,7 +38,7 @@ class GithubDmcaSweeper
     removed_count = 0
 
     repository_names.each do |repository_name|
-      repository = @host.find_repository(repository_name)
+      repository = @host.find_repository(repository_name, previous_names: false)
       next unless repository
 
       indexed_count += 1

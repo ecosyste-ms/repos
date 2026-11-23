@@ -45,6 +45,19 @@ class GithubDmcaSweeperTest < ActiveSupport::TestCase
     assert_includes @output.string, "removing Blocked/Repo"
   end
 
+  test "does not match a notice against a repository's previous name" do
+    renamed = create(:repository, host: @host, full_name: "Blocked/Repo", owner: "Blocked")
+    renamed.update!(full_name: "Elsewhere/Repo")
+
+    expect_comparison("Infringing: https://github.com/Blocked/Repo\n")
+    @repository_client.expects(:repository).never
+
+    result = @sweeper.sweep
+
+    assert Repository.exists?(renamed.id)
+    assert_equal 0, result[:indexed]
+  end
+
   test "uses an anonymous client for github dmca" do
     anonymous_client = mock("anonymous octokit client")
     authenticated_client = mock("authenticated octokit client")
