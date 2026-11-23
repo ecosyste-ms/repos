@@ -2,9 +2,15 @@ require 'test_helper'
 
 class GharchiveImporterTest < ActiveSupport::TestCase
   setup do
+    @unique_jobs_enabled = SidekiqUniqueJobs.config.enabled
+    SidekiqUniqueJobs.config.enabled = false
     @host = create(:github_host)
-    DownloadTagsWorker.jobs.clear
-    PingWorker.jobs.clear
+    [DownloadTagsWorker, PingWorker].each(&:clear)
+  end
+
+  teardown do
+    [DownloadTagsWorker, PingWorker].each(&:clear)
+    SidekiqUniqueJobs.config.enabled = @unique_jobs_enabled
   end
 
   test 'downloads tags for a repository with a release event' do

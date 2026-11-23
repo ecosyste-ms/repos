@@ -17,7 +17,7 @@ class Api::V1::ApplicationController < ApplicationController
   # name. When the shorter repository_id doesn't exist, try the full path as a
   # repo name and render it. Returns true if it rendered.
   def render_shadowed_repository(repository_id, suffix)
-    repo = @host.find_repository("#{repository_id}/#{suffix}".downcase)
+    repo = @host.find_repository("#{repository_id}/#{suffix}".downcase, previous_names: false)
     return false unless repo
     if repo.owner_hidden?
       render json: { error: 'Repository not found' }, status: :not_found
@@ -26,6 +26,16 @@ class Api::V1::ApplicationController < ApplicationController
       render 'api/v1/repositories/show'
     end
     true
+  end
+
+  # A previous name only matches when no current repository is named
+  # repository_id or repository_id/suffix, so it can't hide a shadowed repo.
+  def find_repository_unless_shadowed(repository_id, suffix)
+    name = repository_id.downcase
+    repo = @host.find_repository(name, previous_names: false)
+    return repo if repo
+    return nil if @host.find_repository("#{name}/#{suffix}", previous_names: false)
+    @host.find_repository(name)
   end
 
   def set_cache_headers

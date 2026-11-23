@@ -2,9 +2,15 @@ require 'test_helper'
 
 class PingWorkerTest < ActiveSupport::TestCase
   setup do
+    @unique_jobs_enabled = SidekiqUniqueJobs.config.enabled
+    SidekiqUniqueJobs.config.enabled = false
     @host = create(:github_host)
-    SyncRepositoryWorker.jobs.clear
-    UpdateRepositoryWorker.jobs.clear
+    [SyncRepositoryWorker, UpdateRepositoryWorker].each(&:clear)
+  end
+
+  teardown do
+    [SyncRepositoryWorker, UpdateRepositoryWorker].each(&:clear)
+    SidekiqUniqueJobs.config.enabled = @unique_jobs_enabled
   end
 
   should 'update a repository found by its current name' do

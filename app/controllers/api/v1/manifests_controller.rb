@@ -2,7 +2,7 @@ class Api::V1::ManifestsController < Api::V1::ApplicationController
   before_action :find_host
 
   def index
-    @repository = @host.find_repository(params[:repository_id].downcase)
+    @repository = find_repository_unless_shadowed(params[:repository_id], 'manifests')
     if @repository.nil?
       return if render_shadowed_repository(params[:repository_id], 'manifests')
       raise ActiveRecord::RecordNotFound

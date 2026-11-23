@@ -23,6 +23,23 @@ class RepositoriesControllerTest < ActionDispatch::IntegrationTest
     assert_response :moved_permanently
   end
 
+  test 'a previous name does not hide a repository whose full_name ends in the action name' do
+    renamed = create(:repository, host: @host, full_name: 'group/subgroup', owner: 'group')
+    renamed.update!(full_name: 'group/moved')
+    repo = create(:repository, host: @host, full_name: 'group/subgroup/releases', owner: 'group')
+
+    get "/hosts/#{@host.name}/repositories/#{repo.full_name}"
+    assert_response :success
+    assert_equal repo, assigns(:repository)
+  end
+
+  test 'redirects a member route for a previous name to the current name' do
+    @repository.update!(full_name: 'ecosyste-ms/repositories')
+
+    get releases_host_repository_path(host_id: @host.name, id: 'ecosyste-ms/repos')
+    assert_redirected_to releases_host_repository_path(@host, 'ecosyste-ms/repositories')
+  end
+
   test 'shadowed member route falls back to show when full_name ends in the action name' do
     %w[dependencies readme releases scorecard].each do |suffix|
       repo = create(:repository, host: @host, full_name: "group/subgroup/#{suffix}", owner: 'group')
