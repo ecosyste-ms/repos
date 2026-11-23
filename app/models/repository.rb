@@ -223,7 +223,8 @@ class Repository < ApplicationRecord
   end
 
   def save_previous_names
-    rows = (previous_names - [full_name.to_s.downcase]).map do |name|
+    added = previous_names - previous_names_before_last_save.to_a - [full_name.to_s.downcase]
+    rows = added.map do |name|
       { host_id: host_id, repository_id: id, full_name: name }
     end
     RepositoryPreviousName.upsert_all(rows, unique_by: [:host_id, :full_name]) if rows.any?

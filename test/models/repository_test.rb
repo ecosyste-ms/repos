@@ -1304,6 +1304,16 @@ class RepositoryTest < ActiveSupport::TestCase
       assert_equal reuser, @host.find_repository('old/name')
     end
 
+    should 'not reclaim a reused previous name on a later rename' do
+      @repository.update!(full_name: 'New/Name')
+      reuser = create(:repository, host: @host, full_name: 'old/name', owner: 'old')
+      reuser.update!(full_name: 'Other/Name')
+      @repository.update!(full_name: 'Newer/Name')
+
+      assert_equal reuser, @host.find_repository('old/name')
+      assert_equal @repository, @host.find_repository('new/name')
+    end
+
     should 'prefer a repository currently using the name' do
       @repository.update!(full_name: 'New/Name')
       current = create(:repository, host: @host, full_name: 'old/name', owner: 'old')

@@ -115,7 +115,7 @@ class GharchiveImporter
     
     # DownloadTagsWorker jobs - process repos with releases first
     repos_with_releases.each do |repo_name|
-      repository = @host.find_repository(repo_name)
+      repository = @host.find_repository(repo_name, previous_names: false)
       if repository
         download_tags_jobs << [repository.id]
       else
