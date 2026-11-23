@@ -792,6 +792,28 @@ class HostTest < ActiveSupport::TestCase
       assert_equal existing_repo, @host.find_repository('visible/old-name')
     end
 
+    should 'store the requested name when it is already in previous_names without a stored row' do
+      existing_repo = FactoryBot.create(:repository, host: @host, full_name: 'visible/new-name', owner: 'visible', uuid: '12345')
+      existing_repo.update_column(:previous_names, ['visible/old-name'])
+      @host.stubs(:host_instance).returns(mock('host_instance').tap do |m|
+        m.expects(:fetch_repository).with('visible/old-name').returns({
+          uuid: '12345',
+          full_name: 'visible/new-name',
+          description: 'Test repo',
+          created_at: 1.week.ago,
+          updated_at: 1.day.ago,
+          owner: 'visible'
+        })
+      end)
+
+      assert_nil @host.find_repository('visible/old-name')
+
+      @host.sync_repository('visible/old-name')
+
+      assert_equal existing_repo, @host.find_repository('visible/old-name')
+      assert_equal ['visible/old-name'], existing_repo.reload.previous_names
+    end
+
     should 'not record the current name as a previous name for a new repository' do
       @host.stubs(:host_instance).returns(mock('host_instance').tap do |m|
         m.expects(:fetch_repository).with('visible/repo').returns({

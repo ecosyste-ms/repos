@@ -170,6 +170,7 @@ class Host < ApplicationRecord
           repo.files_changed = true
         end
         repo.save
+        repo.save_previous_names([full_name]) if repo.persisted?
         repo.ping_packages_async if repo_changed && repo.persisted?
         repo.sync_extra_details_async if !repo.fork? && repo_changed && repo.persisted? && repo.files_changed?
         repo.sync_owner
